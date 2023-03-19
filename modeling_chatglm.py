@@ -56,6 +56,7 @@ class InvalidScoreLogitsProcessor(LogitsProcessor):
 
 
 def load_tf_weights_in_chatglm_6b(model, config, tf_checkpoint_path):
+    print('>>>>>>>>>>>> load_tf_weights_in_chatglm_6b')
     """Load tf checkpoints in a pytorch model."""
     try:
         import re
@@ -192,8 +193,10 @@ def rotate_half(x):
 @torch.jit.script
 def apply_rotary_pos_emb_index(q, k, cos, sin, position_id):
     # position_id: [sq, b], q, k: [sq, b, np, hn], cos: [sq, 1, hn] -> [sq, b, 1, hn]
-    cos, sin = F.embedding(position_id, cos.squeeze(1)).unsqueeze(2), \
-        F.embedding(position_id, sin.squeeze(1)).unsqueeze(2)
+    cos = torch.squeeze(cos)
+    sin = torch.squeeze(sin)
+    cos = F.embedding(position_id, cos).unsqueeze(2)
+    sin = F.embedding(position_id, sin).unsqueeze(2)
     q, k = (q * cos) + (rotate_half(q) * sin), (k * cos) + (rotate_half(k) * sin)
     return q, k
 
@@ -802,6 +805,21 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
         # model: [inputs_embeds, attention_mask, position_ids, past_key_values]
         # [seq_len, batch, hidden_size]
         hidden_states = inputs_embeds.transpose(0, 1)
+        
+        #'''
+        past_key_value = past_key_values[0]
+        layer_ret = self.layers[0](
+            hidden_states,
+            position_ids=position_ids,
+            attention_mask=attention_mask,
+            layer_id=torch.tensor(0),
+            past_key_value=past_key_value,
+            use_cache=use_cache,
+            output_attentions=output_attentions
+        )
+        hidden_states = layer_ret[0]
+        presents = layer_ret[1]
+        '''
         presents = []
         for i, layer in enumerate(self.layers):
             past_key_value = past_key_values[i]
@@ -820,6 +838,7 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
 
         # Final layer norm.
         hidden_states = self.final_layernorm(hidden_states)
+        '''
 
         return BaseModelOutputWithPast(
             last_hidden_state=hidden_states,
@@ -954,6 +973,12 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
             output_hidden_states: Optional[bool] = None,
             return_dict: Optional[bool] = None,
     ):
+        import numpy as np
+        print('inputs_embeds.shape = ', inputs_embeds.shape)
+        inputs_embeds_npy = inputs_embeds.cpu().numpy().reshape(-1, 1)
+        np.savetxt('inputs_embeds.txt', inputs_embeds_npy)
+        print(inputs_embeds_npy)
+        exit(0)
         transformer_outputs = self.transformer(
             inputs_embeds=inputs_embeds,
             attention_mask=attention_mask,
@@ -963,9 +988,12 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
             output_attentions=False,
         )
         hidden_states = transformer_outputs[0]
-        #lm_logits = hidden_states
+        #'''
+        lm_logits = hidden_states
+        '''
         lm_logits = self.lm_head(hidden_states)
         lm_logits = lm_logits.permute(1, 0, 2).contiguous()
+        '''
         return CausalLMOutputWithPast(
             loss=None,
             logits=lm_logits,

@@ -20,6 +20,7 @@ def model_export(
         dynamic_axes=dynamic_axes,
         do_constant_folding=True,
         opset_version=opset,
+        verbose=True
     )
 
 
@@ -30,7 +31,7 @@ def test():
     # model = AutoModel.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True).half().quantize(8).cuda()
     response, history = model.chat(tokenizer, "你好", history=[])
     print(response)
-    #response, history = model.chat(tokenizer, "用Python帮我写一段拓扑排序", history=history)
+    #response, history = model.chat(tokenizer, "", history=history)
     #print(response)
 
 def to_onnx():
@@ -45,12 +46,11 @@ def to_onnx():
                     torch.tensor([[[0, 1, 2, 3], [0, 0, 0, 1]]]),
                     torch.zeros(28, 2, 0, 1, 32, 128)
                 ),
-                output_path= "model.onnx",
+                output_path= "glm_block_1.onnx",
                 ordered_input_names=["inputs_embeds", "attention_mask", "position_ids", "past_key_values"],
                 output_names=["hidden_states", "presents"],
                 dynamic_axes={},
                 opset= 14)
-    
 
 if __name__ == '__main__':
     # to_onnx()

@@ -808,7 +808,7 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
         
         #'''
         past_key_value = past_key_values[0]
-        layer_ret = self.layers[0](
+        layer_ret = self.layers[28](
             hidden_states,
             position_ids=position_ids,
             attention_mask=attention_mask,
@@ -819,6 +819,15 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
         )
         hidden_states = layer_ret[0]
         presents = layer_ret[1]
+        if False:
+            import numpy as np
+            print('hidden_states.shape = ', hidden_states.shape)
+            print('presents.shape = ', presents.shape)
+            hidden_states_npy = hidden_states.cpu().numpy().reshape(-1, 1)
+            np.savetxt('hidden_states.txt', hidden_states_npy)
+            presents_npy = presents.cpu().numpy().reshape(-1, 1)
+            np.savetxt('presents.txt', presents_npy)
+            exit(0)
         '''
         presents = []
         for i, layer in enumerate(self.layers):
@@ -834,6 +843,17 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
             )
             hidden_states = layer_ret[0]
             presents.append(layer_ret[1])
+            if i == 1:
+                break
+        if False:
+            import numpy as np
+            print('hidden_states.shape = ', hidden_states.shape)
+            print('presents.shape = ', presents[1].shape)
+            hidden_states_npy = hidden_states.cpu().numpy().reshape(-1, 1)
+            np.savetxt('hidden_states.txt', hidden_states_npy)
+            presents_npy = presents[1].cpu().numpy().reshape(-1, 1)
+            np.savetxt('presents.txt', presents_npy)
+            exit(0)
         presents = torch.stack(presents, dim=0)
 
         # Final layer norm.
@@ -973,12 +993,6 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
             output_hidden_states: Optional[bool] = None,
             return_dict: Optional[bool] = None,
     ):
-        import numpy as np
-        print('inputs_embeds.shape = ', inputs_embeds.shape)
-        inputs_embeds_npy = inputs_embeds.cpu().numpy().reshape(-1, 1)
-        np.savetxt('inputs_embeds.txt', inputs_embeds_npy)
-        print(inputs_embeds_npy)
-        exit(0)
         transformer_outputs = self.transformer(
             inputs_embeds=inputs_embeds,
             attention_mask=attention_mask,

@@ -52,9 +52,9 @@ static void dumpTensor(const Tensor* t, const char* name = nullptr) {
 class ChatGLM {
 public:
     ChatGLM() {
-        mConfig.type      = MNN_FORWARD_CPU;
-        mConfig.numThread = 4;
-        mConfig.backendConfig     = &mBackendConfig;
+        mConfig.type          = MNN_FORWARD_CPU;
+        mConfig.numThread     = 4;
+        mConfig.backendConfig = &mBackendConfig;
     }
     void load(const char* fileName);
     void forward();
@@ -70,13 +70,10 @@ private:
 };
 
 void ChatGLM::load(const char* fileName) {
-    // create net
-    MNN_PRINT("Open Model %s\n", fileName);
+    printf("load %s model\n", fileName);
     std::shared_ptr<Interpreter> net = std::shared_ptr<Interpreter>(Interpreter::createFromFile(fileName), Interpreter::destroy);
     net->setSessionMode(Interpreter::Session_Resize_Defer);
     net->setSessionMode(Interpreter::Session_Input_User);
-    printf("=====================createSession=======================\n");
-    // create session
     Session* session = net->createSession(mConfig);
     auto inputs_embeds = net->getSessionInput(session, "inputs_embeds");
     auto attention_mask = net->getSessionInput(session, "attention_mask");
@@ -91,7 +88,7 @@ void ChatGLM::load(const char* fileName) {
     mHiddenStates.push_back(hidden_states);
     mPresents.push_back(presents);
     mSessions.push_back(session);
-    mNets.push_back(net);
+    mNets.push_back(std::move(net));
 }
 
 void ChatGLM::forward() {
@@ -112,16 +109,23 @@ void ChatGLM::forward() {
     std::vector<int> position_ids_vals {
         0,1,2,3, 0,0,0,1
     };
+    uint8_t* inputs_embeds_ptr = (uint8_t*)inputs_embeds_vals.data();
+    uint8_t* attention_mask_ptr = (uint8_t*)attention_mask_vals.data();
+    uint8_t* position_ids_ptr = (uint8_t*)position_ids_vals.data();
+    const Tensor *hidden_states = nullptr, *presents = nullptr;
     for (int i = 0; i < mSessions.size(); i++) {
         // set input
-        mInputsEmbeds[i]->buffer().host = (uint8_t*)inputs_embeds_vals.data();
-        mAttentionMask[i]->buffer().host = (uint8_t*)attention_mask_vals.data();
-        mPositionIds[i]->buffer().host = (uint8_t*)position_ids_vals.data();
+        mInputsEmbeds[i]->buffer().host = inputs_embeds_ptr;
+        mAttentionMask[i]->buffer().host = attention_mask_ptr;
+        mPositionIds[i]->buffer().host = position_ids_ptr;
         mNets[i]->resizeSession(mSessions[i]);
         {
             AUTOTIME;
             mNets[i]->runSession(mSessions[i]);
         }
+        hidden_states = mHiddenStates[i];
+        presents = mPresents[i];
+        inputs_embeds_ptr = hidden_states->host<uint8_t>();
     }
     dumpTensor(hidden_states, "hidden_states");
     dumpTensor(presents, "presents");
@@ -129,6 +133,11 @@ void ChatGLM::forward() {
 
 int main(int argc, const char* argv[]) {
     ChatGLM chatglm;
-    chatglm.load("chat_0.mnn");
+    char buffer[50];
+    for (int i = 0; i < 17; i++) {
+        sprintf(buffer, "model/glm_block_%d.mnn", i);
+        chatglm.load(buffer);
+    }
+    chatglm.forward();
     return 0;
 }

@@ -20,7 +20,7 @@ def model_export(
         dynamic_axes=dynamic_axes,
         do_constant_folding=True,
         opset_version=opset,
-        verbose=True
+        verbose=False
     )
 
 
@@ -46,12 +46,12 @@ def to_onnx():
                     torch.tensor([[[0, 1, 2, 3], [0, 0, 0, 1]]]),
                     torch.zeros(28, 2, 0, 1, 32, 128)
                 ),
-                output_path= "glm_block_1.onnx",
+                output_path= "chat_model/glm_block_28.onnx",
                 ordered_input_names=["inputs_embeds", "attention_mask", "position_ids", "past_key_values"],
                 output_names=["hidden_states", "presents"],
                 dynamic_axes={},
                 opset= 14)
 
 if __name__ == '__main__':
-    # to_onnx()
-    test()
+    to_onnx()
+    # test()

@@ -34,7 +34,7 @@ def test():
     #response, history = model.chat(tokenizer, "", history=history)
     #print(response)
 
-def to_onnx():
+def glm_to_onnx():
     model = AutoModel.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True, resume_download=True).float().cpu()
     model_export(model,
                 model_args=(
@@ -46,12 +46,35 @@ def to_onnx():
                     torch.tensor([[[0, 1, 2, 3], [0, 0, 0, 1]]]),
                     torch.zeros(28, 2, 0, 1, 32, 128)
                 ),
-                output_path= "chat_model/glm_block_28.onnx",
+                output_path= "chat_model/glm_block_27.onnx",
                 ordered_input_names=["inputs_embeds", "attention_mask", "position_ids", "past_key_values"],
                 output_names=["hidden_states", "presents"],
                 dynamic_axes={},
                 opset= 14)
 
+def lm_to_onnx():
+    model = AutoModel.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True, resume_download=True).float().cpu()
+    model_export(model,
+                model_args=(
+                    torch.randn(4, 1, 4096)
+                ),
+                output_path= "chat_model/lm_head.onnx",
+                ordered_input_names=["hidden_states"],
+                output_names=["lm_logits"],
+                dynamic_axes={},
+                opset= 14)
+    
+def embedding_to_onnx():
+    model = AutoModel.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True, resume_download=True).float().cpu()
+    model_export(model,
+                model_args=(
+                    torch.tensor([0, 1, 2, 3]),
+                ),
+                output_path= "chat_model/embedding.onnx",
+                ordered_input_names=["input_ids"],
+                output_names=["inputs_embeds"],
+                dynamic_axes={},
+                opset= 14)
 if __name__ == '__main__':
-    to_onnx()
-    # test()
+    # embedding_to_onnx()
+    test()

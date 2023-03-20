@@ -58,6 +58,7 @@ public:
     }
     void load(const char* fileName);
     void forward();
+    std::vector<float> embedding(const std::vector<int>& input_ids);
 private:
     ScheduleConfig mConfig;
     BackendConfig mBackendConfig;
@@ -93,14 +94,8 @@ void ChatGLM::load(const char* fileName) {
 
 void ChatGLM::forward() {
     // inputs_embeds
-    int inputs_embeds_size = 4 * 4096;
-    std::vector<float> inputs_embeds_vals(inputs_embeds_size);
-    std::ifstream input("inputs_embeds.txt");
-    float temp = 0.f;
-    for (int i = 0; i < inputs_embeds_size; ++i) {
-        input >> temp;
-        inputs_embeds_vals[i] = temp;
-    }
+    std::vector<int> input_ids { 20005,  94874, 150001, 150004 };
+    auto inputs_embeds_vals = embedding(input_ids);
     // attention_mask
     std::vector<int> attention_mask_vals {
         0,0,0,1, 0,0,0,1, 0,0,0,1, 0,0,0,0
@@ -124,20 +119,44 @@ void ChatGLM::forward() {
             mNets[i]->runSession(mSessions[i]);
         }
         hidden_states = mHiddenStates[i];
+        dumpTensor(hidden_states, "hidden_states");
         presents = mPresents[i];
         inputs_embeds_ptr = hidden_states->host<uint8_t>();
     }
     dumpTensor(hidden_states, "hidden_states");
-    dumpTensor(presents, "presents");
+    // dumpTensor(presents, "presents");
+}
+
+std::vector<float> ChatGLM::embedding(const std::vector<int>& input_ids) {
+    size_t word_nums = input_ids.size();
+    std::vector<float> buffer(word_nums * 4096);
+    constexpr size_t size = 4096 * sizeof(float);
+    FILE* file = fopen("/home/zhaode/ChatGLM-MNN/chat_model/transformer.word_embeddings.weight", "rb");
+    for (size_t i = 0; i < word_nums; i++) {
+        fseek(file, input_ids[i] * size, SEEK_SET);
+        fread(reinterpret_cast<char*>(buffer.data()) + i * size, 1, size, file);
+    }
+    fclose(file);
+    printf("embedding value is : [");
+    for (int i = 0; i < 5; i++) {
+        printf("%f, ", buffer[i]);
+    }
+    printf(" ... ");
+    for (int i = word_nums * 4096 - 5; i < word_nums * 4096; i++) {
+        printf("%f, ", buffer[i]);
+    }
+    printf("]\n");
 }
 
 int main(int argc, const char* argv[]) {
     ChatGLM chatglm;
     char buffer[50];
-    for (int i = 0; i < 17; i++) {
+    for (int i = 0; i < 28; i++) {
         sprintf(buffer, "model/glm_block_%d.mnn", i);
         chatglm.load(buffer);
     }
+    printf("wait key input to continue ...\n");
+    getchar();
     chatglm.forward();
     return 0;
 }

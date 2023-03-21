@@ -200,7 +200,6 @@ def apply_rotary_pos_emb_index(q, k, cos, sin, position_id):
     q, k = (q * cos) + (rotate_half(q) * sin), (k * cos) + (rotate_half(k) * sin)
     return q, k
 
-
 def attention_fn(
         self,
         query_layer,
@@ -232,13 +231,22 @@ def attention_fn(
     # Raw attention scores. [b, np, s, s]
     # ===================================
 
+    #print('query_layer.size() = ', query_layer.size()) #[4, 1, 32, 128] [1, 1, 32, 128] ...
+    #print('key_layer.size() = ', key_layer.size()) #[4, 1, 32, 128] [5, 1, 32, 128] [6, ...] ...
     # [b, np, sq, sk]
+    # b, np, sq = query_layer.size()[1], query_layer.size()[2], query_layer.size()[0]
+    # sk = sq
     output_size = (query_layer.size(1), query_layer.size(2), query_layer.size(0), key_layer.size(0))
 
     # [sq, b, np, hn] -> [sq, b * np, hn]
     query_layer = query_layer.view(output_size[2], output_size[0] * output_size[1], -1)
+    #new_query_shape = (query_layer.size(0), query_layer.size(2), -1)
+    #query_layer = query_layer.view(*new_query_shape)
+
     # [sk, b, np, hn] -> [sk, b * np, hn]
     key_layer = key_layer.view(output_size[3], output_size[0] * output_size[1], -1)
+    #new_key_shape = (key_layer.size(0), query_layer.size(2), -1)
+    #key_layer = key_layer.view(*new_key_shape)
 
     matmul_result = torch.empty(
         output_size[0] * output_size[1],
@@ -248,6 +256,9 @@ def attention_fn(
         device=query_layer.device,
     )
 
+    #print('-> matmul_result.size() = ', matmul_result.size())
+    #print('-> query_layer.size() = ', query_layer.size())
+    #print('-> key_layer.size() = ', key_layer.size())
     matmul_result = torch.baddbmm(
         matmul_result,
         query_layer.transpose(0, 1),  # [b * np, sq, hn]
@@ -258,6 +269,7 @@ def attention_fn(
 
     # change view to [b, np, sq, sk]
     attention_scores = matmul_result.view(*output_size)
+    # attention_scores = matmul_result.view(b, np, sq, sk)
 
     if self.scale_mask_softmax:
         self.scale_mask_softmax.scale = query_key_layer_scaling_coeff
@@ -283,18 +295,28 @@ def attention_fn(
 
     # context layer shape: [b, np, sq, hn]
     output_size = (value_layer.size(1), value_layer.size(2), query_layer.size(0), value_layer.size(3))
+    # b, np, sq, hn = value_layer.size()[1], value_layer.size()[2], value_layer.size()[0], value_layer.size()[3],
 
     # change view [sk, b * np, hn]
+    # print('value_layer.shape = ', value_layer.shape)
     value_layer = value_layer.view(value_layer.size(0), output_size[0] * output_size[1], -1)
+    #new_value_shape = (value_layer.size(0), value_layer.size(2), -1)
+    #value_layer = value_layer.view(*new_value_shape)
+    # print('--> value_layer.shape = ', value_layer.shape)
 
     # change view [b * np, sq, sk]
+    # print('attention_probs.shape = ', attention_probs.shape)
     attention_probs = attention_probs.view(output_size[0] * output_size[1], output_size[2], -1)
+    #new_atten_shape = (value_layer.size(2), query_layer.size(0), -1)
+    #attention_probs = attention_probs.view(*new_atten_shape)
+    # print('--> attention_probs.shape = ', attention_probs.shape)
 
     # matmul: [b * np, sq, hn]
     context_layer = torch.bmm(attention_probs, value_layer.transpose(0, 1))
 
     # change view [b, np, sq, hn]
     context_layer = context_layer.view(*output_size)
+    # context_layer = context_layer.view(b, np, sq, hn)
 
     # [b, np, sq, hn] --> [sq, b, np, hn]
     context_layer = context_layer.permute(2, 0, 1, 3).contiguous()
@@ -803,17 +825,21 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
             output_attentions: Optional[bool] = None,
     ) -> Union[Tuple[torch.Tensor, ...], BaseModelOutputWithPast]:
         # model: [inputs_embeds, attention_mask, position_ids, past_key_values]
+        if False:
+            print('inputs_embeds.shape = ', inputs_embeds.shape)
+            print('attention_mask.shape = ', attention_mask.shape)
+            print('position_ids.shape = ', position_ids.shape)
+            print('past_key_values.shape = ', past_key_values.shape)
         # [seq_len, batch, hidden_size]
-        hidden_states = inputs_embeds.transpose(0, 1)
-        
-        #'''
-        past_key_value = past_key_values[0]
-        layer_ret = self.layers[28](
+        hidden_states = inputs_embeds.transpose(0, 1)        
+        '''
+        hidden_states = inputs_embeds
+        layer_ret = self.layers[0](
             hidden_states,
             position_ids=position_ids,
             attention_mask=attention_mask,
             layer_id=torch.tensor(0),
-            past_key_value=past_key_value,
+            past_key_value=past_key_values,
             use_cache=use_cache,
             output_attentions=output_attentions
         )
@@ -829,6 +855,7 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
             np.savetxt('presents.txt', presents_npy)
             exit(0)
         '''
+        # print('input hidden_states = ', hidden_states)
         presents = []
         for i, layer in enumerate(self.layers):
             past_key_value = past_key_values[i]
@@ -842,9 +869,8 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
                 output_attentions=output_attentions
             )
             hidden_states = layer_ret[0]
+            # print('#{} hidden_states = {}'.format(i, hidden_states))
             presents.append(layer_ret[1])
-            if i == 1:
-                break
         if False:
             import numpy as np
             print('hidden_states.shape = ', hidden_states.shape)
@@ -855,10 +881,10 @@ class ChatGLMModel(ChatGLMPreTrainedModel):
             np.savetxt('presents.txt', presents_npy)
             exit(0)
         presents = torch.stack(presents, dim=0)
-
         # Final layer norm.
         hidden_states = self.final_layernorm(hidden_states)
-        '''
+        # print('output hidden_states = {}'.format(hidden_states))
+        #'''
 
         return BaseModelOutputWithPast(
             last_hidden_state=hidden_states,
@@ -950,7 +976,6 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
 
             if past is None:
                 past = past_key_values
-
             inputs_embeds = self.transformer.word_embeddings(last_token)
             attention_mask = torch.zeros(1, 1).bool()
             if past is None:
@@ -1002,12 +1027,10 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
             output_attentions=False,
         )
         hidden_states = transformer_outputs[0]
-        #'''
-        lm_logits = hidden_states
-        '''
-        lm_logits = self.lm_head(hidden_states)
-        lm_logits = lm_logits.permute(1, 0, 2).contiguous()
-        '''
+        #lm_logits = hidden_states
+        lm_logits = self.lm_head(hidden_states[-1, :, :]).squeeze().contiguous()
+        # lm_logits = self.lm_head(hidden_states)
+        # lm_logits = lm_logits.permute(1, 0, 2).contiguous()
         return CausalLMOutputWithPast(
             loss=None,
             logits=lm_logits,

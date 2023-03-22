@@ -1,9 +1,8 @@
 //
-//  MNNV2Basic.cpp
-//  MNN
+//  chat.cpp
 //
-//  Created by MNN on 2019/01/22.
-//  Copyright © 2018, Alibaba Group Holding Limited
+//  Created by MNN on 2023/03/17.
+//  ZhaodeWang
 //
 
 #define MNN_OPEN_TIME_TRACE
@@ -90,10 +89,10 @@ private:
 
 void ChatGLM::chat() {
     while (true) {
-        std::cout << "\n请输入 >>> ";
+        std::cout << "\nQ: ";
         std::string input_str;
         std::cin >> input_str;
-        std::cout << forward(input_str, false) << std::endl;
+        std::cout << "\nA: " << forward(input_str, false) << std::endl;
     }
 }
 

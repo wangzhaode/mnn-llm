@@ -18,25 +18,30 @@ void ChatGLM::chat() {
         std::cout << "\nQ: ";
         std::string input_str;
         std::cin >> input_str;
-        std::cout << "\nA: " << response(input_str, false) << std::endl;
+        std::cout << "\nA: " << std::flush;;
+        response(input_str, true);
+        std::cout << std::endl;
     }
 }
 
-std::string ChatGLM::response(const std::string& input_str, bool debuginfo) {
-    auto input_ids = tokenizer_encode(input_str);
-    if (debuginfo) {
-        printf("ids is : [ ");
-        for (int i = 0; i < input_ids.size(); i++) {
-            printf("%d, ", input_ids[i]);
-        }
-        printf("]\n");
+std::string ChatGLM::response(const std::string& input_str, bool stream) {
+    // init status
+    mSeqLen = 0, mContextLen = -1, mMaskIdx = -1;
+    if (mHistoryVars.empty()) mHistoryVars.resize(LAYER_SIZE);
+    for (int i = 0; i < LAYER_SIZE; i++) {
+        // init history
+        mHistoryVars[i] = _Input({2, 0, 1, 32, 128}, NCHW);
     }
+    // response
+    auto input_ids = tokenizer_encode(input_str);
     int token = forward(input_ids);
     std::string output_str = decode(token);
+    if (stream) std::cout << output_str << std::flush;
     while (token != EOS) {
         token = forward({token});
-        output_str += decode(token);
-        if (debuginfo) std::cout << output_str;
+        auto word = decode(token);
+        if (stream) std::cout << word << std::flush;
+        output_str += word;
     }
     return output_str;
 }
@@ -81,7 +86,7 @@ void ChatGLM::init(float cuda_memory) {
     config.backendConfig = &cudaBackendConfig;
     mCUDARtmgr.reset(Executor::RuntimeManager::createRuntimeManager(config));
     // 1. load vocab
-    printf("load ../resource/tokenizer/slim_vocab.txt\n");
+    printf("load ../resource/tokenizer/slim_vocab.txt ... ");
     std::ifstream dictFile("../resource/tokenizer/slim_vocab.txt");
     int index = 0;
     std::string word;
@@ -89,26 +94,25 @@ void ChatGLM::init(float cuda_memory) {
         mWordDecode.push_back(word);
         mWordEncode.insert(std::make_pair<std::string, int>(std::move(word), index++));
     }
+    printf("Done!\n");
     // 2. load models
     int cuda_run_layers = (cuda_memory - 1.5) * 1024.0 / 385.0;
     char buffer[50];
     for (int i = 0; i < LAYER_SIZE; i++) {
         sprintf(buffer, "../resource/models/glm_block_%d.mnn", i);
         loadModel(buffer, i <= cuda_run_layers);
-        // init history
-        mHistoryVars.push_back(_Input({2, 0, 1, 32, 128}, NCHW));
     }
 }
 
 void ChatGLM::loadModel(const char* fileName, bool cuda) {
-    printf("load %s model ...\n", fileName);
+    printf("load %s model ... ", fileName);
     Module::Config config;
     config.shapeMutable = true;
     config.rearrange = true;
     auto rtmgr = cuda ? mCUDARtmgr : mCPURtmgr;
     std::shared_ptr<Module> net(Module::load({}, {}, fileName, rtmgr, &config));
     mModules.emplace_back(std::move(net));
-    printf("load %s model done!\n", fileName);
+    printf("Done!\n");
 }
 
 VARP ChatGLM::gen_embedding(const std::vector<int>& input_ids) {
@@ -221,6 +225,6 @@ int ChatGLM::var_to_token(VARP var) {
     auto vs = _Concat(vars, 0);
     auto r = _ArgMax(vs);
     int id = r->readMap<int>()[0];
-    printf("### %d\n", id);
+    // printf("### %d\n", id);
     return id;
 }

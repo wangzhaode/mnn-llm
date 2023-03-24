@@ -38,7 +38,7 @@ public:
         init(cuda_memory);
     }
     void chat();
-    std::string response(const std::string& input_str, bool debuginfo = false);
+    std::string response(const std::string& input_str, bool stream = false);
 private:
     void init(float cuda_memory);
     void loadModel(const char* fileName, bool cuda = false);

@@ -5,7 +5,7 @@
 //  ZhaodeWang
 //
 
-#define MNN_OPEN_TIME_TRACE
+// #define MNN_OPEN_TIME_TRACE
 
 #include <fstream>
 #include <iostream>
@@ -32,13 +32,11 @@ std::string ChatGLM::response(const std::string& input_str, bool debuginfo) {
         printf("]\n");
     }
     int token = forward(input_ids);
-    std::string output_str;
-    output_str += mWordDecode[token];
-    if (debuginfo) std::cout << mWordDecode[token];
+    std::string output_str = decode(token);
     while (token != EOS) {
         token = forward({token});
-        output_str += mWordDecode[token];
-        if (debuginfo) std::cout << mWordDecode[token];
+        output_str += decode(token);
+        if (debuginfo) std::cout << output_str;
     }
     return output_str;
 }
@@ -54,8 +52,7 @@ std::vector<int> ChatGLM::tokenizer_encode(std::string input_str) {
         "../resource/tokenizer/stop_words.utf8"
     );
     jieba.Cut(input_str, words, true);
-    ids.push_back(5);
-    for (const auto& word : words) {
+    for (auto word : words) {
         const auto& iter = mWordEncode.find(word);
         if (iter != mWordEncode.end()) {
             ids.push_back(iter->second);
@@ -64,6 +61,10 @@ std::vector<int> ChatGLM::tokenizer_encode(std::string input_str) {
     ids.push_back(130001);
     ids.push_back(130004);
     return ids;
+}
+
+std::string ChatGLM::decode(int id) {
+    return mWordDecode[id];
 }
 
 void ChatGLM::init(float cuda_memory) {
@@ -89,7 +90,7 @@ void ChatGLM::init(float cuda_memory) {
         mWordEncode.insert(std::make_pair<std::string, int>(std::move(word), index++));
     }
     // 2. load models
-    int cuda_run_layers = (cuda_memory - 1) * 1024.0 / 385.0;
+    int cuda_run_layers = (cuda_memory - 1.5) * 1024.0 / 385.0;
     char buffer[50];
     for (int i = 0; i < LAYER_SIZE; i++) {
         sprintf(buffer, "../resource/models/glm_block_%d.mnn", i);

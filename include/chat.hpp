@@ -31,7 +31,6 @@ static constexpr int VOCAB_SIZE = 130528;
 static constexpr int HIDDEN_SIZE = 4096;
 static constexpr int LAYER_SIZE = 28;
 
-
 class ChatGLM {
 public:
     // your cuda memory size (G)
@@ -44,6 +43,7 @@ private:
     void init(float cuda_memory);
     void loadModel(const char* fileName, bool cuda = false);
     std::vector<int> tokenizer_encode(std::string input_str);
+    std::string decode(int id);
     VARP gen_embedding(const std::vector<int>& input_ids);
     VARP gen_attention_mask(const std::vector<int>& input_ids);
     VARP gen_position_ids(const std::vector<int>& input_ids);

@@ -1,33 +1,49 @@
 # ChatGLM-MNN
 ## Describe
-该模型使用ChatGLM-6B, 将其转换到MNN模型并使用C++进行推理。在实现上做了如下优化：
+该项目将模型[ChatGLM-6B](https://huggingface.co/THUDM/chatglm-6b)转换到`MNN`并使用`C++`进行推理。
+在实现上做了如下优化：
 
-1. 对其中的词表做了部分删减，删除了模型中未使用的前20000个词；将vocab, embedding, lm_head的大小从130528缩小到130528;
+1. 对其中的词表做了部分删减，删除了模型中未使用的前20000个图片词；将`vocab`, `embedding`, `lm_head`的大小从150528缩小到130528;
 2. `Embedding`操作调用次数较少，使用`fseek`, `fread`加载的方式降低内存;
 3. `lm_head`操作为`[num, 4096] @ [4096, 130528]`，将其优化为分段实现的矩阵乘`[130528, 4096] @ [4096, 1]`;
 2. 原模型对显存要求较高；将模型按层拆分成28个模型，可以根据用户显存大小动态将计算任务分配给GPU和CPU，充分利用显卡算力;
 
 ## Usage
 ### 1. Compile MNN library
+从源码编译MNN
 ```bash
 git clone https://github.com/alibaba/MNN.git
 cd MNN
 mkdir build
-cmake ..
+cmake .. # if using CUDA, add -DMNN_CUDA=ON
 make -j8
 cp -r include /path/to/ChatGLM-MNN/
 cp libMNN.so /path/to/ChatGLM-MNN/libs
 ```
 ### 2. Download Models
-Download models from `github release` to `/path/to/ChatGLM-MNN/resource/models`
+从 `github release` 下载模型文件到 `/path/to/ChatGLM-MNN/resource/models`， 如下：
+```
+cd resource/models
+./download_models.sh
+```
 
-### 2. Build and Run
+### 3. Build and Run
 ```bash
 mkdir build
 cd build
 cmake ..
 make -j8
 ./demo
+```
+#### 4. Using CUDA
+默认用法为使用`CPU`, 使用`CUDA`需要在编译MNN时添加宏`-DMNN_CUDA=ON`，在创建`ChatGLM`时指定显存大小，如下：
+```cpp
+// 8G CUDA Memory
+ChatGLM chatglm(8);
+// 命令式
+std::cout << chatglm.response("你好");
+// 交互式
+chatglm.chat();
 ```
 
 ## Example

@@ -12,11 +12,10 @@ link_directories(${CMAKE_CURRENT_LIST_DIR}/libs)
 # source files
 FILE(GLOB SRCS ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
-# target
-add_executable(chat ${SRCS})
+# compile dynamic lib
+add_library(chat SHARED ${SRCS})
+target_link_libraries(chat MNN MNN_Express)
 
-if (MSVC)
-    target_link_libraries(chat MNN)
-else()
-    target_link_libraries(chat MNN)
-endif()
+# demo target
+add_executable(demo ${CMAKE_CURRENT_LIST_DIR}/demo/main.cpp)
+target_link_libraries(demo chat)

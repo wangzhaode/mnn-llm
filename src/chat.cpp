@@ -18,7 +18,7 @@ void ChatGLM::chat() {
         std::cout << "\nQ: ";
         std::string input_str;
         std::cin >> input_str;
-        std::cout << "\nA: " << std::flush;;
+        std::cout << "\nA: " << std::flush;
         response(input_str, true);
         std::cout << std::endl;
     }
@@ -69,7 +69,19 @@ std::vector<int> ChatGLM::tokenizer_encode(std::string input_str) {
 }
 
 std::string ChatGLM::decode(int id) {
-    return mWordDecode[id];
+    auto word = mWordDecode[id];
+    if (word == "<n>") return "\n";
+    if (word == "<|tab|>") return "\t";
+    int pos = word.find("<|blank_");
+    if (pos != -1) {
+        int space_num = atoi(word.substr(8, word.size() - 10).c_str());
+        return std::string(space_num, ' ');
+    }
+    pos = word.find("▁");
+    if (pos != -1) {
+        word.replace(pos, pos + 3, " ");
+    }
+    return word;
 }
 
 void ChatGLM::init(float cuda_memory) {
@@ -96,12 +108,14 @@ void ChatGLM::init(float cuda_memory) {
     }
     printf("Done!\n");
     // 2. load models
-    int cuda_run_layers = (cuda_memory - 1.5) * 1024.0 / 385.0;
+    int cuda_run_layers = (cuda_memory - 2) * 1024.0 / 385.0;
     char buffer[50];
     for (int i = 0; i < LAYER_SIZE; i++) {
         sprintf(buffer, "../resource/models/glm_block_%d.mnn", i);
         loadModel(buffer, i <= cuda_run_layers);
     }
+    // 3. load lm model
+    loadModel("../resource/models/lm.mnn", false);
 }
 
 void ChatGLM::loadModel(const char* fileName, bool cuda) {
@@ -185,7 +199,7 @@ int ChatGLM::forward(const std::vector<int>& input_ids) {
     auto hidden_states = gen_embedding(input_ids);
     auto attention_mask = gen_attention_mask(input_ids);
     auto position_ids = gen_position_ids(input_ids);
-    for (int i = 0; i < mModules.size(); i++) {
+    for (int i = 0; i < LAYER_SIZE; i++) {
         AUTOTIME;
         auto outputs = mModules[i]->onForward({hidden_states, attention_mask, position_ids, mHistoryVars[i]});
         hidden_states = outputs[0];
@@ -196,35 +210,13 @@ int ChatGLM::forward(const std::vector<int>& input_ids) {
 
 int ChatGLM::var_to_token(VARP var) {
     AUTOTIME;
-    // id = argmax(lm @ var[-1])
-    constexpr int TILE = 512;
     int num = var->getInfo()->dim[0];
     if (num > 1) {
         var = _Gather(var, _Scalar<int>(num - 1));
     }
     var = _Reshape(var, {HIDDEN_SIZE, 1});
-    FILE* file = fopen("../resource/models/slim_lm.bin", "rb");
-    std::vector<VARP> vars;
-    for (size_t i = 0; i < VOCAB_SIZE / TILE; i++) {
-        auto tile_var = _Input({TILE, HIDDEN_SIZE}, NHWC);
-        fseek(file, i * TILE * HIDDEN_SIZE * sizeof(float), SEEK_SET);
-        fread(tile_var->writeMap<char>(), 1, TILE * HIDDEN_SIZE * sizeof(float), file);
-        auto mm_res = _MatMul(tile_var, var);
-        vars.push_back(mm_res);
-    }
-    {
-        int i = VOCAB_SIZE / TILE;
-        constexpr int tile = VOCAB_SIZE % TILE;
-        auto tile_var = _Input({tile, HIDDEN_SIZE}, NHWC);
-        fseek(file, i * tile * HIDDEN_SIZE * sizeof(float), SEEK_SET);
-        fread(tile_var->writeMap<char>(), 1, tile * HIDDEN_SIZE * sizeof(float), file);
-        auto mm_res = _MatMul(tile_var, var);
-        vars.push_back(mm_res);
-    }
-    fclose(file);
-    auto vs = _Concat(vars, 0);
-    auto r = _ArgMax(vs);
-    int id = r->readMap<int>()[0];
+    auto outputs = mModules.back()->onForward({var});
+    int id = outputs[0]->readMap<int>()[0];
     // printf("### %d\n", id);
     return id;
 }

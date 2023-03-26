@@ -6,7 +6,10 @@
 1. 对其中的词表做了部分删减，删除了模型中未使用的前20000个图片词；将`vocab`, `embedding`, `lm_head`的大小从150528缩小到130528;
 2. `Embedding`操作调用次数较少，使用`fseek`, `fread`加载的方式降低内存;
 3. `lm_head`操作为`[num, 4096] @ [4096, 130528]`，转换为`[130528, 4096] @ [4096, 1]`;
-2. 原模型对显存要求较高；将模型按层拆分成28个模型，可以根据用户显存大小动态将计算任务分配给GPU和CPU，充分利用GPU与CPU内存与算力;
+4. 原模型对显存要求较高；将模型按层拆分成28个模型，可以根据用户显存大小动态将计算任务分配给GPU和CPU，充分利用GPU与CPU内存与算力; 即使小显存显卡也可以加速生成。
+
+目前支持命令行对话与Web UI对话两种形式的Demo
+![web_demo](./resource/web/web_demo.png)
 
 ## Usage
 ### 1. Compile MNN library
@@ -33,7 +36,8 @@ mkdir build
 cd build
 cmake ..
 make -j8
-./demo
+./cli_demo # cli demo
+./web_demo # web ui demo
 ```
 #### 4. Using CUDA
 默认用法为使用`CPU`, 使用`CUDA`需要在编译MNN时添加宏`-DMNN_CUDA=ON`，在创建`ChatGLM`时指定显存大小，如下：
@@ -120,3 +124,8 @@ A: 北京是中国历史文化名城,也是中国美食之都之一,有许多特
 7. 驴打滚:驴打滚是一种传统的北京小吃,以糯米粉和豆沙为主要材料,通过卷起来和炸的方式制作,口感香甜。
 
 这只是北京众多特色小吃中的一小部分,北京还有很多其他美食,如北京火锅、北京炸酱面、北京小吃街等等,值得一试。
+
+## Reference
+- [ChatGLM-6B](https://huggingface.co/THUDM/chatglm-6b)
+- [cpp-httplib](https://github.com/yhirose/cpp-httplib)
+- [chatgpt-web](https://github.com/xqdoo00o/chatgpt-web)

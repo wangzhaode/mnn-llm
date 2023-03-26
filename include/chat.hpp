@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <iostream>
 
 #include <MNN/AutoTime.hpp>
 #include <MNN/expr/Expr.hpp>
@@ -38,7 +39,7 @@ public:
         init(cuda_memory);
     }
     void chat();
-    std::string response(const std::string& input_str, bool stream = false);
+    std::string response(const std::string& input_str, std::ostream* os = &std::cout);
 private:
     void init(float cuda_memory);
     void loadModel(const char* fileName, bool cuda = false);

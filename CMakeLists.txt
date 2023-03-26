@@ -16,6 +16,10 @@ FILE(GLOB SRCS ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 add_library(chat SHARED ${SRCS})
 target_link_libraries(chat MNN MNN_Express)
 
-# demo target
-add_executable(demo ${CMAKE_CURRENT_LIST_DIR}/demo/main.cpp)
-target_link_libraries(demo chat)
+# demo targets
+add_executable(cli_demo ${CMAKE_CURRENT_LIST_DIR}/demo/cli_demo.cpp)
+target_link_libraries(cli_demo chat)
+
+add_executable(web_demo ${CMAKE_CURRENT_LIST_DIR}/demo/web_demo.cpp)
+# target_link_libraries(web_demo chat pthread ssl crypto)
+target_link_libraries(web_demo chat pthread)

@@ -19,12 +19,12 @@ void ChatGLM::chat() {
         std::string input_str;
         std::cin >> input_str;
         std::cout << "\nA: " << std::flush;
-        response(input_str, true);
+        response(input_str);
         std::cout << std::endl;
     }
 }
 
-std::string ChatGLM::response(const std::string& input_str, bool stream) {
+std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
     // init status
     mSeqLen = 0, mContextLen = -1, mMaskIdx = -1;
     if (mHistoryVars.empty()) mHistoryVars.resize(LAYER_SIZE);
@@ -36,11 +36,11 @@ std::string ChatGLM::response(const std::string& input_str, bool stream) {
     auto input_ids = tokenizer_encode(input_str);
     int token = forward(input_ids);
     std::string output_str = decode(token);
-    if (stream) std::cout << output_str << std::flush;
+    *os << output_str << std::flush;
     while (token != EOS) {
         token = forward({token});
         auto word = decode(token);
-        if (stream) std::cout << word << std::flush;
+        *os << word << std::flush;
         output_str += word;
     }
     return output_str;

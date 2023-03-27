@@ -129,3 +129,4 @@ A: 北京是中国历史文化名城,也是中国美食之都之一,有许多特
 - [ChatGLM-6B](https://huggingface.co/THUDM/chatglm-6b)
 - [cpp-httplib](https://github.com/yhirose/cpp-httplib)
 - [chatgpt-web](https://github.com/xqdoo00o/chatgpt-web)
+- [cppjieba](https://github.com/yanyiwu/cppjieba)

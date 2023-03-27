@@ -11,6 +11,24 @@
 目前支持命令行对话与Web UI对话两种形式的Demo
 ![web_demo](./resource/web/web_demo.png)
 
+## Speed
+
+测试平台：
+- Memory: 32G (+32G Swap)
+- CPU: AMD Ryzen 9 3900X 12-Core Processor
+- GPU: GeForce RTX 2080 Ti
+
+### FP Model
+仅测试浮点模型(CPU: fp32/ GPU: fp16)，输入`你好`，在回复完内容相同的情况下，回复时间(秒)对比如下：
+
+|   impl  |   GPU + CPU   | CPU only  |
+|---------|---------------|-----------|
+|   MNN   |      7.37     |   28.64   |
+| Pytorch | out of memory |   33.59   |
+
+### Quantize Model
+`TODO`
+
 ## Usage
 ### 1. Compile MNN library
 从源码编译MNN

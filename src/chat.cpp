@@ -84,7 +84,7 @@ std::string ChatGLM::decode(int id) {
     return word;
 }
 
-void ChatGLM::init(float cuda_memory) {
+void ChatGLM::init(float gpu_memory) {
     // 0. create runtime
     ScheduleConfig config;
     BackendConfig cpuBackendConfig;
@@ -92,11 +92,12 @@ void ChatGLM::init(float cuda_memory) {
     config.numThread     = 4;
     config.backendConfig = &cpuBackendConfig;
     mCPURtmgr.reset(Executor::RuntimeManager::createRuntimeManager(config));
-    BackendConfig cudaBackendConfig;
+    BackendConfig gpuBackendConfig;
     config.type          = MNN_FORWARD_CUDA;
-    cudaBackendConfig.precision = BackendConfig::Precision_Low;
-    config.backendConfig = &cudaBackendConfig;
-    mCUDARtmgr.reset(Executor::RuntimeManager::createRuntimeManager(config));
+    config.backupType    = MNN_FORWARD_OPENCL;
+    gpuBackendConfig.precision = BackendConfig::Precision_Low;
+    config.backendConfig = &gpuBackendConfig;
+    mGPURtmgr.reset(Executor::RuntimeManager::createRuntimeManager(config));
     // 1. load vocab
     printf("load ../resource/tokenizer/slim_vocab.txt ... ");
     std::ifstream dictFile("../resource/tokenizer/slim_vocab.txt");
@@ -108,11 +109,11 @@ void ChatGLM::init(float cuda_memory) {
     }
     printf("Done!\n");
     // 2. load models
-    int cuda_run_layers = (cuda_memory - 2) * 1024.0 / 385.0;
+    int gpu_run_layers = (gpu_memory - 2) * 1024.0 / 385.0;
     char buffer[50];
     for (int i = 0; i < LAYER_SIZE; i++) {
         sprintf(buffer, "../resource/models/glm_block_%d.mnn", i);
-        loadModel(buffer, i <= cuda_run_layers);
+        loadModel(buffer, i <= gpu_run_layers);
     }
     // 3. load lm model
     loadModel("../resource/models/lm.mnn", false);
@@ -123,7 +124,7 @@ void ChatGLM::loadModel(const char* fileName, bool cuda) {
     Module::Config config;
     config.shapeMutable = true;
     config.rearrange = true;
-    auto rtmgr = cuda ? mCUDARtmgr : mCPURtmgr;
+    auto rtmgr = cuda ? mGPURtmgr : mCPURtmgr;
     std::shared_ptr<Module> net(Module::load({}, {}, fileName, rtmgr, &config));
     mModules.emplace_back(std::move(net));
     printf("Done!\n");

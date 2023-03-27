@@ -34,14 +34,14 @@ static constexpr int LAYER_SIZE = 28;
 
 class ChatGLM {
 public:
-    // your cuda memory size (G)
-    ChatGLM(float cuda_memory = 0) {
-        init(cuda_memory);
+    // set gpu memory size (G)
+    ChatGLM(float gpu_memory = 0) {
+        init(gpu_memory);
     }
     void chat();
     std::string response(const std::string& input_str, std::ostream* os = &std::cout);
 private:
-    void init(float cuda_memory);
+    void init(float gpu_memory);
     void loadModel(const char* fileName, bool cuda = false);
     std::vector<int> tokenizer_encode(std::string input_str);
     std::string decode(int id);
@@ -55,7 +55,7 @@ private:
     std::unordered_map<std::string, int> mWordEncode;
     // MNN Modules
     std::shared_ptr<Executor::RuntimeManager> mCPURtmgr;
-    std::shared_ptr<Executor::RuntimeManager> mCUDARtmgr;
+    std::shared_ptr<Executor::RuntimeManager> mGPURtmgr;
     std::vector<std::shared_ptr<Module>> mModules;
     std::vector<VARP> mHistoryVars;
     // mask info

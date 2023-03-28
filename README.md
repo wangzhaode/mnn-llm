@@ -19,12 +19,12 @@
 - GPU: GeForce RTX 2080 Ti
 
 ### FP Model
-仅测试浮点模型(CPU: fp32/ GPU: fp16)，输入`你好`，在回复完内容相同的情况下，回复时间(秒)对比如下：
+仅测试浮点模型(CPU: fp32/ GPU: fp16)，输入`你好`，在回复完内容相同的情况下，每秒生成的词数(word/s)对比如下：
 
 |   impl  |   GPU + CPU   | CPU only  |
 |---------|---------------|-----------|
-|   MNN   |      7.37     |   28.64   |
-| Pytorch | out of memory |   33.59   |
+|   MNN   |      3.424    |   0.874   |
+| Pytorch | out of memory |   0.744   |
 
 ### Quantize Model
 `TODO`

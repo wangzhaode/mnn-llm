@@ -3,6 +3,8 @@ project(chatglm-mnn)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
+option(MINI_MEM_MODE "Using mini memory mode for small memory device." OFF)
+
 # include dir
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include/)
 
@@ -15,6 +17,10 @@ FILE(GLOB SRCS ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 # compile dynamic lib
 add_library(chat SHARED ${SRCS})
 target_link_libraries(chat MNN MNN_Express)
+
+if (MINI_MEM_MODE)
+    target_compile_options(chat PRIVATE -DMINI_MEM_MODE)
+endif()
 # target_link_libraries(chat MNN MNN_Express MNN_CL) # if using OPENCL
 
 # demo targets

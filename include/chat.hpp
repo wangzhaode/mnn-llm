@@ -42,7 +42,7 @@ public:
     std::string response(const std::string& input_str, std::ostream* os = &std::cout);
 private:
     void init(float gpu_memory);
-    void loadModel(const char* fileName, bool cuda = false);
+    void loadModel(const char* fileName, bool cuda, int index);
     std::vector<int> tokenizer_encode(std::string input_str);
     std::string decode(int id);
     VARP gen_embedding(const std::vector<int>& input_ids);

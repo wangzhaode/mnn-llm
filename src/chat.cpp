@@ -9,6 +9,9 @@
 
 #include <fstream>
 #include <iostream>
+#ifdef MINI_MEM_MODE
+#include <thread>
+#endif
 
 #include "chat.hpp"
 #include "cppjieba/Jieba.hpp"
@@ -25,6 +28,7 @@ void ChatGLM::chat() {
 }
 
 std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
+    // AUTOTIME;
     // init status
     mSeqLen = 0, mContextLen = -1, mMaskIdx = -1;
     if (mHistoryVars.empty()) mHistoryVars.resize(LAYER_SIZE);
@@ -38,6 +42,7 @@ std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
     std::string output_str = decode(token);
     *os << output_str << std::flush;
     while (token != EOS) {
+        AUTOTIME;
         token = forward({token});
         auto word = decode(token);
         *os << word << std::flush;
@@ -109,25 +114,35 @@ void ChatGLM::init(float gpu_memory) {
     }
     printf("Done!\n");
     // 2. load models
+    mModules.resize(LAYER_SIZE + 1);
+#ifdef MINI_MEM_MODE
+    loadModel("../resource/models/glm_block_0.mnn", false, 0);
+#else
     int gpu_run_layers = (gpu_memory - 2) * 1024.0 / 385.0;
     char buffer[50];
     for (int i = 0; i < LAYER_SIZE; i++) {
         sprintf(buffer, "../resource/models/glm_block_%d.mnn", i);
-        loadModel(buffer, i <= gpu_run_layers);
+        loadModel(buffer, i <= gpu_run_layers, i);
     }
     // 3. load lm model
-    loadModel("../resource/models/lm.mnn", false);
+    loadModel("../resource/models/lm.mnn", false, LAYER_SIZE);
+#endif
 }
 
-void ChatGLM::loadModel(const char* fileName, bool cuda) {
-    printf("load %s model ... ", fileName);
+void ChatGLM::loadModel(const char* fileName, bool cuda, int i) {
+    // AUTOTIME;
     Module::Config config;
     config.shapeMutable = true;
+#ifndef MINI_MEM_MODE
     config.rearrange = true;
+    printf("load %s model ... ", fileName);
+#endif
     auto rtmgr = cuda ? mGPURtmgr : mCPURtmgr;
     std::shared_ptr<Module> net(Module::load({}, {}, fileName, rtmgr, &config));
-    mModules.emplace_back(std::move(net));
+    mModules[i] = std::move(net);
+#ifndef MINI_MEM_MODE
     printf("Done!\n");
+#endif
 }
 
 VARP ChatGLM::gen_embedding(const std::vector<int>& input_ids) {
@@ -200,17 +215,35 @@ int ChatGLM::forward(const std::vector<int>& input_ids) {
     auto hidden_states = gen_embedding(input_ids);
     auto attention_mask = gen_attention_mask(input_ids);
     auto position_ids = gen_position_ids(input_ids);
+#ifdef MINI_MEM_MODE
+    char buffer[50];
+    int i = 0;
+    std::thread load_lm(&ChatGLM::loadModel, this, "../resource/models/lm.mnn", false, LAYER_SIZE);
+    for (; i < LAYER_SIZE; i++) {
+        AUTOTIME;
+        int loadIdx = i < LAYER_SIZE - 1 ? i + 1 : 0;
+        sprintf(buffer, "../resource/8bit_models/glm_block_%d.mnn", loadIdx);
+        std::thread load_next_model(&ChatGLM::loadModel, this, buffer, false, loadIdx);
+        auto outputs = mModules[i]->onForward({hidden_states, attention_mask, position_ids, mHistoryVars[i]});
+        hidden_states = outputs[0];
+        mHistoryVars[i] = outputs[1];
+        load_next_model.join();
+        mModules[i].reset();
+    }
+    load_lm.join();
+#else
     for (int i = 0; i < LAYER_SIZE; i++) {
         AUTOTIME;
         auto outputs = mModules[i]->onForward({hidden_states, attention_mask, position_ids, mHistoryVars[i]});
         hidden_states = outputs[0];
         mHistoryVars[i] = outputs[1];
     }
+#endif
     return var_to_token(hidden_states);
 }
 
 int ChatGLM::var_to_token(VARP var) {
-    AUTOTIME;
+    // AUTOTIME;
     int num = var->getInfo()->dim[0];
     if (num > 1) {
         var = _Gather(var, _Scalar<int>(num - 1));
@@ -218,6 +251,9 @@ int ChatGLM::var_to_token(VARP var) {
     var = _Reshape(var, {HIDDEN_SIZE, 1});
     auto outputs = mModules.back()->onForward({var});
     int id = outputs[0]->readMap<int>()[0];
+#ifdef MINI_MEM_MODE
+    mModules.back().reset();
+#endif
     // printf("### %d\n", id);
     return id;
 }

@@ -30,7 +30,7 @@
 `TODO`
 
 ## Usage
-### 1. Compile MNN library
+### 1. Compile MNN library and sentencepiece
 从源码编译MNN
 ```bash
 git clone https://github.com/alibaba/MNN.git
@@ -41,6 +41,17 @@ make -j8
 cp -r include /path/to/ChatGLM-MNN/
 cp libMNN.so /path/to/ChatGLM-MNN/libs
 ```
+编译安装sentencepiece
+```bash
+git clone https://github.com/google/sentencepiece.git 
+cd sentencepiece
+mkdir build
+cd build
+cmake ..
+make -j8
+make install
+ldconfig -v
+```
 ### 2. Download Models
 从 `github release` 下载模型文件到 `/path/to/ChatGLM-MNN/resource/models`， 如下：
 ```
@@ -49,6 +60,7 @@ cd resource/models
 ./download_models_int8.sh # 下载int8权值模型，推荐使用
 ./download_models_int4.sh # 下载int4权值模型，有精度损失
 ```
+
 
 ### 3. Build and Run
 ```bash

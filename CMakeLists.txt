@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(chatglm-mnn)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 # include dir
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include/)
@@ -14,7 +14,7 @@ FILE(GLOB SRCS ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
 # compile dynamic lib
 add_library(chat SHARED ${SRCS})
-target_link_libraries(chat MNN MNN_Express)
+target_link_libraries(chat MNN MNN_Express sentencepiece)
 # target_link_libraries(chat MNN MNN_Express MNN_CL) # if using OPENCL
 
 # demo targets

@@ -20,6 +20,8 @@
 #include <MNN/expr/MathOp.hpp>
 #include <MNN/expr/NeuralNetWorkOp.hpp>
 
+#include <sentencepiece_processor.h>
+
 using namespace MNN;
 using namespace Express;
 
@@ -43,7 +45,7 @@ public:
 private:
     void init(float gpu_memory);
     void loadModel(const char* fileName, bool cuda = false);
-    std::vector<int> tokenizer_encode(std::string input_str);
+    std::vector<int> tokenizer_encode(const std::string &input_str);
     std::string decode(int id);
     VARP gen_embedding(const std::vector<int>& input_ids);
     VARP gen_attention_mask(const std::vector<int>& input_ids);
@@ -51,8 +53,7 @@ private:
     int var_to_token(VARP var);
     int forward(const std::vector<int>& input_ids);
 private:
-    std::vector<std::string> mWordDecode;
-    std::unordered_map<std::string, int> mWordEncode;
+    sentencepiece::SentencePieceProcessor sp_processor;
     // MNN Modules
     std::shared_ptr<Executor::RuntimeManager> mCPURtmgr;
     std::shared_ptr<Executor::RuntimeManager> mGPURtmgr;

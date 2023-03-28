@@ -12,6 +12,7 @@
 
 #include "chat.hpp"
 #include "cppjieba/Jieba.hpp"
+#include <sentencepiece_processor.h>
 
 void ChatGLM::chat() {
     while (true) {
@@ -24,7 +25,7 @@ void ChatGLM::chat() {
     }
 }
 
-std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
+std::string ChatGLM::response(const std::string &input_str, std::ostream *os) {
     // init status
     mSeqLen = 0, mContextLen = -1, mMaskIdx = -1;
     if (mHistoryVars.empty()) mHistoryVars.resize(LAYER_SIZE);
@@ -46,40 +47,42 @@ std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
     return output_str;
 }
 
-std::vector<int> ChatGLM::tokenizer_encode(std::string input_str) {
-    std::vector<int> ids;
-    std::vector<std::string> words;
-    cppjieba::Jieba jieba(
-        "../resource/tokenizer/jieba.dict.utf8",
-        "../resource/tokenizer/hmm_model.utf8",
-        "../resource/tokenizer/user.dict.utf8",
-        "../resource/tokenizer/idf.utf8",
-        "../resource/tokenizer/stop_words.utf8"
-    );
-    jieba.Cut(input_str, words, true);
-    for (auto word : words) {
-        const auto& iter = mWordEncode.find(word);
-        if (iter != mWordEncode.end()) {
-            ids.push_back(iter->second);
+std::vector<int> ChatGLM::tokenizer_encode(const std::string &input_str) {
+    std::string processed_text = input_str;
+    size_t position = processed_text.find("\n");
+    while (position != std::string::npos) {
+        processed_text.replace(position, 1, "<n>");
+        position = processed_text.find("\n", position + 3);
+    }
+    while ((position = processed_text.find('\t')) != std::string::npos) {
+        processed_text.replace(position, 1, "<|tab|>");
+    }
+    for (int i = 80; i > 1; i--) {
+        std::string spaces(i, ' ');
+        std::string blank_token = "<|blank_" + std::to_string(i) + "|>";
+        position = processed_text.find(spaces);
+        while (position != std::string::npos) {
+            processed_text.replace(position, i, blank_token);
+            position = processed_text.find(spaces, position + blank_token.length());
         }
     }
+    std::vector<int> ids;
+    sp_processor.Encode(processed_text, &ids);
     ids.push_back(130001);
     ids.push_back(130004);
     return ids;
 }
 
 std::string ChatGLM::decode(int id) {
-    auto word = mWordDecode[id];
+    std::vector<int> ids = {id};
+    std::string word;
+    sp_processor.Decode(ids, &word);
     if (word == "<n>") return "\n";
     if (word == "<|tab|>") return "\t";
     int pos = word.find("<|blank_");
     if (pos != -1) {
         int space_num = atoi(word.substr(8, word.size() - 10).c_str());
         return std::string(space_num, ' ');
-    }
-    pos = word.find("▁");
-    if (pos != -1) {
-        word.replace(pos, pos + 3, " ");
     }
     return word;
 }
@@ -88,26 +91,24 @@ void ChatGLM::init(float gpu_memory) {
     // 0. create runtime
     ScheduleConfig config;
     BackendConfig cpuBackendConfig;
-    config.type          = MNN_FORWARD_CPU;
-    config.numThread     = 4;
+    config.type = MNN_FORWARD_CPU;
+    config.numThread = 4;
     config.backendConfig = &cpuBackendConfig;
     mCPURtmgr.reset(Executor::RuntimeManager::createRuntimeManager(config));
     BackendConfig gpuBackendConfig;
-    config.type          = MNN_FORWARD_CUDA;
-    config.backupType    = MNN_FORWARD_OPENCL;
+    config.type = MNN_FORWARD_CUDA;
+    config.backupType = MNN_FORWARD_OPENCL;
     gpuBackendConfig.precision = BackendConfig::Precision_Low;
     config.backendConfig = &gpuBackendConfig;
     mGPURtmgr.reset(Executor::RuntimeManager::createRuntimeManager(config));
-    // 1. load vocab
-    printf("load ../resource/tokenizer/slim_vocab.txt ... ");
-    std::ifstream dictFile("../resource/tokenizer/slim_vocab.txt");
+    // 1. load tokenizer
+    printf("load ../resource/tokenizer/ice_text_new.model ... \n");
     int index = 0;
-    std::string word;
-    while (dictFile >> word) {
-        mWordDecode.push_back(word);
-        mWordEncode.insert(std::make_pair<std::string, int>(std::move(word), index++));
+    const auto status = sp_processor.Load("../resource/tokenizer/ice_text_new.model");
+    if (!status.ok()) {
+        std::cerr << status.ToString() << std::endl;
+        // error
     }
-    printf("Done!\n");
     // 2. load models
     int gpu_run_layers = (gpu_memory - 2) * 1024.0 / 385.0;
     char buffer[50];
@@ -119,7 +120,7 @@ void ChatGLM::init(float gpu_memory) {
     loadModel("../resource/models/lm.mnn", false);
 }
 
-void ChatGLM::loadModel(const char* fileName, bool cuda) {
+void ChatGLM::loadModel(const char *fileName, bool cuda) {
     printf("load %s model ... ", fileName);
     Module::Config config;
     config.shapeMutable = true;
@@ -130,11 +131,11 @@ void ChatGLM::loadModel(const char* fileName, bool cuda) {
     printf("Done!\n");
 }
 
-VARP ChatGLM::gen_embedding(const std::vector<int>& input_ids) {
+VARP ChatGLM::gen_embedding(const std::vector<int> &input_ids) {
     size_t seq_len = input_ids.size();
     auto embedding_var = _Input({static_cast<int>(seq_len), 1, HIDDEN_SIZE}, NCHW);
     constexpr size_t size = HIDDEN_SIZE * sizeof(float);
-    FILE* file = fopen("../resource/models/slim_word_embeddings.bin", "rb");
+    FILE *file = fopen("../resource/models/slim_word_embeddings.bin", "rb");
     for (size_t i = 0; i < seq_len; i++) {
         fseek(file, input_ids[i] * size, SEEK_SET);
         fread(embedding_var->writeMap<char>() + i * size, 1, size, file);
@@ -143,7 +144,7 @@ VARP ChatGLM::gen_embedding(const std::vector<int>& input_ids) {
     return embedding_var;
 }
 
-VARP ChatGLM::gen_attention_mask(const std::vector<int>& input_ids) {
+VARP ChatGLM::gen_attention_mask(const std::vector<int> &input_ids) {
     int seq_len = input_ids.size();
     // init mask
     if (seq_len > 1 && mMaskIdx == -1 && mContextLen == -1) {
@@ -177,7 +178,7 @@ VARP ChatGLM::gen_attention_mask(const std::vector<int>& input_ids) {
     return attention_mask_var;
 }
 
-VARP ChatGLM::gen_position_ids(const std::vector<int>& input_ids) {
+VARP ChatGLM::gen_position_ids(const std::vector<int> &input_ids) {
     int seq_len = input_ids.size();
     // position_ids
     auto position_ids_var = _Input({1, 2, seq_len}, NCHW, halide_type_of<int>());
@@ -195,7 +196,7 @@ VARP ChatGLM::gen_position_ids(const std::vector<int>& input_ids) {
     return position_ids_var;
 }
 
-int ChatGLM::forward(const std::vector<int>& input_ids) {
+int ChatGLM::forward(const std::vector<int> &input_ids) {
     mSeqLen += input_ids.size();
     auto hidden_states = gen_embedding(input_ids);
     auto attention_mask = gen_attention_mask(input_ids);

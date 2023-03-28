@@ -15,6 +15,7 @@
 
 #include "chat.hpp"
 #include "cppjieba/Jieba.hpp"
+#include <MNN/expr/ExecutorScope.hpp>
 
 void ChatGLM::chat() {
     while (true) {
@@ -28,7 +29,7 @@ void ChatGLM::chat() {
 }
 
 std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
-    // AUTOTIME;
+    AUTOTIME;
     // init status
     mSeqLen = 0, mContextLen = -1, mMaskIdx = -1;
     if (mHistoryVars.empty()) mHistoryVars.resize(LAYER_SIZE);
@@ -95,11 +96,13 @@ void ChatGLM::init(float gpu_memory) {
     BackendConfig cpuBackendConfig;
     config.type          = MNN_FORWARD_CPU;
     config.numThread     = 4;
+    cpuBackendConfig.precision = BackendConfig::Precision_Low;
     config.backendConfig = &cpuBackendConfig;
     mCPURtmgr.reset(Executor::RuntimeManager::createRuntimeManager(config));
     BackendConfig gpuBackendConfig;
     config.type          = MNN_FORWARD_CUDA;
     config.backupType    = MNN_FORWARD_OPENCL;
+    config.numThread     = 1;
     gpuBackendConfig.precision = BackendConfig::Precision_Low;
     config.backendConfig = &gpuBackendConfig;
     mGPURtmgr.reset(Executor::RuntimeManager::createRuntimeManager(config));
@@ -115,11 +118,11 @@ void ChatGLM::init(float gpu_memory) {
     printf("Done!\n");
     // 2. load models
     mModules.resize(LAYER_SIZE + 1);
+    int gpu_run_layers = (gpu_memory - 2) * 1024.0 / 385.0;
+    char buffer[50];
 #ifdef MINI_MEM_MODE
     loadModel("../resource/models/glm_block_0.mnn", false, 0);
 #else
-    int gpu_run_layers = (gpu_memory - 2) * 1024.0 / 385.0;
-    char buffer[50];
     for (int i = 0; i < LAYER_SIZE; i++) {
         sprintf(buffer, "../resource/models/glm_block_%d.mnn", i);
         loadModel(buffer, i <= gpu_run_layers, i);
@@ -131,12 +134,12 @@ void ChatGLM::init(float gpu_memory) {
 
 void ChatGLM::loadModel(const char* fileName, bool cuda, int i) {
     // AUTOTIME;
-    Module::Config config;
-    config.shapeMutable = true;
 #ifndef MINI_MEM_MODE
-    config.rearrange = true;
     printf("load %s model ... ", fileName);
 #endif
+    Module::Config config;
+    config.shapeMutable = true;
+    config.rearrange = true;
     auto rtmgr = cuda ? mGPURtmgr : mCPURtmgr;
     std::shared_ptr<Module> net(Module::load({}, {}, fileName, rtmgr, &config));
     mModules[i] = std::move(net);
@@ -211,29 +214,29 @@ VARP ChatGLM::gen_position_ids(const std::vector<int>& input_ids) {
 }
 
 int ChatGLM::forward(const std::vector<int>& input_ids) {
+    AUTOTIME;
     mSeqLen += input_ids.size();
     auto hidden_states = gen_embedding(input_ids);
     auto attention_mask = gen_attention_mask(input_ids);
     auto position_ids = gen_position_ids(input_ids);
 #ifdef MINI_MEM_MODE
     char buffer[50];
-    int i = 0;
-    std::thread load_lm(&ChatGLM::loadModel, this, "../resource/models/lm.mnn", false, LAYER_SIZE);
-    for (; i < LAYER_SIZE; i++) {
-        AUTOTIME;
+    for (int i = 0; i < LAYER_SIZE; i++) {
         int loadIdx = i < LAYER_SIZE - 1 ? i + 1 : 0;
-        sprintf(buffer, "../resource/8bit_models/glm_block_%d.mnn", loadIdx);
+        sprintf(buffer, "../resource/models/glm_block_%d.mnn", loadIdx);
         std::thread load_next_model(&ChatGLM::loadModel, this, buffer, false, loadIdx);
-        auto outputs = mModules[i]->onForward({hidden_states, attention_mask, position_ids, mHistoryVars[i]});
-        hidden_states = outputs[0];
-        mHistoryVars[i] = outputs[1];
+        {
+            // AUTOTIME;
+            auto outputs = mModules[i]->onForward({hidden_states, attention_mask, position_ids, mHistoryVars[i]});
+            hidden_states = outputs[0];
+            mHistoryVars[i] = outputs[1];
+        }
         load_next_model.join();
         mModules[i].reset();
     }
-    load_lm.join();
 #else
     for (int i = 0; i < LAYER_SIZE; i++) {
-        AUTOTIME;
+        // AUTOTIME;
         auto outputs = mModules[i]->onForward({hidden_states, attention_mask, position_ids, mHistoryVars[i]});
         hidden_states = outputs[0];
         mHistoryVars[i] = outputs[1];
@@ -249,10 +252,48 @@ int ChatGLM::var_to_token(VARP var) {
         var = _Gather(var, _Scalar<int>(num - 1));
     }
     var = _Reshape(var, {HIDDEN_SIZE, 1});
+#ifdef MINI_MEM_MODE
+    // naive impl to save memory : gemm + argmax
+    auto ptr = var->readMap<float>();
+    constexpr int TILE = 512;
+    FILE* file = fopen("../resource/models/slim_lm.bin", "rb");
+    std::vector<float> buffer(TILE * HIDDEN_SIZE);
+    int id = -1;
+    float max_score = 0.f;
+    for (size_t i = 0; i < VOCAB_SIZE / TILE; i++) {
+        fseek(file, i * TILE * HIDDEN_SIZE * sizeof(float), SEEK_SET);
+        fread(reinterpret_cast<char*>(buffer.data()), 1, TILE * HIDDEN_SIZE * sizeof(float), file);
+        for (int j = 0; j < TILE; j++) {
+            float sum = 0.f;
+            for (int k = 0; k < HIDDEN_SIZE; k++) {
+                sum += (buffer[j * HIDDEN_SIZE + k]) * ptr[k];
+            }
+            if (sum > max_score) {
+                max_score = sum;
+                id = i * TILE + j;
+            }
+        }
+    }
+    {
+        int i = VOCAB_SIZE / TILE;
+        constexpr int tile = VOCAB_SIZE % TILE;
+        fseek(file, i * TILE * HIDDEN_SIZE * sizeof(float), SEEK_SET);
+        fread(reinterpret_cast<char*>(buffer.data()), 1, tile * HIDDEN_SIZE * sizeof(float), file);
+        for (int j = 0; j < tile; j++) {
+            float sum = 0.f;
+            for (int k = 0; k < HIDDEN_SIZE; k++) {
+                sum += (buffer[j * HIDDEN_SIZE + k]) * ptr[k];
+            }
+            if (sum > max_score) {
+                max_score = sum;
+                id = i * TILE + j;
+            }
+        }
+    }
+    fclose(file);
+#else
     auto outputs = mModules.back()->onForward({var});
     int id = outputs[0]->readMap<int>()[0];
-#ifdef MINI_MEM_MODE
-    mModules.back().reset();
 #endif
     // printf("### %d\n", id);
     return id;

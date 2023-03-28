@@ -7,27 +7,31 @@
 2. `Embedding`操作调用次数较少，使用`fseek`, `fread`加载的方式降低内存;
 3. `lm_head`操作为`[num, 4096] @ [4096, 130528]`，转换为`[130528, 4096] @ [4096, 1]`;
 4. 原模型对显存要求较高；将模型按层拆分成28个模型，可以根据用户显存大小动态将计算任务分配给GPU和CPU，充分利用GPU与CPU内存与算力; 即使小显存显卡也可以加速生成。
+5. 针对端侧设备可以逐次加载计算，`2G`内存的Android设备也可以执行推理（速度较慢）。
 
 目前支持命令行对话与Web UI对话两种形式的Demo
 ![web_demo](./resource/web/web_demo.png)
 
 ## Speed
 
-测试平台：
+移动端：将分段模型逐个加载推理可以在内存大小大于`2G`的设备执行推理，实验性测试性能较差；目前性能约为：63 `s/word`。
+
+PC测试平台：
 - Memory: 32G (+32G Swap)
 - CPU: AMD Ryzen 9 3900X 12-Core Processor
 - GPU: GeForce RTX 2080 Ti
 
 ### FP Model
-仅测试浮点模型(CPU: fp32/ GPU: fp16)，输入`你好`，在回复完内容相同的情况下，每秒生成的词数(word/s)对比如下：
+仅测试浮点模型(CPU: fp32/ GPU: fp16)，输入`你好`，在回复完内容相同的情况下，每秒生成的词数(`s/word`)对比如下：
 
 |   impl  |   GPU + CPU   | CPU only  |
 |---------|---------------|-----------|
-|   MNN   |      3.424    |   1.140   |
-| Pytorch | out of memory |   0.744   |
+|   MNN   |      0.292    |   0.877   |
+| Pytorch | out of memory |   1.344   |
 
 ### Quantize Model
 `TODO`
+
 
 ## Usage
 ### 1. Compile MNN library
@@ -51,6 +55,7 @@ cd resource/models
 ```
 
 ### 3. Build and Run
+Mac/Linux/Windows:
 ```bash
 mkdir build
 cd build
@@ -59,6 +64,15 @@ make -j8
 ./cli_demo # cli demo
 ./web_demo # web ui demo
 ```
+
+Android:
+```
+mkdir build
+cd build
+../android_build.sh
+make -j8
+```
+
 #### 4. Using CUDA
 默认用法为使用`CPU`, 使用`CUDA`需要在编译MNN时添加宏`-DMNN_CUDA=ON`，在创建`ChatGLM`时指定显存大小，如下：
 ```cpp

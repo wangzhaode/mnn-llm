@@ -45,7 +45,9 @@ cp libMNN.so /path/to/ChatGLM-MNN/libs
 从 `github release` 下载模型文件到 `/path/to/ChatGLM-MNN/resource/models`， 如下：
 ```
 cd resource/models
-./download_models.sh
+./download_models_fp16.sh # 下载fp16权值模型
+./download_models_int8.sh # 下载int8权值模型，推荐使用
+./download_models_int4.sh # 下载int4权值模型，有精度损失
 ```
 
 ### 3. Build and Run

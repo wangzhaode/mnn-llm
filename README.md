@@ -38,8 +38,9 @@ cd MNN
 mkdir build
 cmake .. # if using CUDA, add -DMNN_CUDA=ON
 make -j8
-cp -r include /path/to/ChatGLM-MNN/
+cp -r ../include /path/to/ChatGLM-MNN/
 cp libMNN.so /path/to/ChatGLM-MNN/libs
+cp express/libMNN_Express.so /path/to/ChatGLM-MNN/libs
 ```
 ### 2. Download Models
 从 `github release` 下载模型文件到 `/path/to/ChatGLM-MNN/resource/models`， 如下：

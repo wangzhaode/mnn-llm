@@ -23,7 +23,7 @@
 
 |   impl  |   GPU + CPU   | CPU only  |
 |---------|---------------|-----------|
-|   MNN   |      3.424    |   0.874   |
+|   MNN   |      3.424    |   1.140   |
 | Pytorch | out of memory |   0.744   |
 
 ### Quantize Model

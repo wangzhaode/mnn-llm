@@ -39,7 +39,7 @@ PC测试平台：
 ```bash
 git clone https://github.com/alibaba/MNN.git
 cd MNN
-mkdir build
+mkdir build && cd build
 cmake .. # if using CUDA, add -DMNN_CUDA=ON
 make -j8
 cp -r ../include /path/to/ChatGLM-MNN/

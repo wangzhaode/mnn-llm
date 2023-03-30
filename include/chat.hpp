@@ -38,6 +38,11 @@ public:
     ChatGLM(float gpu_memory = 0) {
         init(gpu_memory);
     }
+    ChatGLM(float gpu_memory, const std::string& model_dir, const std::string& tokenizer_dir) {
+        mModelDir = model_dir;
+        mTokenizerDir = tokenizer_dir;
+        init(gpu_memory);
+    };
     void chat();
     std::string response(const std::string& input_str, std::ostream* os = &std::cout);
 private:
@@ -60,6 +65,10 @@ private:
     std::vector<VARP> mHistoryVars;
     // mask info
     int mSeqLen = 0, mContextLen = -1, mMaskIdx = -1;
+
+    // model dir
+    std::string mModelDir = "../resource/models";
+    std::string mTokenizerDir = "../resource/tokenize";
 };
 
 #endif // CHAT_hpp

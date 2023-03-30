@@ -55,12 +55,17 @@ std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
 std::vector<int> ChatGLM::tokenizer_encode(std::string input_str) {
     std::vector<int> ids;
     std::vector<std::string> words;
+    std::string dict_path = mTokenizerDir + "/jieba.dict.utf8";
+    std::string model_path = mTokenizerDir + "/hmm_model.utf8";
+    std::string user_dict_path = mTokenizerDir + "/user.dict.utf8";
+    std::string idf_path = mTokenizerDir + "/idf.utf8";
+    std::string stopWord_path = mTokenizerDir + "/stop_words.utf8";
     cppjieba::Jieba jieba(
-        "../resource/tokenizer/jieba.dict.utf8",
-        "../resource/tokenizer/hmm_model.utf8",
-        "../resource/tokenizer/user.dict.utf8",
-        "../resource/tokenizer/idf.utf8",
-        "../resource/tokenizer/stop_words.utf8"
+        dict_path,
+        model_path,
+        user_dict_path,
+        idf_path,
+        stopWord_path
     );
     jieba.Cut(input_str, words, true);
     for (auto word : words) {
@@ -107,8 +112,9 @@ void ChatGLM::init(float gpu_memory) {
     config.backendConfig = &gpuBackendConfig;
     mGPURtmgr.reset(Executor::RuntimeManager::createRuntimeManager(config));
     // 1. load vocab
-    printf("load ../resource/tokenizer/slim_vocab.txt ... ");
-    std::ifstream dictFile("../resource/tokenizer/slim_vocab.txt");
+    std::string dictFilePath = mTokenizerDir + "/slim_vocab.txt";
+    printf("load %s ... ", dictFilePath.c_str());
+    std::ifstream dictFile(dictFilePath);
     int index = 0;
     std::string word;
     while (dictFile >> word) {
@@ -121,14 +127,16 @@ void ChatGLM::init(float gpu_memory) {
     int gpu_run_layers = (gpu_memory - 2) * 1024.0 / 385.0;
     char buffer[50];
 #ifdef MINI_MEM_MODE
-    loadModel("../resource/models/glm_block_0.mnn", false, 0);
+    std::string model0 = mModelDir + "/glm_block_0.mnn";
+    loadModel(model0.c_str(), false, 0);
 #else
     for (int i = 0; i < LAYER_SIZE; i++) {
-        sprintf(buffer, "../resource/models/glm_block_%d.mnn", i);
-        loadModel(buffer, i <= gpu_run_layers, i);
+        std::string model_path = mModelDir + "/glm_block_" + std::to_string(i) + ".mnn";
+        loadModel(model_path.c_str(), i <= gpu_run_layers, i);
     }
     // 3. load lm model
-    loadModel("../resource/models/lm.mnn", false, LAYER_SIZE);
+    std::string lm_model_path = mModelDir + "/lm.mnn";
+    loadModel(lm_model_path.c_str(), false, LAYER_SIZE);
 #endif
 }
 
@@ -152,7 +160,8 @@ VARP ChatGLM::gen_embedding(const std::vector<int>& input_ids) {
     size_t seq_len = input_ids.size();
     auto embedding_var = _Input({static_cast<int>(seq_len), 1, HIDDEN_SIZE}, NCHW);
     constexpr size_t size = HIDDEN_SIZE * sizeof(float);
-    FILE* file = fopen("../resource/models/slim_word_embeddings.bin", "rb");
+    std::string file_path = mModelDir + "/slim_word_embeddings.bin";
+    FILE* file = fopen(file_path.c_str(), "rb");
     for (size_t i = 0; i < seq_len; i++) {
         fseek(file, input_ids[i] * size, SEEK_SET);
         fread(embedding_var->writeMap<char>() + i * size, 1, size, file);
@@ -223,8 +232,8 @@ int ChatGLM::forward(const std::vector<int>& input_ids) {
     char buffer[50];
     for (int i = 0; i < LAYER_SIZE; i++) {
         int loadIdx = i < LAYER_SIZE - 1 ? i + 1 : 0;
-        sprintf(buffer, "../resource/models/glm_block_%d.mnn", loadIdx);
-        std::thread load_next_model(&ChatGLM::loadModel, this, buffer, false, loadIdx);
+        std::string model_path = mModelDir + "/glm_block_" + std::to_string(loadIdx) + ".mnn";
+        std::thread load_next_model(&ChatGLM::loadModel, this, model_path.c_str(), false, loadIdx);
         {
             // AUTOTIME;
             auto outputs = mModules[i]->onForward({hidden_states, attention_mask, position_ids, mHistoryVars[i]});
@@ -256,7 +265,8 @@ int ChatGLM::var_to_token(VARP var) {
     // naive impl to save memory : gemm + argmax
     auto ptr = var->readMap<float>();
     constexpr int TILE = 512;
-    FILE* file = fopen("../resource/models/slim_lm.bin", "rb");
+    std::string file_path = mModelDir + "/slim_lm.bin";
+    FILE* file = fopen(file_path.c_str(), "rb");
     std::vector<float> buffer(TILE * HIDDEN_SIZE);
     int id = -1;
     float max_score = 0.f;

@@ -1,0 +1,8 @@
+# ignore dirs
+build/
+MNN/
+.vscode/
+libs/
+
+# ignore files
+.DS_Store

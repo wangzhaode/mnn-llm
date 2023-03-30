@@ -9,36 +9,33 @@ help(){
 }
 
 fp16_model(){
-	mkdir -p fp16
 	for i in `seq 0 27`
    do
-      wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/glm_block_$i.mnn
+      wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/glm_block_$i.mnn -P fp16
    done
 
-   wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/lm.mnn
-   wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/slim_word_embeddings.bin
+   wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/lm.mnn -P fp16
+   wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/slim_word_embeddings.bin -P fp16
 }
 
 int8_model(){
-   mkdir -p int8
    for i in `seq 0 27`
    do
-      wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.2/glm_block_$i.mnn
+      wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.2/glm_block_$i.mnn -P int8
    done
 
-   wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/lm.mnn
-   wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/slim_word_embeddings.bin
+   wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/lm.mnn -P int8
+   wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/slim_word_embeddings.bin -P int8
 }
 
 int4_model(){
-   mkdir -p int4
    for i in `seq 0 27`
    do
-      wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.3/glm_block_$i.mnn
+      wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.3/glm_block_$i.mnn -P in4
    done
 
-   wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/lm.mnn
-   wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/slim_word_embeddings.bin
+   wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/lm.mnn -P in4
+   wget -c https://ghproxy.com/https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/slim_word_embeddings.bin -P in4
 }
 
 if [ $# -eq 0 ]

@@ -4,7 +4,7 @@ help(){
 	echo "Usage: ./download_model.sh [OPTIONS]" 
 
 	echo "Options:"
-  	echo "	-h,--help                   Print this help message and exit"
+  	echo "	-h,--help               Print this help message and exit"
   	echo "fp16,int8,int4	            Chose different models"
 }
 

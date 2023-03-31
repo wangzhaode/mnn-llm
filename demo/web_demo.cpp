@@ -7,11 +7,23 @@
 
 #include "chat.hpp"
 #include "httplib.h"
+#include "CLI11.hpp"
 #include <iostream>
 #include <thread>
 
 int main(int argc, const char* argv[]) {
-    ChatGLM chatglm(8);
+    CLI::App app{"web demo for chat.cpp"};
+    float gpusize = 8.0;
+    std::string modeldir = "../resource/models";
+    std::string tokenizerdir = "../resource/tokenizer";
+    app.add_option("-g,--gpusize", gpusize,"gpu memory size(G)");
+    app.add_option("-m,--model", modeldir, "model directory");
+    app.add_option("-t,--tokenizer", tokenizerdir, "tokenizer directory");
+
+    CLI11_PARSE(app, argc, argv);
+
+    ChatGLM chatglm(gpusize,modeldir,tokenizerdir);
+
     std::stringstream ss;
     httplib::Server svr;
     std::atomic_bool waiting;

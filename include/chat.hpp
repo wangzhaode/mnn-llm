@@ -44,6 +44,7 @@ public:
         init(gpu_memory);
     };
     void chat();
+    void reset();
     std::string response(const std::string& input_str, std::ostream* os = &std::cout);
 private:
     void init(float gpu_memory);
@@ -69,6 +70,10 @@ private:
     // model dir
     std::string mModelDir = "../resource/models";
     std::string mTokenizerDir = "../resource/tokenize";
+
+    // history
+    int mChatRound = 0;
+    std::string mHistoryStr = "";
 };
 
 #endif // CHAT_hpp

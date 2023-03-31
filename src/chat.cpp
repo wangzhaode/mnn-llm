@@ -28,6 +28,11 @@ void ChatGLM::chat() {
     }
 }
 
+void ChatGLM::reset() {
+    mHistoryStr = "";
+    mChatRound = 0;
+}
+
 std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
     AUTOTIME;
     // init status
@@ -38,7 +43,9 @@ std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
         mHistoryVars[i] = _Input({2, 0, 1, 32, 128}, NCHW);
     }
     // response
-    auto input_ids = tokenizer_encode(input_str);
+    mHistoryStr += ("[Round " + std::to_string(mChatRound++) + "]\n问：" + input_str);
+    auto prompt = mChatRound > 1 ? mHistoryStr : input_str;
+    auto input_ids = tokenizer_encode(prompt);
     int token = forward(input_ids);
     std::string output_str = decode(token);
     *os << output_str << std::flush;
@@ -49,6 +56,7 @@ std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
         *os << word << std::flush;
         output_str += word;
     }
+    mHistoryStr += ("\n答：" + output_str + "\n");
     return output_str;
 }
 
@@ -74,8 +82,8 @@ std::vector<int> ChatGLM::tokenizer_encode(std::string input_str) {
             ids.push_back(iter->second);
         }
     }
-    ids.push_back(130001);
-    ids.push_back(130004);
+    ids.push_back(gMASK);
+    ids.push_back(BOS);
     return ids;
 }
 
@@ -240,8 +248,8 @@ int ChatGLM::forward(const std::vector<int>& input_ids) {
             hidden_states = outputs[0];
             mHistoryVars[i] = outputs[1];
         }
-        load_next_model.join();
         mModules[i].reset();
+        load_next_model.join();
     }
 #else
     for (int i = 0; i < LAYER_SIZE; i++) {

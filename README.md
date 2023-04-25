@@ -38,36 +38,76 @@ PC测试平台：
 
 
 ## Usage
-### 1. Compile MNN library
-从源码编译MNN
+### 1. 下载本项目
 ```bash
-git clone https://github.com/alibaba/MNN.git
-cd MNN
-mkdir build && cd build
-cmake .. # CPU only
-cmake .. -DMNN_CUDA=ON # using CUDA
-cmake .. -DMNN_OPENCL=ON -DMNN_USE_SYSTEM_LIB=ON -DMNN_SEP_BUILD=OFF # using OPENCL
-make -j8
-cp -r ../include /path/to/ChatGLM-MNN/
-cp libMNN.so /path/to/ChatGLM-MNN/libs
-cp express/libMNN_Express.so /path/to/ChatGLM-MNN/libs
+git clone https://github.com/wangzhaode/ChatGLM-MNN.git
 ```
-### 2. Download Models
-从 `github release` 下载模型文件到 `/path/to/ChatGLM-MNN/resource/models`， 如下：
-```
-cd resource/models
-./download_models_fp16.sh # 下载fp16权值模型
-./download_models_int8.sh # 下载int8权值模型，推荐使用
-./download_models_int4.sh # 下载int4权值模型，有精度损失
+### 2. 编译MNN库
+- 克隆MNN项目，最新正式版是2.4.0
+```bash
+git clone https://github.com/alibaba/MNN.git -b 2.4.0
 ```
 
-### 3. Build and Run
+- 进入MNN项目, 并构建一个Build目录准备编译
+```bash
+cd MNN
+mkdir build && cd build
+```
+
+- 正式编译，可选CPU/CUDA/OpenCL三种，推荐有英伟达显卡的选择CUDA，没显卡的选CPU,有AMD显卡的选择OpenCL
+```bash
+# CPU only
+cmake ..
+
+# using CUDA
+cmake .. -DMNN_CUDA=ON
+
+# using OPENCL
+cmake .. -DMNN_OPENCL=ON -DMNN_USE_SYSTEM_LIB=ON -DMNN_SEP_BUILD=OFF 
+
+# start build
+make -j$(nproc)
+```
+- 回到ChatGLM-MNN
+
+```bash
+cd ../..
+```
+
+- 将MNN库的编译结果拷贝给ChatGLM-MNN
+```bash
+cp -r MNN/include/MNN include
+cp MNN/build/libMNN.so libs/
+cp MNN/build/express/*.so  libs/
+```
+
+### 3. Download Models
+从 `github release` 下载模型文件到 `/path/to/ChatGLM-MNN/resource/models`， 如下：
+```bash
+cd resource/models
+# 下载fp16权值模型, 几乎没有精度损失
+./download_models.sh fp16
+
+# 下载int8权值模型，极少精度损失，推荐使用
+./download_models.sh int8
+
+# 下载int4权值模型，有一定精度损失
+./download_models.sh int4 
+```
+
+### 4. Build and Run
 Mac/Linux/Windows:
 ```bash
-mkdir build
-cd build
+mkdir build && cd build
+# for CPU
 cmake ..
-make -j8
+# for GPU
+cmake -D WITH_CUDA=on ..
+# for mini memory device
+cmake -D BUILD_MINI_MEM_MODE=on ..
+# begin build
+make -j$(nproc)
+# run
 ./cli_demo # cli demo
 ./web_demo # web ui demo
 ```
@@ -80,7 +120,7 @@ cd build
 make -j8
 ```
 
-#### 4. Using GPU
+#### 5. Using GPU
 默认用法为使用`CPU`, 使用`NVIDIA GPU`需要在编译MNN时添加宏`-DMNN_CUDA=ON`，使用其他GPU需要在编译MNN时添加宏`-DMNN_OPENCL=ON -DMNN_USE_SYSTEM_LIB=ON -DMNN_SEP_BUILD=OFF`；
 在创建`ChatGLM`时指定显存大小，如下：
 ```cpp

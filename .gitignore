@@ -3,6 +3,11 @@ build/
 MNN/
 .vscode/
 libs/
+include/MNN
+resource/models/fp16/
+resource/models/int8/
+resource/models/int4/
+src/chat
 
 # ignore files
 .DS_Store

@@ -100,6 +100,12 @@ std::string ChatGLM::decode(int id) {
     if (pos != -1) {
         word.replace(pos, pos + 3, " ");
     }
+    // Fix utf-8 garbled characters
+    if (word.length() == 6 && word[0] == '<' && word[word.length()-1] == '>' && word[1] == '0' && word[2] == 'x') {
+
+        int num = std::stoi(word.substr(3, 2), nullptr, 16);
+        word = static_cast<char>(num);
+    }
     return word;
 }
 

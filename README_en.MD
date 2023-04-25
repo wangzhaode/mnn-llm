@@ -38,49 +38,104 @@ Only floating-point models were tested (CPU: fp32/ GPU: fp16). Given the input "
 `TODO`
 
 ## Usage
-### 1. Compile MNN library
-Compile MNN from source code
+### 1. Download this project
+```bash
+git clone https://github.com/wangzhaode/ChatGLM-MNN.git
+```
+
+### 2. Compile MNN library
+Compile MNN from source code, the latest release version is 2.4.0
 
 ```bash
-git clone https://github.com/alibaba/MNN.git
+git clone https://github.com/alibaba/MNN.git -b 2.4.0
+```
+
+- Enter the MNN project, and build a Build directory ready to compile
+```bash
 cd MNN
 mkdir build && cd build
-cmake .. # CPU only
-cmake .. -DMNN_CUDA=ON # using CUDA
-cmake .. -DMNN_OPENCL=ON -DMNN_USE_SYSTEM_LIB=ON -DMNN_SEP_BUILD=OFF # using OPENCL
-make -j8
-cp -r ../include /path/to/ChatGLM-MNN/
-cp libMNN.so /path/to/ChatGLM-MNN/libs
-cp express/libMNN_Express.so /path/to/ChatGLM-MNN/libs
 ```
-### 2. Download Models
+
+- Formally compiled, CPU/CUDA/OpenCL can be selected. It is recommended to choose CUDA if you have an NVIDIA graphics card, choose CPU if you don’t have a graphics card, and choose OpenCL if you have an AMD graphics card.
+```bash
+# CPU only
+cmake ..
+
+# using CUDA
+cmake .. -DMNN_CUDA=ON
+
+# using OPENCL
+cmake .. -DMNN_OPENCL=ON -DMNN_USE_SYSTEM_LIB=ON -DMNN_SEP_BUILD=OFF 
+
+# start build
+make -j$(nproc)
+```
+
+- Back to ChatGLM-MNN
+```bash
+cd ../..
+```
+
+- Copy the compilation result of the MNN library to ChatGLM-MNN
+```bash
+cp -r MNN/include/MNN include
+cp MNN/build/libMNN.so libs/
+cp MNN/build/express/*.so  libs/
+```
+
+### 3. Download Models
 Download model files from github release to /path/to/ChatGLM-MNN/resource/models, as follows:   
-```
+```bash
 cd resource/models
-./download_models_fp16.sh # 下载fp16权值模型
-./download_models_int8.sh # 下载int8权值模型，推荐使用
-./download_models_int4.sh # 下载int4权值模型，有精度损失
+# download fp16(almost no loss of precision)
+./download_models.sh fp16 
+
+# download int8(little loss of precision,recommend)
+./download_models.sh int8
+
+# download int4(some precision loss)
+./download_models.sh int4
 ```
-### 3. Build and Run
-Mac/Linux/Windows:
+### 4. Build and Run
+
+- Mac/Linux/Windows:
 ```bash
 mkdir build
 cd build
+# for CPU
 cmake ..
-make -j8
+# for GPU
+cmake -D WITH_CUDA=on ..
+# for mini memory device
+cmake -D BUILD_MINI_MEM_MODE=on ..
+# begin build
+make -j$(nproc)
+# run
 ./cli_demo # cli demo
 ./web_demo # web ui demo
 ```
 
-Android:
+- Android:
 ```
 mkdir build
 cd build
 ../android_build.sh
 make -j8
 ```
+- Docker with Cuda(only Support Linux)
+```bash
+# Start compiling (download the fp16 model before compiling)
+docker build . -t chatglm-mnn
 
-#### 4. Using GPU
+# Run the web version directly, and then open the 5088 port of the corresponding ip in the browser to access the web page
+docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn
+
+# Run directly (cli version)
+docker run --gpus all -it --name chatglm-mnn chatglm-mnn bash -c "cd /workspace/build && ./cli_demo"
+
+```
+
+#### 5. Using GPU
 The default usage is to use CPU. To use NVIDIA GPU, the macro -DMNN_CUDA=ON needs to be added when compiling MNN. To use other GPUs, the macro -DMNN_OPENCL=ON -DMNN_USE_SYSTEM_LIB=ON -DMNN_SEP_BUILD=OFF needs to be added when compiling MNN.
 
 Specify the size of the memory when creating ChatGLM as follows:
@@ -89,7 +144,7 @@ Specify the size of the memory when creating ChatGLM as follows:
 // 8G CUDA Memory
 ChatGLM chatglm(8);
 // 命令式
-std::cout << chatglm.response("你好");
+std::cout << chatglm.response("Hello");
 // 交互式
 chatglm.chat();
 ```

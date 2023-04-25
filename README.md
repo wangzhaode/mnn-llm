@@ -96,7 +96,8 @@ cd resource/models
 ```
 
 ### 4. Build and Run
-Mac/Linux/Windows:
+
+- Mac/Linux/Windows:
 ```bash
 mkdir build && cd build
 # for CPU
@@ -112,13 +113,26 @@ make -j$(nproc)
 ./web_demo # web ui demo
 ```
 
-Android:
+- Android:
 ```
 mkdir build
 cd build
 ../android_build.sh
 make -j8
 ```
+- Docker with Cuda(only Support Linux)
+```bash
+# 开始编译 (编译前，先把fp16的模型下载好)
+docker build . -t chatglm-mnn
+
+# 直接运行web版, 然后浏览器打开对应ip的5088端口即可访问web页面
+docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn
+
+# 直接运行(cli版)
+docker run --gpus all -it --name chatglm-mnn chatglm-mnn bash -c "cd /workspace/build && ./cli_demo"
+
+```
+
 
 #### 5. Using GPU
 默认用法为使用`CPU`, 使用`NVIDIA GPU`需要在编译MNN时添加宏`-DMNN_CUDA=ON`，使用其他GPU需要在编译MNN时添加宏`-DMNN_OPENCL=ON -DMNN_USE_SYSTEM_LIB=ON -DMNN_SEP_BUILD=OFF`；

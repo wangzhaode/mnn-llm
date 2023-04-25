@@ -44,7 +44,7 @@ int main(int argc, const char* argv[]) {
     std::filesystem::path now_path = std::filesystem::current_path();
     std::filesystem::path project_dir = now_path.parent_path();
     std::filesystem::path model_dir = std::filesystem::path(
-            project_dir / "resource/models/int8"
+            project_dir / "resource/models/fp16"
         ).string();
     std::filesystem::path tokenizer_dir = std::filesystem::path(
             project_dir / "resource/tokenizer"

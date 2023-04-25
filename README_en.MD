@@ -97,7 +97,8 @@ cd resource/models
 ./download_models.sh int4
 ```
 ### 4. Build and Run
-Mac/Linux/Windows:
+
+- Mac/Linux/Windows:
 ```bash
 mkdir build
 cd build
@@ -114,12 +115,24 @@ make -j$(nproc)
 ./web_demo # web ui demo
 ```
 
-Android:
+- Android:
 ```
 mkdir build
 cd build
 ../android_build.sh
 make -j8
+```
+- Docker with Cuda(only Support Linux)
+```bash
+# Start compiling (download the fp16 model before compiling)
+docker build . -t chatglm-mnn
+
+# Run the web version directly, and then open the 5088 port of the corresponding ip in the browser to access the web page
+docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn
+
+# Run directly (cli version)
+docker run --gpus all -it --name chatglm-mnn chatglm-mnn bash -c "cd /workspace/build && ./cli_demo"
+
 ```
 
 #### 5. Using GPU

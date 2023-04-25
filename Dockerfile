@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/tensorrt:23.03-py3
+FROM nvcr.io/nvidia/tensorrt:22.10-py3
 
 # update timezone
 ENV TZ=Asia/Shanghai
@@ -19,23 +19,31 @@ RUN sed -i "s@http://ftp.debian.org@http://mirrors.aliyun.com@g" /etc/apt/source
 # setting workspace
 WORKDIR /workspace
 
-COPY include include
-COPY resources resources
-COPY CMakeLists.txt CMakeLists.txt
-COPY src src
-COPY libs libs
-COPY demo demo
-
 # build MNN
 RUN git clone https://github.com/alibaba/MNN.git -b 2.4.0 && \
   cd MNN && \
   mkdir build && cd build && \
   cmake .. -DMNN_CUDA=ON && \
   make -j$(nproc) && \
-  cd .. && \
-  cp -r MNN/include/MNN include && \
+  cd ../..
+
+
+# copy files
+COPY include include
+RUN mkdir -p resource/models
+COPY resource/models/fp16 resource/models/fp16
+COPY resource/tokenizer resource/tokenizer
+COPY resource/web resource/web
+COPY CMakeLists.txt CMakeLists.txt
+COPY src src
+COPY libs libs
+COPY demo demo
+
+
+# copy MNN
+RUN cp -r MNN/include/MNN include && \
   cp MNN/build/libMNN.so libs/ && \
-  cp MNN/build/express/*.so  libs/ 
+  cp MNN/build/express/*.so  libs/
 
 # build ChatGLM-MNN
 RUN mkdir build && cd build && \
@@ -46,6 +54,6 @@ RUN mkdir build && cd build && \
 EXPOSE 5088
 
 # run
-CMD ["cd build && ./web_demo.cpp"]
+CMD ["/bin/bash", "-c", "cd /workspace/build && ./web_demo"]
 
 

@@ -49,7 +49,7 @@ int main(int argc, const char* argv[]) {
     // std::filesystem::path now_dir = now_path.parent_path();
     std::filesystem::path project_dir = now_path.parent_path();
     std::filesystem::path model_dir = std::filesystem::path(
-            project_dir / "resource/models/int8"
+            project_dir / "resource/models/fp16"
         ).string();
     std::filesystem::path tokenizer_dir = std::filesystem::path(
             project_dir / "resource/tokenizer"
@@ -61,7 +61,7 @@ int main(int argc, const char* argv[]) {
     CLI11_PARSE(app, argc, argv);
 
     ChatGLM chatglm(gpusize, model_dir, tokenizer_dir);
-
+    
     std::stringstream ss;
     httplib::Server svr;
     std::atomic_bool waiting;
@@ -89,8 +89,8 @@ int main(int argc, const char* argv[]) {
         }
     });
     svr.set_mount_point("/", "../resource/web");
-    printf(">>> please open http://localhost:5088\n");
-    svr.listen("localhost", 5088);
+    printf(">>> please open http://0.0.0.0:5088\n");
+    svr.listen("0.0.0.0", 5088);
     printf(">>> end\n");
     return 0;
 }

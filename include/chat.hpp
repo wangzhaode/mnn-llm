@@ -70,7 +70,7 @@ private:
     std::filesystem::path now_path = std::filesystem::current_path();
     // std::filesystem::path project_dir = now_path.parent_path();
     std::filesystem::path model_dir = std::filesystem::path(
-        now_path / "resource/models/int8"
+        now_path / "resource/models/fp16"
     );
     std::filesystem::path tokenizer_dir = std::filesystem::path(
         now_path / "resource/tokenizer"

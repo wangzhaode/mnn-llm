@@ -121,60 +121,60 @@ cd build
 make -j8
 ```
 ##### Docker
-1. 对于x64架构，Linux系统，有支持cuda的英伟达显卡，想要运行fp16模型的 
+1. 对于Linux系统，有支持cuda的英伟达显卡，想要运行fp16模型的 
 ```bash
 # 开始编译,
-docker build . -t chatglm-mnn:x64_cuda_fp16_v0.1 -f dockerfiles/x64-cuda-fp16.Dockerfile
+docker build . -t chatglm-mnn:cuda_fp16_v0.1 -f dockerfiles/cuda_fp16.Dockerfile
 
 # 直接运行web版, 然后浏览器打开对应ip的5088端口即可访问web页面
-docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:x64_cuda_fp16_v0.1
+docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:cuda_fp16_v0.1
 
 # 直接运行(cli版)
 docker run --gpus all -it \
   --name chatglm-mnn \
-  chatglm-mnn:x64_cuda_fp16_v0.1 \
+  chatglm-mnn:cuda_fp16_v0.1 \
   bash -c "cd /workspace/build && ./cli_demo"
 ```
-2. 对于x64架构，Linux系统，有支持cuda的英伟达显卡，想要运行int8模型的 
+2. 对于Linux系统，有支持cuda的英伟达显卡，想要运行int8模型的 
 ```bash
 # 开始编译
-docker build . -t chatglm-mnn:x64_cuda_int8_v0.1 -f dockerfiles/x64-cuda-int8.Dockerfile
+docker build . -t chatglm-mnn:cuda_int8_v0.1 -f dockerfiles/cuda_int8.Dockerfile
 
 # 直接运行（web版)
-docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:x64_cuda_int8_v0.1
+docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:cuda_int8_v0.1
 
 # 直接运行(cli版)
 docker run --gpus all -it \
   --name chatglm-mnn \
-  chatglm-mnn:x64_cuda_int8_v0.1 \
+  chatglm-mnn:cuda_int8_v0.1 \
   bash -c "cd /workspace/build && ./cli_demo -d int8"
 ```
-3. 对于x64架构，无英伟达显卡，Linux/Mac系统，想要运行fp16的(大概需要24G内存）。
+3. 对于Linux/Mac系统，无英伟达显卡，想要运行fp16的(大概需要24G内存）。
 ```bash
 # 开始编译
-docker build . -t chatglm-mnn:x64_cpu_fp16_v0.1 -f dockerfiles/x64-cpu-fp16.Dockerfile
+docker build . -t chatglm-mnn:cpu_fp16_normal_v0.1 -f dockerfiles/cpu_fp16_normal.Dockerfile
 
 # 直接运行（web版)
-docker run -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:x64_cpu_fp16_v0.1
+docker run -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:cpu_fp16_normal_v0.1
 
 # 直接运行(cli版)
 docker run -it \
   --name chatglm-mnn \
-  chatglm-mnn:x64_cpu_fp16_v0.1 \
+  chatglm-mnn:cpu_fp16_normal_v0.1 \
   bash -c "cd /workspace/build && ./cli_demo"
 ```
-4. 对于x64架构，无英伟达显卡，Linux/Mac系统，想要运行int8的(大概需要24G内存）。
+4. 对于Linux/Mac系统，无英伟达显卡，想要运行int8的(大概需要24G内存）。
 ```bash
 # 开始编译
-docker build . -t chatglm-mnn:x64_cpu_int8_v0.1 -f dockerfiles/x64-cpu-int8.Dockerfile
+docker build . -t chatglm-mnn:cpu_int8_normal_v0.1 -f dockerfiles/cpu_int8_normal.Dockerfile
 
 # 直接运行（web版)
-docker run -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:x64_cpu_int8_v0.1
+docker run -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:cpu_int8_normal_v0.1
 
 # 直接运行(cli版)
 docker run -it \
   --name chatglm-mnn \
-  chatglm-mnn:x64_cpu_int8_v0.1 \
+  chatglm-mnn:cpu_int8_normal_v0.1 \
   bash -c "cd /workspace/build && ./cli_demo -d int8"
 ```
 

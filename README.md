@@ -87,12 +87,18 @@ cp MNN/build/express/*.so  libs/
 cd resource/models
 # 下载fp16权值模型, 几乎没有精度损失
 ./download_models.sh fp16
+# 对于中国用户，可以使用第三方服务加速下载fp16模型
+./download_models.sh fp16 proxy
 
 # 下载int8权值模型，极少精度损失，推荐使用
 ./download_models.sh int8
+# 对于中国用户，可以使用第三方服务加速下载int8模型
+./download_models.sh int8 proxy
 
 # 下载int4权值模型，有一定精度损失
 ./download_models.sh int4 
+# 对于中国用户，可以使用第三方服务加速下载int4模型
+./download_models.sh int4 proxy
 ```
 
 ### 4. Build and Run

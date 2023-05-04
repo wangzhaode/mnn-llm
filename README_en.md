@@ -89,12 +89,18 @@ Download model files from github release to /path/to/ChatGLM-MNN/resource/models
 cd resource/models
 # download fp16(almost no loss of precision)
 ./download_models.sh fp16 
+# For Chinese users, you can use third-party services to speed up downloading the fp16 model
+./download_models.sh fp16 proxy
 
 # download int8(little loss of precision,recommend)
 ./download_models.sh int8
+# For Chinese users, you can use third-party services to speed up downloading the int8 model
+./download_models.sh int8 proxy
 
 # download int4(some precision loss)
 ./download_models.sh int4
+# For Chinese users, you can use third-party services to speed up downloading the int4 model
+./download_models.sh int4 proxy
 ```
 ### 4. Build and Run
 

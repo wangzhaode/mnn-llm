@@ -43,24 +43,18 @@ int main(int argc, const char* argv[]) {
 #else
     float gpusize = 8.0;
 #endif
-    // std::string modeldir = "../resource/models";
-    // std::string tokenizerdir = "../resource/tokenizer";
-    std::experimental::filesystem::path now_path = std::experimental::filesystem::current_path();
-    // std::experimental::filesystem::path now_dir = now_path.parent_path();
-    std::experimental::filesystem::path project_dir = now_path.parent_path();
-    std::experimental::filesystem::path model_dir = std::experimental::filesystem::path(
-            project_dir / "resource/models/fp16"
-        ).string();
-    std::experimental::filesystem::path tokenizer_dir = std::experimental::filesystem::path(
-            project_dir / "resource/tokenizer"
-        ).string();
+    std::string model_dir = "../resource/models";
+    std::string data_type = "fp16";
+    std::string tokenizer_dir = "../resource/tokenizer";
     app.add_option("-g,--gpusize", gpusize,"gpu memory size(G)");
-    app.add_option("-m,--model_dir", model_dir, "model directory");
+	app.add_option("-m,--model_dir", model_dir, "model directory");
+	app.add_option("-d,--data_type", data_type, "data type, support fp16 and int8");
     app.add_option("-t,--tokenizer_dir", tokenizer_dir, "tokenizer directory");
 
     CLI11_PARSE(app, argc, argv);
 
-    ChatGLM chatglm(gpusize, model_dir, tokenizer_dir);
+    std::cout << "model path is " << model_dir + "/" + data_type << std::endl;
+    ChatGLM chatglm(gpusize, model_dir, data_type, tokenizer_dir);
     
     std::stringstream ss;
     httplib::Server svr;
@@ -90,6 +84,7 @@ int main(int argc, const char* argv[]) {
     });
     svr.set_mount_point("/", "../resource/web");
     printf(">>> please open http://0.0.0.0:5088\n");
+    fflush(stdout);
     svr.listen("0.0.0.0", 5088);
     printf(">>> end\n");
     return 0;

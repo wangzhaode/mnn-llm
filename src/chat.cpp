@@ -146,7 +146,9 @@ void ChatGLM::init(float gpu_memory) {
 #else
     for (int i = 0; i < LAYER_SIZE; i++) {
         std::string model_path = mModelDir + "/glm_block_" + std::to_string(i) + ".mnn";
+        printf("[%3.0f%% ] ", (i + 1) * 100.0 / LAYER_SIZE);
         loadModel(model_path.c_str(), i <= gpu_run_layers, i);
+        fflush(stdout);
     }
     // 3. load lm model
     std::string lm_model_path = mModelDir + "/lm.mnn";

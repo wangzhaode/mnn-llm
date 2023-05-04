@@ -13,7 +13,6 @@
 #include <string>
 #include <unordered_map>
 #include <iostream>
-#include <experimental/filesystem>
 
 #include <MNN/AutoTime.hpp>
 #include <MNN/expr/Expr.hpp>
@@ -39,8 +38,8 @@ public:
     ChatGLM(float gpu_memory = 0) {
         init(gpu_memory);
     }
-    ChatGLM(float gpu_memory, const std::string& model_dir, const std::string& tokenizer_dir) {
-        mModelDir = model_dir;
+    ChatGLM(float gpu_memory, const std::string& model_dir, const std::string & data_type, const std::string& tokenizer_dir) {
+        mModelDir = model_dir + "/" + data_type;
         mTokenizerDir = tokenizer_dir;
         init(gpu_memory);
     };
@@ -67,19 +66,9 @@ private:
     std::vector<VARP> mHistoryVars;
     // mask info
     int mSeqLen = 0, mContextLen = -1, mMaskIdx = -1;
-    std::experimental::filesystem::path now_path = std::experimental::filesystem::current_path();
-    // std::experimental::filesystem::path project_dir = now_path.parent_path();
-    std::experimental::filesystem::path model_dir = std::experimental::filesystem::path(
-        now_path / "resource/models/fp16"
-    );
-    std::experimental::filesystem::path tokenizer_dir = std::experimental::filesystem::path(
-        now_path / "resource/tokenizer"
-    );
     // model dir
-    std::string mModelDir = model_dir.string();
-    std::string mTokenizerDir = tokenizer_dir.string();
-    // std::string mModelDir = "../resource/models";
-    // std::string mTokenizerDir = "../resource/tokenize";
+    std::string mModelDir = "../resource/models/fp16";
+    std::string mTokenizerDir = "../resource/tokenize";
 
     // history
     int mChatRound = 0;

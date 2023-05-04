@@ -87,17 +87,23 @@ cp MNN/build/express/*.so  libs/
 cd resource/models
 # 下载fp16权值模型, 几乎没有精度损失
 ./download_models.sh fp16
+# 对于中国用户，可以使用第三方服务加速下载fp16模型
+./download_models.sh fp16 proxy
 
 # 下载int8权值模型，极少精度损失，推荐使用
 ./download_models.sh int8
+# 对于中国用户，可以使用第三方服务加速下载int8模型
+./download_models.sh int8 proxy
 
 # 下载int4权值模型，有一定精度损失
 ./download_models.sh int4 
+# 对于中国用户，可以使用第三方服务加速下载int4模型
+./download_models.sh int4 proxy
 ```
 
 ### 4. Build and Run
 
-- Mac/Linux/Windows:
+##### Mac/Linux/Windows:
 ```bash
 mkdir build && cd build
 # for CPU
@@ -113,24 +119,69 @@ make -j$(nproc)
 ./web_demo # web ui demo
 ```
 
-- Android:
+##### Android:
 ```
 mkdir build
 cd build
 ../android_build.sh
 make -j8
 ```
-- Docker with Cuda(only Support Linux)
+##### Docker
+1. 对于Linux系统，有支持cuda的英伟达显卡，想要运行fp16模型的 
 ```bash
-# 开始编译 (编译前，先把fp16的模型下载好)
-docker build . -t chatglm-mnn
+# 开始编译,
+docker build . -t chatglm-mnn:cuda_fp16_v0.1 -f dockerfiles/cuda_fp16.Dockerfile
 
 # 直接运行web版, 然后浏览器打开对应ip的5088端口即可访问web页面
-docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn
+docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:cuda_fp16_v0.1
 
 # 直接运行(cli版)
-docker run --gpus all -it --name chatglm-mnn chatglm-mnn bash -c "cd /workspace/build && ./cli_demo"
+docker run --gpus all -it \
+  --name chatglm-mnn \
+  chatglm-mnn:cuda_fp16_v0.1 \
+  bash -c "cd /workspace/build && ./cli_demo"
+```
+2. 对于Linux系统，有支持cuda的英伟达显卡，想要运行int8模型的 
+```bash
+# 开始编译
+docker build . -t chatglm-mnn:cuda_int8_v0.1 -f dockerfiles/cuda_int8.Dockerfile
 
+# 直接运行（web版)
+docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:cuda_int8_v0.1
+
+# 直接运行(cli版)
+docker run --gpus all -it \
+  --name chatglm-mnn \
+  chatglm-mnn:cuda_int8_v0.1 \
+  bash -c "cd /workspace/build && ./cli_demo -d int8"
+```
+3. 对于Linux/Mac系统，无英伟达显卡，想要运行fp16的(大概需要24G内存）。
+```bash
+# 开始编译
+docker build . -t chatglm-mnn:cpu_fp16_normal_v0.1 -f dockerfiles/cpu_fp16_normal.Dockerfile
+
+# 直接运行（web版)
+docker run -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:cpu_fp16_normal_v0.1
+
+# 直接运行(cli版)
+docker run -it \
+  --name chatglm-mnn \
+  chatglm-mnn:cpu_fp16_normal_v0.1 \
+  bash -c "cd /workspace/build && ./cli_demo"
+```
+4. 对于Linux/Mac系统，无英伟达显卡，想要运行int8的(大概需要24G内存）。
+```bash
+# 开始编译
+docker build . -t chatglm-mnn:cpu_int8_normal_v0.1 -f dockerfiles/cpu_int8_normal.Dockerfile
+
+# 直接运行（web版)
+docker run -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:cpu_int8_normal_v0.1
+
+# 直接运行(cli版)
+docker run -it \
+  --name chatglm-mnn \
+  chatglm-mnn:cpu_int8_normal_v0.1 \
+  bash -c "cd /workspace/build && ./cli_demo -d int8"
 ```
 
 

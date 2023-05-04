@@ -13,7 +13,7 @@
 #include <string>
 #include <unordered_map>
 #include <iostream>
-#include <filesystem>
+#include <experimental/filesystem>
 
 #include <MNN/AutoTime.hpp>
 #include <MNN/expr/Expr.hpp>
@@ -67,12 +67,12 @@ private:
     std::vector<VARP> mHistoryVars;
     // mask info
     int mSeqLen = 0, mContextLen = -1, mMaskIdx = -1;
-    std::filesystem::path now_path = std::filesystem::current_path();
-    // std::filesystem::path project_dir = now_path.parent_path();
-    std::filesystem::path model_dir = std::filesystem::path(
+    std::experimental::filesystem::path now_path = std::experimental::filesystem::current_path();
+    // std::experimental::filesystem::path project_dir = now_path.parent_path();
+    std::experimental::filesystem::path model_dir = std::experimental::filesystem::path(
         now_path / "resource/models/fp16"
     );
-    std::filesystem::path tokenizer_dir = std::filesystem::path(
+    std::experimental::filesystem::path tokenizer_dir = std::experimental::filesystem::path(
         now_path / "resource/tokenizer"
     );
     // model dir

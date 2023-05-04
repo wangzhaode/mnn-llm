@@ -18,7 +18,7 @@ FILE(GLOB SRCS ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
 # compile dynamic lib
 add_library(chat SHARED ${SRCS})
-target_link_libraries(chat MNN MNN_Express)
+target_link_libraries(chat stdc++fs MNN MNN_Express)
 # target_link_libraries(chat MNN MNN_Express MNN_CL) # if using OPENCL
 
 if (BUILD_FOR_ANDROID)

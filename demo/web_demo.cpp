@@ -45,13 +45,13 @@ int main(int argc, const char* argv[]) {
 #endif
     // std::string modeldir = "../resource/models";
     // std::string tokenizerdir = "../resource/tokenizer";
-    std::filesystem::path now_path = std::filesystem::current_path();
-    // std::filesystem::path now_dir = now_path.parent_path();
-    std::filesystem::path project_dir = now_path.parent_path();
-    std::filesystem::path model_dir = std::filesystem::path(
+    std::experimental::filesystem::path now_path = std::experimental::filesystem::current_path();
+    // std::experimental::filesystem::path now_dir = now_path.parent_path();
+    std::experimental::filesystem::path project_dir = now_path.parent_path();
+    std::experimental::filesystem::path model_dir = std::experimental::filesystem::path(
             project_dir / "resource/models/fp16"
         ).string();
-    std::filesystem::path tokenizer_dir = std::filesystem::path(
+    std::experimental::filesystem::path tokenizer_dir = std::experimental::filesystem::path(
             project_dir / "resource/tokenizer"
         ).string();
     app.add_option("-g,--gpusize", gpusize,"gpu memory size(G)");

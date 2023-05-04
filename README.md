@@ -90,11 +90,30 @@ cp MNN/build/express/*.so  libs/
 # for windows
 cp -r MNN/include/MNN include
 cp MNN/build/Debug/MNN.dll libs/
+cp MNN/build/Debug/MNN.lib libs/
+```
+
+- 对于Windows，还需要下载一下第三方库pthread，下载[地址](https://gigenet.dl.sourceforge.net/project/pthreads4w/pthreads-w32-2-9-1-release.zip),下载后解压，打开Pre-built.2\lib\x64， 将pthreadVC2.lib文件拷贝到ChatGLM-MNN的libs文件夹。打开Pre-built.2\include,将下面三个.h文件都放到ChatGLM-MNN的include文件夹。对于windows，项目的最终文件结构如下：
+```bash
+├───libs
+│   ├───MNN.dll
+│   ├───MNN.lib
+│   └───pthreadVC2.lib
+├───include
+│   ├───cppjieba
+│   ├───limonp
+│   ├───MNN
+│   ├───chat.hpp
+│   ├───httplib.h
+│   ├───pthread.h
+│   ├───sched.h
+│   └───semaphore.h
 ```
 
 
 ### 3. Download Models
 从 `github release` 下载模型文件到 `/path/to/ChatGLM-MNN/resource/models`， 如下：
+- 对于Linux/Mac
 ```bash
 cd resource/models
 # 下载fp16权值模型, 几乎没有精度损失
@@ -111,6 +130,15 @@ cd resource/models
 ./download_models.sh int4 
 # 对于中国用户，可以使用第三方服务加速下载int4模型
 ./download_models.sh int4 proxy
+```
+- 对于windows,将上面的`xxx.sh`替换为`xxx.ps1`文件即可，例如：
+```powershell
+cd resource/models
+
+# 下载fp16权值模型, 几乎没有精度损失
+./download_models.ps1 fp16
+# 对于中国用户，可以使用第三方服务加速下载fp16模型
+./download_models.ps1 fp16 proxy
 ```
 
 ### 4. Build and Run
@@ -131,10 +159,15 @@ make -j$(nproc)
 # start build(support Windows)
 cmake --build . -- /m:8
 
-# run
+# run (for Linux/Mac)
 ./cli_demo # cli demo
 ./web_demo # web ui demo
+
+# run (for Windows)
+.\Debug\cli_demo.exe
+.\Debug\web_demo.exe
 ```
+
 
 ##### Android:
 ```

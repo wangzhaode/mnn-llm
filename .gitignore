@@ -10,6 +10,11 @@ resource/models/fp16/
 resource/models/int8/
 resource/models/int4/
 src/chat
+Debug/
+Release
+include/pthread.h
+include/sched.h
+include/semaphore.h
 
 # ignore files
 .DS_Store

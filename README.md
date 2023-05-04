@@ -1,6 +1,6 @@
 # ChatGLM-MNN
 
-[Read me in english ](./README_en.md)
+[Read me in english ](./README_en.MD)
 
 ## Describe
 该项目将模型[ChatGLM-6B](https://huggingface.co/THUDM/chatglm-6b)转换到`MNN`并使用`C++`进行推理。
@@ -55,19 +55,25 @@ mkdir build && cd build
 ```
 
 - 正式编译，可选CPU/CUDA/OpenCL三种，推荐有英伟达显卡的选择CUDA，没显卡的选CPU,有AMD显卡的选择OpenCL
-```bash
-# CPU only
-cmake ..
 
-# using CUDA
-cmake .. -DMNN_CUDA=ON
+```bash
+# CPU only（Suport Linux/Mac/Windows）
+cmake -DCMAKE_BUILD_TYPE=Release ..
+
+# using CUDA(Support Linux)
+cmake -DCMAKE_BUILD_TYPE=Release -DMNN_CUDA=ON ..
 
 # using OPENCL
-cmake .. -DMNN_OPENCL=ON -DMNN_USE_SYSTEM_LIB=ON -DMNN_SEP_BUILD=OFF 
+cmake -DCMAKE_BUILD_TYPE=Release -DMNN_OPENCL=ON -DMNN_USE_SYSTEM_LIB=ON -DMNN_SEP_BUILD=OFF ..
 
-# start build
+# start build(support Linux/Mac)
 make -j$(nproc)
+
+# start build(support Windows)
+cmake --build . -- /m:8
+
 ```
+
 - 回到ChatGLM-MNN
 
 ```bash
@@ -76,10 +82,16 @@ cd ../..
 
 - 将MNN库的编译结果拷贝给ChatGLM-MNN
 ```bash
+# for Linux/Mac
 cp -r MNN/include/MNN include
 cp MNN/build/libMNN.so libs/
 cp MNN/build/express/*.so  libs/
+
+# for windows
+cp -r MNN/include/MNN include
+cp MNN/build/Debug/MNN.dll libs/
 ```
+
 
 ### 3. Download Models
 从 `github release` 下载模型文件到 `/path/to/ChatGLM-MNN/resource/models`， 如下：
@@ -112,8 +124,13 @@ cmake ..
 cmake -D WITH_CUDA=on ..
 # for mini memory device
 cmake -D BUILD_MINI_MEM_MODE=on ..
-# begin build
+
+# start build(support Linux/Mac)
 make -j$(nproc)
+
+# start build(support Windows)
+cmake --build . -- /m:8
+
 # run
 ./cli_demo # cli demo
 ./web_demo # web ui demo

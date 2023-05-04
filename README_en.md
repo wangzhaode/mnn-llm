@@ -58,17 +58,21 @@ mkdir build && cd build
 
 - Formally compiled, CPU/CUDA/OpenCL can be selected. It is recommended to choose CUDA if you have an NVIDIA graphics card, choose CPU if you don’t have a graphics card, and choose OpenCL if you have an AMD graphics card.
 ```bash
-# CPU only
-cmake ..
+# CPU only（Suport Linux/Mac/Windows）
+cmake -DCMAKE_BUILD_TYPE=Release ..
 
-# using CUDA
-cmake .. -DMNN_CUDA=ON
+# using CUDA(Support Linux)
+cmake -DCMAKE_BUILD_TYPE=Release -DMNN_CUDA=ON ..
 
 # using OPENCL
-cmake .. -DMNN_OPENCL=ON -DMNN_USE_SYSTEM_LIB=ON -DMNN_SEP_BUILD=OFF 
+cmake -DCMAKE_BUILD_TYPE=Release -DMNN_OPENCL=ON -DMNN_USE_SYSTEM_LIB=ON -DMNN_SEP_BUILD=OFF ..
 
-# start build
+# start build(support Linux/Mac)
 make -j$(nproc)
+
+# start build(support Windows)
+cmake --build . -- /m:8
+
 ```
 
 - Back to ChatGLM-MNN
@@ -78,9 +82,14 @@ cd ../..
 
 - Copy the compilation result of the MNN library to ChatGLM-MNN
 ```bash
+# for Linux/Mac
 cp -r MNN/include/MNN include
 cp MNN/build/libMNN.so libs/
 cp MNN/build/express/*.so  libs/
+
+# for windows
+cp -r MNN/include/MNN include
+cp MNN/build/Debug/MNN.dll libs/
 ```
 
 ### 3. Download Models

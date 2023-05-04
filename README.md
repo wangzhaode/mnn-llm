@@ -1,6 +1,6 @@
 # ChatGLM-MNN
 
-[Read me in english ](./README_en.MD)
+[Read me in english ](./README_en.md)
 
 ## Describe
 该项目将模型[ChatGLM-6B](https://huggingface.co/THUDM/chatglm-6b)转换到`MNN`并使用`C++`进行推理。

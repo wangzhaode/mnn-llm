@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(chatglm-mnn)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 option(BUILD_FOR_ANDROID "Build for android whith mini memory mode." OFF)
 option(BUILD_MINI_MEM_MODE "Build whith mini memory mode." OFF)
@@ -18,8 +18,14 @@ FILE(GLOB SRCS ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
 # compile dynamic lib
 add_library(chat SHARED ${SRCS})
-target_link_libraries(chat stdc++fs MNN MNN_Express)
-# target_link_libraries(chat MNN MNN_Express MNN_CL) # if using OPENCL
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+    # Apple Clang
+    target_link_libraries(chat MNN MNN_Express)
+else()
+    target_link_libraries(chat stdc++fs MNN MNN_Express)
+    # target_link_libraries(chat stdc++fs MNN MNN_Express MNN_CL) # if using OPENCL
+endif()
 
 if (BUILD_FOR_ANDROID)
     target_compile_options(chat PRIVATE -DMINI_MEM_MODE)

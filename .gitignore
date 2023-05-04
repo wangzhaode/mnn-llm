@@ -2,6 +2,8 @@
 build/
 MNN/
 .vscode/
+.cached/
+.cache/
 libs/
 include/MNN
 resource/models/fp16/

@@ -98,7 +98,7 @@ cd resource/models
 ```
 ### 4. Build and Run
 
-- Mac/Linux/Windows:
+##### Mac/Linux/Windows:
 ```bash
 mkdir build
 cd build
@@ -115,25 +115,71 @@ make -j$(nproc)
 ./web_demo # web ui demo
 ```
 
-- Android:
+##### Android:
 ```
 mkdir build
 cd build
 ../android_build.sh
 make -j8
 ```
-- Docker with Cuda(only Support Linux)
+
+##### Docker
+1. For x64 architecture, Linux system, there are Nvidia graphics cards that support cuda, and those who want to run the fp16 model
 ```bash
-# Start compiling (download the fp16 model before compiling)
-docker build . -t chatglm-mnn
+# start compiling
+docker build . -t chatglm-mnn:x64_cuda_fp16_v0.1 -f dockerfiles/x64-cuda-fp16.Dockerfile
 
 # Run the web version directly, and then open the 5088 port of the corresponding ip in the browser to access the web page
-docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn
+docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:x64_cuda_fp16_v0.1
 
 # Run directly (cli version)
-docker run --gpus all -it --name chatglm-mnn chatglm-mnn bash -c "cd /workspace/build && ./cli_demo"
-
+docker run --gpus all -it \
+  --name chatglm-mnn \
+  chatglm-mnn:x64_cuda_fp16_v0.1 \
+  bash -c "cd /workspace/build && ./cli_demo"
 ```
+2. For x64 architecture, Linux system, there are Nvidia graphics cards that support cuda, and those who want to run the int8 model
+```bash
+# start compiling
+docker build . -t chatglm-mnn:x64_cuda_int8_v0.1 -f dockerfiles/x64-cuda-int8.Dockerfile
+
+# Run the web version directly
+docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:x64_cuda_int8_v0.1
+
+# Run directly (cli version)
+docker run --gpus all -it \
+  --name chatglm-mnn \
+  chatglm-mnn:x64_cuda_int8_v0.1 \
+  bash -c "cd /workspace/build && ./cli_demo -d int8"
+```
+
+3. For x64 architecture, no Nvidia graphics card, Linux/Mac system, want to run fp16 model (big concept requires 24G memory)。
+```bash
+# start compiling
+docker build . -t chatglm-mnn:x64_cpu_fp16_v0.1 -f dockerfiles/x64-cpu-fp16.Dockerfile
+
+# Run the web version directly
+docker run -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:x64_cpu_fp16_v0.1
+
+# Run directly (cli version)
+docker run -it \
+  --name chatglm-mnn \
+  chatglm-mnn:x64_cpu_fp16_v0.1 \
+  bash -c "cd /workspace/build && ./cli_demo"
+```
+4. For x64 architecture, no Nvidia graphics card, Linux/Mac system, want to run int8 model (big concept requires 24G memory)
+```bash
+# start compiling
+docker build . -t chatglm-mnn:x64_cpu_int8_v0.1 -f dockerfiles/x64-cpu-int8.Dockerfile
+
+# Run the web version directly
+docker run -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:x64_cpu_int8_v0.1
+
+# Run directly (cli version)
+docker run -it \
+  --name chatglm-mnn \
+  chatglm-mnn:x64_cpu_int8_v0.1 \
+  bash -c "cd /workspace/build && ./cli_demo -d int8"
 
 #### 5. Using GPU
 The default usage is to use CPU. To use NVIDIA GPU, the macro -DMNN_CUDA=ON needs to be added when compiling MNN. To use other GPUs, the macro -DMNN_OPENCL=ON -DMNN_USE_SYSTEM_LIB=ON -DMNN_SEP_BUILD=OFF needs to be added when compiling MNN.

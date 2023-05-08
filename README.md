@@ -43,9 +43,9 @@ PC测试平台：
 git clone https://github.com/wangzhaode/ChatGLM-MNN.git
 ```
 ### 2. 编译MNN库
-- 克隆MNN项目，最新正式版是2.4.0
+- 克隆MNN项目，最新正式版是2.5.0
 ```bash
-git clone https://github.com/alibaba/MNN.git -b 2.4.0
+git clone https://github.com/alibaba/MNN.git -b 2.5.0
 ```
 
 - 进入MNN项目, 并构建一个Build目录准备编译

@@ -44,10 +44,10 @@ git clone https://github.com/wangzhaode/ChatGLM-MNN.git
 ```
 
 ### 2. Compile MNN library
-Compile MNN from source code, the latest release version is 2.4.0
+Compile MNN from source code, the latest release version is 2.5.0
 
 ```bash
-git clone https://github.com/alibaba/MNN.git -b 2.4.0
+git clone https://github.com/alibaba/MNN.git -b 2.5.0
 ```
 
 - Enter the MNN project, and build a Build directory ready to compile

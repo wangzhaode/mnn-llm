@@ -16,10 +16,17 @@ link_directories(${CMAKE_CURRENT_LIST_DIR}/libs)
 # source files
 FILE(GLOB SRCS ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
-# compile dynamic lib
-add_library(chat SHARED ${SRCS})
+if (MSVC)
+    # compile static lib, surrpot Winwows
+    add_library(chat STATIC ${SRCS})
+    target_link_libraries(chat MNN.lib)
+else()
+    # compile dynamic so, support Linux/Mac
+    add_library(chat SHARED ${SRCS})
+    set_target_properties(chat PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
-target_link_libraries(chat MNN MNN_Express)
+    target_link_libraries(chat MNN MNN_Express)
+endif()
 # target_link_libraries(chat MNN MNN_Express MNN_CL) # if using OPENCL
 
 if (BUILD_FOR_ANDROID)
@@ -54,7 +61,13 @@ else()
     else()
         message("CUDA support disabled for cli demo")
         add_executable(cli_demo ${CMAKE_CURRENT_LIST_DIR}/demo/cli_demo.cpp)
-        target_link_libraries(cli_demo chat)
+        if (MSVC)
+            target_link_libraries(cli_demo chat)
+            # copy all lib to target dir
+            file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/libs/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Debug/)
+        else()
+            target_link_libraries(cli_demo chat)
+        endif()
     endif()
     # web demo
     if (WITH_CUDA)
@@ -67,6 +80,12 @@ else()
     else()
         message("CUDA support disabled for web demo")
         add_executable(web_demo ${CMAKE_CURRENT_LIST_DIR}/demo/web_demo.cpp)
-        target_link_libraries(web_demo chat pthread)
+        if (MSVC)
+            target_link_libraries(web_demo chat pthreadVC2)
+            # copy all lib to target dir
+            file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/libs/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Debug/)
+        else()
+            target_link_libraries(web_demo chat pthread)
+        endif()
     endif()
 endif()

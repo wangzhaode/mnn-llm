@@ -32,11 +32,11 @@ int8_model(){
 int4_model(){
    for i in `seq 0 27`
    do
-      wget -c $1https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.3/glm_block_$i.mnn -P in4
+      wget -c $1https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.3/glm_block_$i.mnn -P int4
    done
 
-   wget -c $1https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/lm.mnn -P in4
-   wget -c $1https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/slim_word_embeddings.bin -P in4
+   wget -c $1https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/lm.mnn -P int4
+   wget -c $1https://github.com/wangzhaode/ChatGLM-MNN/releases/download/v0.1/slim_word_embeddings.bin -P int4
 }
 
 if [ $# -eq 0 ]

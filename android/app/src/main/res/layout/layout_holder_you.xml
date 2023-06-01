@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:padding="@dimen/space10"
+    android:layout_marginRight="@dimen/spaceLR">
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/logo"
+            android:layout_marginRight="@dimen/space10"/>
+        <TextView
+            android:id="@+id/tv_chat_text"
+            android:layout_toLeftOf="@id/tv_time"
+            android:maxWidth="@dimen/maxwidth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/space10"
+            android:text="Hi, joe how are you, do you like to join our party in next week because you don't like party?"
+            android:textColor="@color/colorTextBlack"
+            android:textSize="@dimen/h3"
+            android:textAppearance="@style/Light"
+            android:background="@drawable/bg_chat_you"/>
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_marginLeft="@dimen/space10"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawablePadding="@dimen/space5"
+            android:drawableLeft="@drawable/ic_clock"
+            android:text="5:04pm"
+            android:textColor="@color/colorTextInfo"
+            android:textSize="@dimen/h4"
+            android:textAppearance="@style/ExtraLight"
+            android:layout_centerVertical="true"/>
+    </LinearLayout>
+</RelativeLayout>

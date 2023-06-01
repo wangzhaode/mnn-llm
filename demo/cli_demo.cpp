@@ -41,17 +41,19 @@ int main(int argc, const char* argv[]) {
 #else
     float gpusize = 0;
 #endif
+    float cpusize = 8;
     std::string model_dir = "../resource/models";
     std::string data_type = "fp16";
     std::string tokenizer_dir = "../resource/tokenizer";
+    app.add_option("-c,--cpusize", cpusize,"cpu memory size(G), default is 8G.");
     app.add_option("-g,--gpusize", gpusize,"gpu memory size(G)");
 	app.add_option("-m,--model_dir", model_dir, "model directory");
-	app.add_option("-d,--data_type", data_type, "data type, support fp16 and int8 and int4");
     app.add_option("-t,--tokenizer_dir", tokenizer_dir, "tokenizer directory");
 
 	CLI11_PARSE(app, argc, argv);
-    std::cout << "model path is " << model_dir + "/" + data_type << std::endl;
-    ChatGLM chatglm(gpusize, model_dir, data_type, tokenizer_dir);
+    std::cout << "model path is " << model_dir << std::endl;
+    ChatGLM chatglm;
+    chatglm.load(cpusize, gpusize, model_dir, tokenizer_dir);
     chatglm.chat();
     return 0;
 }

@@ -10,15 +10,17 @@
 2. `Embedding`操作调用次数较少，使用`fseek`, `fread`加载的方式降低内存;
 3. `lm_head`操作为`[num, 4096] @ [4096, 130528]`，转换为`[130528, 4096] @ [4096, 1]`;
 4. 原模型对显存要求较高；将模型按层拆分成28个模型，可以根据用户显存大小动态将计算任务分配给GPU和CPU，充分利用GPU与CPU内存与算力; 即使小显存显卡也可以加速生成。
-5. 针对端侧设备可以逐次加载计算，`2G`内存的Android设备也可以执行推理（速度较慢）。
+5. `int4`量化模型在`4G`内存以上Android设备可以执行推理。
 6. **现已提供[ONNX导出方法](./export_script)和模型，可以使用其他框架部署；[点击下载](https://github.com/wangzhaode/ChatGLM-MNN/releases/tag/v0.4)**
+
+**支持Android App Demo**
 
 目前支持命令行对话与Web UI对话两种形式的Demo
 ![web_demo](./resource/web/web_demo.png)
 
 ## Speed
 
-移动端：将分段模型逐个加载推理可以在内存大小大于`2G`的设备执行推理，实验性测试性能较差；目前性能约为：63 `s/word`。
+移动端：XiaoMi 12推理速度约为1.5 `word/s`。
 
 PC测试平台：
 - Memory: 32G (+32G Swap)
@@ -26,11 +28,11 @@ PC测试平台：
 - GPU: GeForce RTX 2080 Ti
 
 ### FP Model
-仅测试浮点模型(CPU: fp32/ GPU: fp16)，输入`你好`，在回复完内容相同的情况下，平均生成一个词语的时间(`s/word`)对比如下：
+仅测试浮点模型(CPU: fp32/ GPU: fp16)，输入`你好`，在回复完内容相同的情况下，平均生成一个词语的时间(`word/s`)对比如下：
 
 |   impl  |   GPU + CPU   | CPU only  |
 |---------|---------------|-----------|
-|   MNN   |      0.292    |   0.877   |
+|   MNN   |      3.424    |   1.140   |
 | Pytorch | out of memory |   1.344   |
 
 ### Quantize Model
@@ -203,7 +205,7 @@ docker run --gpus all -d -p 5088:5088 --restart always --name chatglm-mnn chatgl
 docker run --gpus all -it \
   --name chatglm-mnn \
   chatglm-mnn:cuda_int8_v0.1 \
-  bash -c "cd /workspace/build && ./cli_demo -d int8"
+  bash -c "cd /workspace/build && ./cli_demo"
 ```
 3. 对于Linux/Mac系统，无英伟达显卡，想要运行fp16的(大概需要24G内存）。
 ```bash
@@ -231,7 +233,7 @@ docker run -d -p 5088:5088 --restart always --name chatglm-mnn chatglm-mnn:cpu_i
 docker run -it \
   --name chatglm-mnn \
   chatglm-mnn:cpu_int8_normal_v0.1 \
-  bash -c "cd /workspace/build && ./cli_demo -d int8"
+  bash -c "cd /workspace/build && ./cli_demo"
 ```
 
 

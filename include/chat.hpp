@@ -34,20 +34,22 @@ static constexpr int LAYER_SIZE = 28;
 
 class ChatGLM {
 public:
+    ChatGLM() {}
     // set gpu memory size (G)
-    ChatGLM(float gpu_memory = 0) {
-        init(gpu_memory);
+    void load(float cpu_memory = 8, float gpu_memory = 0) {
+        init(cpu_memory, gpu_memory);
     }
-    ChatGLM(float gpu_memory, const std::string& model_dir, const std::string & data_type, const std::string& tokenizer_dir) {
-        mModelDir = model_dir + "/" + data_type;
+    void load(float cpu_memory, float gpu_memory, const std::string& model_dir, const std::string& tokenizer_dir) {
+        mModelDir = model_dir;
         mTokenizerDir = tokenizer_dir;
-        init(gpu_memory);
+        init(cpu_memory, gpu_memory);
     };
+    float loadProgress() { return mLoadProgress; }
     void chat();
     void reset();
     std::string response(const std::string& input_str, std::ostream* os = &std::cout);
 private:
-    void init(float gpu_memory);
+    void init(float cpu_memory, float gpu_memory);
     void loadModel(const char* fileName, bool cuda, int index);
     std::vector<int> tokenizer_encode(std::string input_str);
     std::string decode(int id);
@@ -57,6 +59,7 @@ private:
     int var_to_token(VARP var);
     int forward(const std::vector<int>& input_ids);
 private:
+    float mLoadProgress = 0;
     std::vector<std::string> mWordDecode;
     std::unordered_map<std::string, int> mWordEncode;
     // MNN Modules

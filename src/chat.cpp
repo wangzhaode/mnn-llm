@@ -9,9 +9,6 @@
 
 #include <fstream>
 #include <iostream>
-#ifdef MINI_MEM_MODE
-#include <thread>
-#endif
 
 #include "chat.hpp"
 #include "cppjieba/Jieba.hpp"
@@ -22,6 +19,13 @@ void ChatGLM::chat() {
         std::cout << "\nQ: ";
         std::string input_str;
         std::cin >> input_str;
+        if (input_str == "/reset") {
+            reset();
+            continue;
+        }
+        if (input_str == "/quit") {
+            break;
+        }
         std::cout << "\nA: " << std::flush;
         response(input_str);
         std::cout << std::endl;
@@ -29,12 +33,12 @@ void ChatGLM::chat() {
 }
 
 void ChatGLM::reset() {
-    mHistoryStr = "";
+    mHistoryStr.clear();
     mChatRound = 0;
 }
 
 std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
-    AUTOTIME;
+    // AUTOTIME;
     // init status
     mSeqLen = 0, mContextLen = -1, mMaskIdx = -1;
     if (mHistoryVars.empty()) mHistoryVars.resize(LAYER_SIZE);
@@ -45,17 +49,23 @@ std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
     // response
     mHistoryStr += ("[Round " + std::to_string(mChatRound++) + "]\n问：" + input_str);
     auto prompt = mChatRound > 1 ? mHistoryStr : input_str;
+    auto st = std::chrono::system_clock::now();
+    int tok_num = 1;
     auto input_ids = tokenizer_encode(prompt);
     int token = forward(input_ids);
     std::string output_str = decode(token);
     *os << output_str << std::flush;
     while (token != EOS) {
-        AUTOTIME;
+        // AUTOTIME;
+        tok_num++;
         token = forward({token});
         auto word = decode(token);
         *os << word << std::flush;
         output_str += word;
     }
+    auto et = std::chrono::system_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(et - st);
+    printf("\nspeed: %f tok/s\n", tok_num / (duration.count() * 1e-6));
     mHistoryStr += ("\n答：" + output_str + "\n");
     return output_str;
 }
@@ -102,20 +112,23 @@ std::string ChatGLM::decode(int id) {
     }
     // Fix utf-8 garbled characters
     if (word.length() == 6 && word[0] == '<' && word[word.length()-1] == '>' && word[1] == '0' && word[2] == 'x') {
-
         int num = std::stoi(word.substr(3, 2), nullptr, 16);
         word = static_cast<char>(num);
     }
     return word;
 }
 
-void ChatGLM::init(float gpu_memory) {
+void ChatGLM::init(float cpu_memory, float gpu_memory) {
+    // AUTOTIME;
     // 0. create runtime
     ScheduleConfig config;
     BackendConfig cpuBackendConfig;
     config.type          = MNN_FORWARD_CPU;
     config.numThread     = 4;
     cpuBackendConfig.precision = BackendConfig::Precision_Low;
+    if (cpu_memory < 24) {
+        cpuBackendConfig.memory = BackendConfig::Memory_Low;
+    }
     config.backendConfig = &cpuBackendConfig;
     mCPURtmgr.reset(Executor::RuntimeManager::createRuntimeManager(config));
     BackendConfig gpuBackendConfig;
@@ -126,61 +139,67 @@ void ChatGLM::init(float gpu_memory) {
     config.backendConfig = &gpuBackendConfig;
     mGPURtmgr.reset(Executor::RuntimeManager::createRuntimeManager(config));
     // 1. load vocab
-    std::string dictFilePath = mTokenizerDir + "/slim_vocab.txt";
-    printf("load %s ... ", dictFilePath.c_str());
-    std::ifstream dictFile(dictFilePath);
-    int index = 0;
-    std::string word;
-    while (dictFile >> word) {
-        mWordDecode.push_back(word);
-        mWordEncode.insert(std::make_pair<std::string, int>(std::move(word), index++));
+    {
+        AUTOTIME;
+        std::string dictFilePath = mTokenizerDir + "/slim_vocab.txt";
+        printf("load %s ... ", dictFilePath.c_str());
+        std::ifstream dictFile(dictFilePath);
+        int index = 0;
+        std::string word;
+        while (dictFile >> word) {
+            mWordDecode.push_back(word);
+            mWordEncode.insert(std::make_pair<std::string, int>(std::move(word), index++));
+        }
+        printf("Done!\n");
     }
-    printf("Done!\n");
+    mLoadProgress = 1.5;
     // 2. load models
     mModules.resize(LAYER_SIZE + 1);
     int gpu_run_layers = (gpu_memory - 2) * 1024.0 / 385.0;
     char buffer[50];
-#ifdef MINI_MEM_MODE
-    std::string model0 = mModelDir + "/glm_block_0.mnn";
-    loadModel(model0.c_str(), false, 0);
-#else
-    for (int i = 0; i < LAYER_SIZE; i++) {
-        std::string model_path = mModelDir + "/glm_block_" + std::to_string(i) + ".mnn";
-        printf("[%3.0f%% ] ", (i + 1) * 100.0 / LAYER_SIZE);
-        loadModel(model_path.c_str(), i <= gpu_run_layers, i);
-        fflush(stdout);
-    }
-    // 3. load lm model
+    // load lm model
     std::string lm_model_path = mModelDir + "/lm.mnn";
     loadModel(lm_model_path.c_str(), false, LAYER_SIZE);
-#endif
+    mLoadProgress = 8.46;
+    printf("[%3.0f%% ] ", mLoadProgress);
+    // load glm_block models
+    for (int i = 0; i < LAYER_SIZE; i++) {
+        std::string model_path = mModelDir + "/glm_block_" + std::to_string(i) + ".mnn";
+        loadModel(model_path.c_str(), i <= gpu_run_layers, i);
+        mLoadProgress += 3.27;
+        printf("[%3.0f%% ] ", mLoadProgress);
+        fflush(stdout);
+    }
 }
 
 void ChatGLM::loadModel(const char* fileName, bool cuda, int i) {
-    // AUTOTIME;
-#ifndef MINI_MEM_MODE
+    AUTOTIME;
     printf("load %s model ... ", fileName);
-#endif
     Module::Config config;
     config.shapeMutable = true;
     config.rearrange = true;
+    cuda = false;
     auto rtmgr = cuda ? mGPURtmgr : mCPURtmgr;
     std::shared_ptr<Module> net(Module::load({}, {}, fileName, rtmgr, &config));
     mModules[i] = std::move(net);
-#ifndef MINI_MEM_MODE
     printf("Done!\n");
-#endif
 }
 
 VARP ChatGLM::gen_embedding(const std::vector<int>& input_ids) {
     size_t seq_len = input_ids.size();
     auto embedding_var = _Input({static_cast<int>(seq_len), 1, HIDDEN_SIZE}, NCHW);
-    constexpr size_t size = HIDDEN_SIZE * sizeof(float);
-    std::string file_path = mModelDir + "/slim_word_embeddings.bin";
+    constexpr size_t size = HIDDEN_SIZE * sizeof(int16_t);
+    std::string file_path = mModelDir + "/slim_word_embeddings_bf16.bin";
     FILE* file = fopen(file_path.c_str(), "rb");
+    std::unique_ptr<int16_t[]> buffer(new int16_t[HIDDEN_SIZE]);
     for (size_t i = 0; i < seq_len; i++) {
         fseek(file, input_ids[i] * size, SEEK_SET);
-        fread(embedding_var->writeMap<char>() + i * size, 1, size, file);
+        fread(buffer.get(), 1, size, file);
+        auto ptr = embedding_var->writeMap<int16_t>() + i * HIDDEN_SIZE * 2;
+        for (int j = 0; j < HIDDEN_SIZE; j++) {
+            ptr[j * 2] = 0;
+            ptr[j * 2 + 1] = buffer[j];
+        }
     }
     fclose(file);
     return embedding_var;
@@ -239,34 +258,17 @@ VARP ChatGLM::gen_position_ids(const std::vector<int>& input_ids) {
 }
 
 int ChatGLM::forward(const std::vector<int>& input_ids) {
-    AUTOTIME;
+    // AUTOTIME;
     mSeqLen += input_ids.size();
     auto hidden_states = gen_embedding(input_ids);
     auto attention_mask = gen_attention_mask(input_ids);
     auto position_ids = gen_position_ids(input_ids);
-#ifdef MINI_MEM_MODE
-    char buffer[50];
-    for (int i = 0; i < LAYER_SIZE; i++) {
-        int loadIdx = i < LAYER_SIZE - 1 ? i + 1 : 0;
-        std::string model_path = mModelDir + "/glm_block_" + std::to_string(loadIdx) + ".mnn";
-        std::thread load_next_model(&ChatGLM::loadModel, this, model_path.c_str(), false, loadIdx);
-        {
-            // AUTOTIME;
-            auto outputs = mModules[i]->onForward({hidden_states, attention_mask, position_ids, mHistoryVars[i]});
-            hidden_states = outputs[0];
-            mHistoryVars[i] = outputs[1];
-        }
-        mModules[i].reset();
-        load_next_model.join();
-    }
-#else
     for (int i = 0; i < LAYER_SIZE; i++) {
         // AUTOTIME;
         auto outputs = mModules[i]->onForward({hidden_states, attention_mask, position_ids, mHistoryVars[i]});
         hidden_states = outputs[0];
         mHistoryVars[i] = outputs[1];
     }
-#endif
     return var_to_token(hidden_states);
 }
 
@@ -276,51 +278,8 @@ int ChatGLM::var_to_token(VARP var) {
     if (num > 1) {
         var = _Gather(var, _Scalar<int>(num - 1));
     }
-    var = _Reshape(var, {HIDDEN_SIZE, 1});
-#ifdef MINI_MEM_MODE
-    // naive impl to save memory : gemm + argmax
-    auto ptr = var->readMap<float>();
-    constexpr int TILE = 512;
-    std::string file_path = mModelDir + "/slim_lm.bin";
-    FILE* file = fopen(file_path.c_str(), "rb");
-    std::vector<float> buffer(TILE * HIDDEN_SIZE);
-    int id = -1;
-    float max_score = 0.f;
-    for (size_t i = 0; i < VOCAB_SIZE / TILE; i++) {
-        fseek(file, i * TILE * HIDDEN_SIZE * sizeof(float), SEEK_SET);
-        fread(reinterpret_cast<char*>(buffer.data()), 1, TILE * HIDDEN_SIZE * sizeof(float), file);
-        for (int j = 0; j < TILE; j++) {
-            float sum = 0.f;
-            for (int k = 0; k < HIDDEN_SIZE; k++) {
-                sum += (buffer[j * HIDDEN_SIZE + k]) * ptr[k];
-            }
-            if (sum > max_score) {
-                max_score = sum;
-                id = i * TILE + j;
-            }
-        }
-    }
-    {
-        int i = VOCAB_SIZE / TILE;
-        constexpr int tile = VOCAB_SIZE % TILE;
-        fseek(file, i * TILE * HIDDEN_SIZE * sizeof(float), SEEK_SET);
-        fread(reinterpret_cast<char*>(buffer.data()), 1, tile * HIDDEN_SIZE * sizeof(float), file);
-        for (int j = 0; j < tile; j++) {
-            float sum = 0.f;
-            for (int k = 0; k < HIDDEN_SIZE; k++) {
-                sum += (buffer[j * HIDDEN_SIZE + k]) * ptr[k];
-            }
-            if (sum > max_score) {
-                max_score = sum;
-                id = i * TILE + j;
-            }
-        }
-    }
-    fclose(file);
-#else
+    var = _Reshape(var, {1, HIDDEN_SIZE, 1, 1});
     auto outputs = mModules.back()->onForward({var});
     int id = outputs[0]->readMap<int>()[0];
-#endif
-    // printf("### %d\n", id);
     return id;
 }

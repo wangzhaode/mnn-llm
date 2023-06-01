@@ -14,8 +14,9 @@
 6. **现已提供[ONNX导出方法](./export_script)和模型，可以使用其他框架部署；[点击下载](https://github.com/wangzhaode/ChatGLM-MNN/releases/tag/v0.4)**
 
 **支持Android App Demo**
+![android_demo](./resource/android_demo.jpg)
 
-目前支持命令行对话与Web UI对话两种形式的Demo
+PC端支持命令行对话与Web UI对话两种形式的Demo
 ![web_demo](./resource/web/web_demo.png)
 
 ## Speed

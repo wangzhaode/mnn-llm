@@ -8,7 +8,7 @@ The number of Embedding operations called is reduced by loading data using fseek
 The lm_head operation is [num, 4096] @ [4096, 130528] and is converted to [130528, 4096] @ [4096, 1].
 The original model requires a large amount of GPU memory. The model is split into 28 submodels, which can be dynamically allocated to GPU and CPU based on the user's GPU memory size to fully utilize the memory and computing power of both. Even small VRAM graphics cards can speed up generation.
 
-For edge devices, calculations can be loaded progressively, and inference can be performed even on Android devices with only 2GB of memory (although slowly).
+For edge devices, using int4 quantized model, and inference can be performed fastly on Android devices with `>=3GB` memory.
 
 An ONNX export method and model are now available for deployment using other frameworks; click here to download
 Currently, two types of demos are supported: command-line dialogue and web UI dialogue.

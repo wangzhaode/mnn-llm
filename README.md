@@ -333,3 +333,4 @@ A: 北京是中国历史文化名城,也是中国美食之都之一,有许多特
 - [cpp-httplib](https://github.com/yhirose/cpp-httplib)
 - [chatgpt-web](https://github.com/xqdoo00o/chatgpt-web)
 - [cppjieba](https://github.com/yanyiwu/cppjieba)
+- [ChatViewDemo](https://github.com/BrettFX/ChatViewDemo)

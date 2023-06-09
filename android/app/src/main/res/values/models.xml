@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="model_list">
+        <item>glm_block_0.mnn</item>
+        <item>glm_block_1.mnn</item>
+        <item>glm_block_2.mnn</item>
+        <item>glm_block_3.mnn</item>
+        <item>glm_block_4.mnn</item>
+        <item>glm_block_5.mnn</item>
+        <item>glm_block_6.mnn</item>
+        <item>glm_block_7.mnn</item>
+        <item>glm_block_8.mnn</item>
+        <item>glm_block_9.mnn</item>
+        <item>glm_block_10.mnn</item>
+        <item>glm_block_11.mnn</item>
+        <item>glm_block_12.mnn</item>
+        <item>glm_block_13.mnn</item>
+        <item>glm_block_14.mnn</item>
+        <item>glm_block_15.mnn</item>
+        <item>glm_block_16.mnn</item>
+        <item>glm_block_17.mnn</item>
+        <item>glm_block_18.mnn</item>
+        <item>glm_block_19.mnn</item>
+        <item>glm_block_20.mnn</item>
+        <item>glm_block_21.mnn</item>
+        <item>glm_block_22.mnn</item>
+        <item>glm_block_23.mnn</item>
+        <item>glm_block_24.mnn</item>
+        <item>glm_block_25.mnn</item>
+        <item>glm_block_26.mnn</item>
+        <item>glm_block_27.mnn</item>
+        <item>lm.mnn</item>
+        <item>slim_word_embeddings_bf16.bin</item>
+    </string-array>
+    <integer-array name="model_size">
+        <item>101104204</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>101104300</item>
+        <item>100507772</item>
+        <item>268888716</item>
+        <item>1069285376</item>
+    </integer-array>
+</resources>

@@ -178,7 +178,6 @@ void ChatGLM::loadModel(const char* fileName, bool cuda, int i) {
     Module::Config config;
     config.shapeMutable = true;
     config.rearrange = true;
-    cuda = false;
     auto rtmgr = cuda ? mGPURtmgr : mCPURtmgr;
     std::shared_ptr<Module> net(Module::load({}, {}, fileName, rtmgr, &config));
     mModules[i] = std::move(net);

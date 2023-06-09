@@ -1,13 +1,12 @@
 package com.mnn.chatglm;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.res.AssetManager;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 
 public class Common {
     public static String copyAssetResource2File(Activity activity, String assetsDir) throws IOException, InterruptedException  {

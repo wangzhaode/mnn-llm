@@ -170,7 +170,7 @@ class ResponseThread extends Thread {
             try {
                 Thread.sleep(200);
             } catch (Exception e) {}
-            String response = mChat.Response();
+            String response = new String(mChat.Response());
             if (response.equals(last_response)) {
                 continue;
             } else {

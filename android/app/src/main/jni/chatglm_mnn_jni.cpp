@@ -58,9 +58,18 @@ JNIEXPORT jstring JNICALL Java_com_mnn_chatglm_Chat_Submit(JNIEnv* env, jobject 
     return result;
 }
 
+/*
 JNIEXPORT jstring JNICALL Java_com_mnn_chatglm_Chat_Response(JNIEnv* env, jobject thiz) {
     jstring result = env->NewStringUTF(response_buffer.str().c_str());
     return result;
+}
+*/
+
+JNIEXPORT jbyteArray JNICALL Java_com_mnn_chatglm_Chat_Response(JNIEnv* env, jobject thiz) {
+    auto len = response_buffer.str().size();
+    jbyteArray res = env->NewByteArray(len);
+    env->SetByteArrayRegion(res, 0, len, (const jbyte*)response_buffer.str().c_str());
+    return res;
 }
 
 JNIEXPORT void JNICALL Java_com_mnn_chatglm_Chat_Done(JNIEnv* env, jobject thiz) {

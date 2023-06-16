@@ -1,5 +1,7 @@
 package com.mnn.chatglm;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -36,5 +38,17 @@ public class DownloadModel extends BaseActivity {
         mDownloadAll.setBackgroundColor(Color.parseColor("#2454e4"));
         mDownloadAll.setText("模型下载中 ...");
         mAdapter.onDownload(mDownloadAll);
+    }
+    public void clearAll(View view) {
+        new AlertDialog.Builder(this)
+                .setTitle("清空确认")
+                .setMessage("确认删除所有已下载模型？")
+                .setPositiveButton("确认",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                mAdapter.onClear();
+                            }
+                }).show();
     }
 }

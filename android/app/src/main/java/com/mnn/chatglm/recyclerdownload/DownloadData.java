@@ -82,6 +82,12 @@ public class DownloadData {
 
     public void setSuccess(int sucess) { this.mSuccess = sucess; }
 
+    public void onClear() {
+        File file = new File(mDir, mName);
+        if (file.exists()) {
+            file.delete();
+        }
+    }
     public void onDownload(int nextDownloadIdx) {
         // check has download
         File file = new File(mDir, mName);

@@ -23,12 +23,19 @@
 using namespace MNN;
 using namespace Express;
 
+#ifdef CHATGLM_1
 static constexpr int MASK = 130000;
 static constexpr int gMASK = 130001;
 static constexpr int BOS = 130004;
 static constexpr int EOS = 130005;
-
 static constexpr int VOCAB_SIZE = 130528;
+#else
+static constexpr int MASK = 130000;
+static constexpr int gMASK = 130001;
+static constexpr int BOS = 1;
+static constexpr int EOS = 2;
+static constexpr int VOCAB_SIZE = 65024;
+#endif
 static constexpr int HIDDEN_SIZE = 4096;
 static constexpr int LAYER_SIZE = 28;
 
@@ -69,6 +76,7 @@ private:
     std::vector<VARP> mHistoryVars;
     // mask info
     int mSeqLen = 0, mContextLen = -1, mMaskIdx = -1;
+    int mToks = 0;
     // model dir
     std::string mModelDir = "../resource/models/fp16";
     std::string mTokenizerDir = "../resource/tokenize";

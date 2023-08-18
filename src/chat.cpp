@@ -40,24 +40,25 @@ void ChatGLM::reset() {
 std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
     // AUTOTIME;
     // init status
-    mSeqLen = 0, mContextLen = -1, mMaskIdx = -1;
+    mSeqLen = 0, mContextLen = -1, mMaskIdx = -1, mToks = 0;
     if (mHistoryVars.empty()) mHistoryVars.resize(LAYER_SIZE);
     for (int i = 0; i < LAYER_SIZE; i++) {
         // init history
-        mHistoryVars[i] = _Input({2, 0, 1, 32, 128}, NCHW);
+        //mHistoryVars[i] = _Input({2, 0, 1, 32, 128}, NCHW);
+        mHistoryVars[i] = _Input({2, 0, 1, 2, 128}, NCHW);
     }
     // response
     mHistoryStr += ("[Round " + std::to_string(mChatRound++) + "]\n问：" + input_str);
     auto prompt = mChatRound > 1 ? mHistoryStr : input_str;
     auto st = std::chrono::system_clock::now();
-    int tok_num = 1;
+    mToks = 1;
     auto input_ids = tokenizer_encode(prompt);
     int token = forward(input_ids);
     std::string output_str = decode(token);
     *os << output_str << std::flush;
     while (token != EOS) {
         // AUTOTIME;
-        tok_num++;
+        mToks++;
         token = forward({token});
         auto word = decode(token);
         *os << word << std::flush;
@@ -65,7 +66,7 @@ std::string ChatGLM::response(const std::string& input_str, std::ostream* os) {
     }
     auto et = std::chrono::system_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(et - st);
-    printf("\nspeed: %f tok/s\n", tok_num / (duration.count() * 1e-6));
+    printf("\nspeed: %f tok/s\n", mToks / (duration.count() * 1e-6));
     mHistoryStr += ("\n答：" + output_str + "\n");
     return output_str;
 }
@@ -86,14 +87,21 @@ std::vector<int> ChatGLM::tokenizer_encode(std::string input_str) {
         stopWord_path
     );
     jieba.Cut(input_str, words, true);
+    ids.push_back(64790);
+    ids.push_back(64792);
     for (auto word : words) {
         const auto& iter = mWordEncode.find(word);
         if (iter != mWordEncode.end()) {
             ids.push_back(iter->second);
         }
     }
-    ids.push_back(gMASK);
-    ids.push_back(BOS);
+    printf("ids = { ");
+    for (auto id : ids) {
+        printf("%d, ", id);
+    }
+    printf(" }\n");
+    // ids.push_back(gMASK);
+    // ids.push_back(BOS);
     return ids;
 }
 
@@ -141,7 +149,8 @@ void ChatGLM::init(float cpu_memory, float gpu_memory) {
     // 1. load vocab
     {
         AUTOTIME;
-        std::string dictFilePath = mTokenizerDir + "/slim_vocab.txt";
+        // std::string dictFilePath = mTokenizerDir + "/slim_vocab.txt";
+        std::string dictFilePath = mTokenizerDir + "/vocab_2.txt";
         printf("load %s ... ", dictFilePath.c_str());
         std::ifstream dictFile(dictFilePath);
         int index = 0;
@@ -179,6 +188,7 @@ void ChatGLM::loadModel(const char* fileName, bool cuda, int i) {
     config.shapeMutable = true;
     config.rearrange = true;
     auto rtmgr = cuda ? mGPURtmgr : mCPURtmgr;
+    std::vector<std::string> input_names {};
     std::shared_ptr<Module> net(Module::load({}, {}, fileName, rtmgr, &config));
     mModules[i] = std::move(net);
     printf("Done!\n");
@@ -231,9 +241,17 @@ VARP ChatGLM::gen_attention_mask(const std::vector<int>& input_ids) {
         ptr[i] = 0;
     }
     if (seq_len > 1) {
+#ifdef GLM_V1
         for (int i = 1; i < seq_len; i++) {
             ptr[seq_len * i - 1] = 1;
         }
+#else
+        for (int i = 0; i < seq_len; i++) {
+            for (int j = 0; j < seq_len; j++) {
+                ptr[seq_len * i + j] = j > i;
+            }
+        }
+#endif
     }
     return attention_mask_var;
 }
@@ -241,6 +259,7 @@ VARP ChatGLM::gen_attention_mask(const std::vector<int>& input_ids) {
 VARP ChatGLM::gen_position_ids(const std::vector<int>& input_ids) {
     int seq_len = input_ids.size();
     // position_ids
+#ifdef CHATHLM_1
     auto position_ids_var = _Input({1, 2, seq_len}, NCHW, halide_type_of<int>());
     auto ptr = position_ids_var->writeMap<int>();
     if (seq_len == 1) {
@@ -253,6 +272,17 @@ VARP ChatGLM::gen_position_ids(const std::vector<int>& input_ids) {
         }
         ptr[2 * seq_len - 1] = 1;
     }
+#else
+    auto position_ids_var = _Input({seq_len}, NCHW, halide_type_of<int>());
+    auto ptr = position_ids_var->writeMap<int>();
+    if (seq_len == 1) {
+        ptr[0] = mToks - 1;
+    } else {
+        for (int i = 0; i < seq_len; i++) {
+            ptr[i] = i;
+        }
+    }
+#endif
     return position_ids_var;
 }
 
@@ -260,11 +290,58 @@ int ChatGLM::forward(const std::vector<int>& input_ids) {
     // AUTOTIME;
     mSeqLen += input_ids.size();
     auto hidden_states = gen_embedding(input_ids);
+    auto ptr = hidden_states->readMap<float>();
+#ifdef DEBUG_DUMP
+    printf("embeding : [\n");
+    for (int n = 0; n < 1; n++) {
+        for (int i = 0; i < 3; i++) {
+            printf("%f, ", ptr[n * 4096 + i]);
+        }
+        printf(" ..., ");
+        for (int i = 4093; i < 4096; i++) {
+            printf("%f, ", ptr[n * 4096 + i]);
+        }
+        printf("\n");
+    }
+    printf("]\n");
+#endif
     auto attention_mask = gen_attention_mask(input_ids);
     auto position_ids = gen_position_ids(input_ids);
     for (int i = 0; i < LAYER_SIZE; i++) {
         // AUTOTIME;
         auto outputs = mModules[i]->onForward({hidden_states, attention_mask, position_ids, mHistoryVars[i]});
+#ifdef DEBUG_DUMP
+        if (mHistoryVars[i]->getInfo()->size > 1) {
+            auto size = mHistoryVars[i]->getInfo()->size;
+            ptr = mHistoryVars[i]->readMap<float>();
+            printf("pastkv : [\n");
+            for (int i = 0; i < 3; i++) {
+                printf("%f, ", ptr[i]);
+            }
+            printf(" ..., ");
+            for (int i = size - 3; i < size; i++) {
+                printf("%f, ", ptr[i]);
+            }
+            printf("]\n");
+        }
+#endif
+        hidden_states = outputs[0];
+#ifdef DEBUG_DUMP
+        if (mHistoryVars[i]->getInfo()->size > 1) {
+        ptr = hidden_states->readMap<float>();
+        printf("hidden_states : [\n");
+        for (int n = 0; n < 1; n++) {
+            for (int i = 0; i < 3; i++) {
+                printf("%f, ", ptr[n * 4096 + i]);
+            }
+            printf(" ..., ");
+            for (int i = 4093; i < 4096; i++) {
+                printf("%f, ", ptr[n * 4096 + i]);
+            }
+            printf("\n");
+        }
+        printf("]\n");
+#endif
         hidden_states = outputs[0];
         mHistoryVars[i] = outputs[1];
     }
@@ -277,7 +354,8 @@ int ChatGLM::var_to_token(VARP var) {
     if (num > 1) {
         var = _Gather(var, _Scalar<int>(num - 1));
     }
-    var = _Reshape(var, {1, HIDDEN_SIZE, 1, 1});
+    // var = _Reshape(var, {1, HIDDEN_SIZE, 1, 1});
+    var = _Reshape(var, {1, HIDDEN_SIZE});
     auto outputs = mModules.back()->onForward({var});
     int id = outputs[0]->readMap<int>()[0];
     return id;

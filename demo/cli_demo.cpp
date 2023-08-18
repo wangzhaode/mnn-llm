@@ -54,6 +54,7 @@ int main(int argc, const char* argv[]) {
     std::cout << "model path is " << model_dir << std::endl;
     ChatGLM chatglm;
     chatglm.load(cpusize, gpusize, model_dir, tokenizer_dir);
-    chatglm.chat();
+    // chatglm.chat();
+    chatglm.response("你好");
     return 0;
 }

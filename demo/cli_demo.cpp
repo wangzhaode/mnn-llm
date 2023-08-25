@@ -6,6 +6,7 @@
 //
 
 #include "chat.hpp"
+#include "llm.hpp"
 #include "CLI11.hpp"
 #include <stdlib.h>
 #ifdef WITH_CUDA
@@ -52,10 +53,16 @@ int main(int argc, const char* argv[]) {
 
 	CLI11_PARSE(app, argc, argv);
     std::cout << "model path is " << model_dir << std::endl;
+    /*
     ChatGLM chatglm;
     chatglm.load(cpusize, gpusize, model_dir, tokenizer_dir);
     // chatglm.chat();
     auto query = "\n<|im_start|>user\n你好<|im_end|>\n<|im_start|>assistant\n";
     chatglm.response(query);
+    */
+    // std::unique_ptr<Llm> llm(new Qwen_7b);
+    std::unique_ptr<Llm> llm(new Chatglm_6b);
+    llm->load(model_dir, tokenizer_dir);
+    llm->response("你好");
     return 0;
 }

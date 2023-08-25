@@ -24,7 +24,7 @@ static inline bool is_base64(BYTE c) {
   return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-std::string base64_decode(std::string const& encoded_string) {
+std::string base64_decode_(std::string const& encoded_string) {
   int in_len = encoded_string.size();
   int i = 0;
   int j = 0;
@@ -211,7 +211,7 @@ void ChatGLM::init(float cpu_memory, float gpu_memory) {
         int index = 0;
         std::string word;
         while (dictFile >> word) {
-            word = base64_decode(word);
+            word = base64_decode_(word);
             mWordDecode.push_back(word);
             mWordEncode.insert(std::make_pair<std::string, int>(std::move(word), index++));
         }

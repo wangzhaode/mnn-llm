@@ -55,6 +55,7 @@ int main(int argc, const char* argv[]) {
     ChatGLM chatglm;
     chatglm.load(cpusize, gpusize, model_dir, tokenizer_dir);
     // chatglm.chat();
-    chatglm.response("你好");
+    auto query = "\n<|im_start|>user\n你好<|im_end|>\n<|im_start|>assistant\n";
+    chatglm.response(query);
     return 0;
 }

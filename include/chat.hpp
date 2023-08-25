@@ -33,11 +33,11 @@ static constexpr int VOCAB_SIZE = 130528;
 static constexpr int MASK = 130000;
 static constexpr int gMASK = 130001;
 static constexpr int BOS = 1;
-static constexpr int EOS = 2;
-static constexpr int VOCAB_SIZE = 65024;
+static constexpr int EOS = 151645;
+static constexpr int VOCAB_SIZE = 151936;
 #endif
 static constexpr int HIDDEN_SIZE = 4096;
-static constexpr int LAYER_SIZE = 28;
+static constexpr int LAYER_SIZE = 32;
 
 class ChatGLM {
 public:

@@ -78,6 +78,9 @@ Llm* Llm::createLLM(const std::string& path) {
         // llm = new Chatglm2_6b;
     } else if (path.find("chatglm") != std::string::npos) {
         llm = new Chatglm_6b;
+    } else if (path.find("codegeex2") != std::string::npos) {
+        llm = new Chatglm2_6b;
+        llm->model_name_ = "Codegeex2_6b";
     } else if (path.find("qwen") != std::string::npos) {
         llm = new Qwen_7b;
     } else if (path.find("baichuan") != std::string::npos) {

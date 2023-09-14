@@ -1,4 +1,4 @@
-package com.mnn.chatglm;
+package com.mnn.llm;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,8 +14,8 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.mnn.chatglm.recylcerchat.ChatData;
-import com.mnn.chatglm.recylcerchat.ConversationRecyclerView;
+import com.mnn.llm.recylcerchat.ChatData;
+import com.mnn.llm.recylcerchat.ConversationRecyclerView;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -39,7 +39,7 @@ public class Conversation extends BaseActivity {
         setContentView(R.layout.activity_conversation);
         mChat = (Chat) getIntent().getSerializableExtra("chat");
         mDateFormat = new SimpleDateFormat("hh:mm aa");
-        setupToolbarWithUpNav(R.id.toolbar, "ChatGLM-MNN", R.drawable.ic_action_back);
+        setupToolbarWithUpNav(R.id.toolbar, "mnn-llm", R.drawable.ic_action_back);
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         mRecyclerView.setHasFixedSize(true);
@@ -123,7 +123,7 @@ public class Conversation extends BaseActivity {
         String itemDate = mDateFormat.format(new Date());
         item.setType("1");
         item.setTime(itemDate);
-        item.setText("你好，我是ChatGLM-MNN，欢迎向我提问。");
+        item.setText("你好，我是mnn-llm，欢迎向我提问。");
         data.add(item);
 
         return data;

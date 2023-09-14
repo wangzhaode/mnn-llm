@@ -1,4 +1,4 @@
-package com.mnn.chatglm;
+package com.mnn.llm;
 
 import java.io.Serializable;
 
@@ -12,6 +12,6 @@ public class Chat implements Serializable {
     public native void Reset();
 
     static {
-        System.loadLibrary("chatglm_mnn");
+        System.loadLibrary("llm_mnn");
     }
 }

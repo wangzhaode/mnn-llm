@@ -1,4 +1,4 @@
-package com.mnn.chatglm.recylcerchat;
+package com.mnn.llm.recylcerchat;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.mnn.chatglm.R;
+import com.mnn.llm.R;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.mnn.chatglm.recyclerdownload;
+package com.mnn.llm.recyclerdownload;
 
 import android.view.View;
 import android.widget.Button;
@@ -7,7 +7,7 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.mnn.chatglm.R;
+import com.mnn.llm.R;
 
 import org.w3c.dom.Text;
 

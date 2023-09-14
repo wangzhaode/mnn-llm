@@ -5,7 +5,7 @@
 //  ZhaodeWang
 //
 
-#include "chat.hpp"
+#include "llm.hpp"
 #include "httplib.h"
 #include "CLI11.hpp"
 #include <iostream>
@@ -16,7 +16,7 @@
 #endif // DEBUG
 
 int main(int argc, const char* argv[]) {
-    CLI::App app{"web demo for chat.cpp"};
+    CLI::App app{"web demo for llm.cpp"};
 #ifdef WITH_CUDA
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, 0);
@@ -55,8 +55,8 @@ int main(int argc, const char* argv[]) {
     CLI11_PARSE(app, argc, argv);
 
     std::cout << "model path is " << model_dir << std::endl;
-    ChatGLM chatglm;
-    chatglm.load(cpusize, gpusize, model_dir, tokenizer_dir);
+    std::unique_ptr<Llm> llm(Llm::createLLM(model_dir));
+    llm->load(model_dir, tokenizer_dir);
     
     std::stringstream ss;
     httplib::Server svr;
@@ -65,7 +65,7 @@ int main(int argc, const char* argv[]) {
     std::string last_request = "";
     auto chat = [&](std::string str) {
         waiting = true;
-        chatglm.response(str, &ss);
+        llm->response(str, &ss);
         waiting = false;
         std::cout << "### response : " << ss.str() << std::endl;
     };

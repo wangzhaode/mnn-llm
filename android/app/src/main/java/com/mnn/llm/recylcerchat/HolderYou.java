@@ -1,11 +1,11 @@
-package com.mnn.chatglm.recylcerchat;
+package com.mnn.llm.recylcerchat;
 
 import android.view.View;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.mnn.chatglm.R;
+import com.mnn.llm.R;
 
 public class HolderYou extends RecyclerView.ViewHolder {
 

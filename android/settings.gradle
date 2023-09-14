@@ -1,2 +1,2 @@
 include ':app'
-rootProject.name='ChatGLM-MNN'
+rootProject.name='mnn-llm'

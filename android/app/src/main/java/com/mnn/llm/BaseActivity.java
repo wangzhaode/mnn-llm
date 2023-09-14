@@ -1,4 +1,4 @@
-package com.mnn.chatglm;
+package com.mnn.llm;
 
 import android.content.Context;
 //import android.support.annotation.DrawableRes;
@@ -13,7 +13,7 @@ import androidx.annotation.DrawableRes;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.mnn.chatglm.R;
+import com.mnn.llm.R;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class BaseActivity extends AppCompatActivity {

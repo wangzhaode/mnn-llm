@@ -7,6 +7,6 @@ cmake_minimum_required(VERSION 3.10)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/../../../../../include/)
 link_directories(${CMAKE_CURRENT_LIST_DIR}/libs/arm64-v8a)
 
-add_library(chatglm_mnn SHARED chatglm_mnn_jni.cpp ../../../../../src/chat.cpp)
+add_library(llm_mnn SHARED llm_mnn_jni.cpp ../../../../../src/llm.cpp)
 
-target_link_libraries(chatglm_mnn MNN MNN_Express log)
+target_link_libraries(llm_mnn MNN MNN_Express log)

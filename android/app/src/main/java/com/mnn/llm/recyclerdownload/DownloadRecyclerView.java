@@ -1,4 +1,4 @@
-package com.mnn.chatglm.recyclerdownload;
+package com.mnn.llm.recyclerdownload;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -12,7 +12,7 @@ import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.mnn.chatglm.R;
+import com.mnn.llm.R;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.mnn.chatglm.recylcerchat;
+package com.mnn.llm.recylcerchat;
 
 public class ChatData {
     String type, text, time;

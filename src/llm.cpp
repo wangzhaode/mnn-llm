@@ -122,6 +122,10 @@ std::string Llm::response(const std::string& query, std::ostream* os) {
     return output_str;
 }
 
+void Llm::reset() {
+    // TODO
+}
+
 void Llm::load(const std::string& model_dir, const std::string& tokenizer_dir) {
     model_dir_ = model_dir;
     tokenizer_dir_ = tokenizer_dir;
@@ -152,6 +156,7 @@ void Llm::load(const std::string& model_dir, const std::string& tokenizer_dir) {
     Module::Config module_config;
     module_config.shapeMutable = true;
     module_config.rearrange = true;
+    load_progress_ = 0.f;
     if (is_single_) {
         modules_.resize(1);
         std::string model_path = model_dir;
@@ -166,23 +171,24 @@ void Llm::load(const std::string& model_dir, const std::string& tokenizer_dir) {
     } else {
         // 2. load models
         modules_.resize(layer_nums_ + 2);
+        float step = 100.0 / modules_.size();
         char buffer[50];
         // load lm model
         std::string lm_model_path = model_dir + "/lm.mnn";
         std::string embedding_model_path = model_dir + "/embedding.mnn";
-        float load_progress = 0.f;
-        printf("[%3.0f%% ] load %s model ... ", load_progress, lm_model_path.c_str());
+        printf("[%3.0f%% ] load %s model ... ", load_progress_, lm_model_path.c_str());
         modules_[layer_nums_].reset(Module::load({}, {}, lm_model_path.c_str(), runtime_manager_, &module_config));
         printf("Done!\n");
-        printf("[%3.0f%% ] load %s model ... ", load_progress, embedding_model_path.c_str());fflush(stdout);
+        load_progress_ += step;
+        printf("[%3.0f%% ] load %s model ... ", load_progress_, embedding_model_path.c_str());fflush(stdout);
         modules_[layer_nums_ + 1].reset(Module::load({}, {}, embedding_model_path.c_str(), runtime_manager_, &module_config));
         printf("Done!\n");
-        float step = 100.0 / (layer_nums_ + 1);
+        load_progress_ += step;
         // load glm_block models
         for (int i = 0; i < layer_nums_; i++) {
-            load_progress += step;
+            load_progress_ += step;
             std::string model_path = model_dir + "/block_" + std::to_string(i) + ".mnn";
-            printf("[%3.0f%% ] load %s model ... ", load_progress, model_path.c_str());
+            printf("[%3.0f%% ] load %s model ... ", load_progress_, model_path.c_str());
             modules_[i].reset(Module::load(
                 {"inputs_embeds", "attention_mask", "position_ids", "past_key_values"},
                 {"hidden_states", "presents"}, model_path.c_str(), runtime_manager_, &module_config));

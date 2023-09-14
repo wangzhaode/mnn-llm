@@ -1,4 +1,4 @@
-package com.mnn.chatglm;
+package com.mnn.llm;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -12,7 +12,7 @@ import android.widget.Button;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.mnn.chatglm.recyclerdownload.DownloadRecyclerView;
+import com.mnn.llm.recyclerdownload.DownloadRecyclerView;
 
 public class DownloadModel extends BaseActivity {
 

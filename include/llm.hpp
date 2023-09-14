@@ -33,6 +33,8 @@ public:
     std::vector<int> tokenizer_encode(std::string input_str);
     std::string decode(int id);
     std::string response(const std::string& input_str, std::ostream* os = &std::cout);
+    float load_progress() { return load_progress_; }
+    void reset();
 private:
     virtual std::vector<int> tokenizer(const std::string& query) = 0;
     virtual VARP gen_attention_mask(int seq_len) = 0;
@@ -48,6 +50,7 @@ protected:
     // gen info
     int gen_seq_len_ = 0;
     int all_seq_len_ = 0;
+    float load_progress_ = 0.f;
 private:
     // MNN Modules
     std::shared_ptr<Executor::RuntimeManager> runtime_manager_;

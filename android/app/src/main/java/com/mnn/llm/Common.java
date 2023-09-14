@@ -1,4 +1,4 @@
-package com.mnn.chatglm;
+package com.mnn.llm;
 
 import android.app.Activity;
 import android.content.res.AssetManager;

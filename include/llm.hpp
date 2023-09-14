@@ -26,12 +26,13 @@ using namespace Express;
 class Llm {
 public:
     Llm() {}
+    static Llm* createLLM(const std::string& path);
     VARP gen_embedding(const std::vector<int>& input_ids);
+    void load(const std::string& model_dir, const std::string& tokenizer_dir);
     int forward(const std::vector<int>& input_ids);
     std::vector<int> tokenizer_encode(std::string input_str);
     std::string decode(int id);
     std::string response(const std::string& input_str, std::ostream* os = &std::cout);
-    void load(const std::string& model_dir, const std::string& tokenizer_dir);
 private:
     virtual std::vector<int> tokenizer(const std::string& query) = 0;
     virtual VARP gen_attention_mask(int seq_len) = 0;
@@ -39,6 +40,7 @@ private:
     virtual bool is_stop(int token_id) = 0;
 protected:
     // model configs
+    bool is_single_ = false;
     int layer_nums_ = 0;
     int hidden_size_ = 4096;
     std::vector<int> key_value_shape_ = {};
@@ -48,8 +50,7 @@ protected:
     int all_seq_len_ = 0;
 private:
     // MNN Modules
-    std::shared_ptr<Executor::RuntimeManager> cpu_runtime_manager_;
-    std::shared_ptr<Executor::RuntimeManager> gpu_runtime_manager_;
+    std::shared_ptr<Executor::RuntimeManager> runtime_manager_;
     std::vector<std::shared_ptr<Module>> modules_;
     std::vector<VARP> past_key_values_;
     // model dir
@@ -97,6 +98,20 @@ public:
         model_name_ = "Qwen_7b";
         layer_nums_ = 32;
         key_value_shape_ = {2, 1, 0, 32, 128};
+    }
+private:
+    virtual std::vector<int> tokenizer(const std::string& query) override;
+    virtual VARP gen_attention_mask(int seq_len) override;
+    virtual VARP gen_position_ids(int seq_len) override;
+    virtual bool is_stop(int token_id) override;
+};
+
+class Baichuan2_7b : public Llm {
+public:
+    Baichuan2_7b() {
+        model_name_ = "Baichuan2_7b";
+        layer_nums_ = 32;
+        key_value_shape_ = {2, 1, 32, 0, 128};
     }
 private:
     virtual std::vector<int> tokenizer(const std::string& query) override;

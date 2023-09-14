@@ -1,0 +1,28 @@
+name: macos-cpu
+on:
+  push:
+    branches:
+     - master
+     - 'feature/**'
+    paths:
+      - 'src/**'
+      - '.github/workflows/macos-cpu.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'src/**'
+      - '.github/workflows/macos-cpu.yml'
+
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+
+jobs:
+  macos_buil_test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: ./script/macos_build.sh

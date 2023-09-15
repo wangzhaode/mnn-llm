@@ -1,4 +1,6 @@
 # mnn-llm
+[![License](https://img.shields.io/github/license/wangzhaode/mnn-llm)](LICENSE.txt)
+[![Download](https://img.shields.io/github/downloads/wangzhaode/mnn-llm/total)](https://github.com/wangzhaode/mnn-llm/releases)
 
 [Read me in english ](./README_en.md)
 
@@ -7,29 +9,50 @@
 
 | model | onnx-fp32 | mnn-int4 |
 |-------|-----------|----------|
-| chatglm-6b | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/chatglm-6b-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm-6b-mnn) |
-| chatglm2-6b | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/chatglm2-6b-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm2-6b-mnn) |
-| codegeex2-6b | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/codegeex2-6b-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/codegeex2-6b-mnn) |
-| Qwen-7B-Chat | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/qwen-7b-chat-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-7b-chat-mnn) |
-| Baichuan2-7B-Chat | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/baichuan2-7b-chat-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/baichuan2-7b-chat-mnn) |
+| chatglm-6b | [![Download][download-chatglm-6b-onnx]][release-chatglm-6b-onnx] | [![Download][download-chatglm-6b-mnn]][release-chatglm-6b-mnn] |
+| chatglm2-6b | [![Download][download-chatglm2-6b-onnx]][release-chatglm2-6b-onnx] | [![Download][download-chatglm2-6b-mnn]][release-chatglm2-6b-mnn] |
+| codegeex2-6b | [![Download][download-codegeex2-6b-onnx]][release-codegeex2-6b-onnx] | [![Download][download-codegeex2-6b-mnn]][release-codegeex2-6b-mnn] |
+| Qwen-7B-Chat | [![Download][download-qwen-7b-chat-onnx]][release-qwen-7b-chat-onnx] | [![Download][download-qwen-7b-chat-mnn]][release-qwen-7b-chat-mnn] |
+| Baichuan2-7B-Chat | [![Download][download-baichuan2-7b-chat-onnx]][release-baichuan2-7b-chat-onnx] | [![Download][download-baichuan2-7b-chat-mnn]][release-baichuan2-7b-chat-mnn] |
 
-### 下载
+[download-chatglm-6b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/chatglm-6b-onnx/total
+[download-chatglm2-6b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/chatglm2-6b-onnx/total
+[download-codegeex2-6b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/codegeex2-6b-onnx/total
+[download-qwen-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen-7b-chat-onnx/total
+[download-baichuan2-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/baichuan2-7b-chat-onnx/total
+[release-chatglm-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm-6b-onnx
+[release-chatglm2-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm2-6b-onnx
+[release-codegeex2-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/codegeex2-6b-onnx
+[release-qwen-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen-7b-chat-onnx
+[release-baichuan2-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/baichuan2-7b-chat-onnx
+[download-chatglm-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm-6b-mnn/total
+[download-chatglm2-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm2-6b-mnn/total
+[download-codegeex2-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/codegeex2-6b-mnn/total
+[download-qwen-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-7b-chat-mnn/total
+[download-baichuan2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/baichuan2-7b-chat-mnn/total
+[release-chatglm-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm-6b-mnn
+[release-chatglm2-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm2-6b-mnn
+[release-codegeex2-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/codegeex2-6b-mnn
+[release-qwen-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-7b-chat-mnn
+[release-baichuan2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/baichuan2-7b-chat-mnn
+
+
+### 下载int4模型
 ```
-# int4 model, <model> like `chatglm-6b`
+# <model> like `chatglm-6b`
 ./script/download_model.sh <model>
 ```
-
 
 ## 构建
 
 当前构建状态：
 
-| system | cpu |
-|--------|-----|
-| linux | [![Build Status][pass-linux-cpu]][ci-linux-cpu] |
-| macos | [![Build Status][pass-macos-cpu]][ci-macos-cpu] |
-| windows | [![Build Status][pass-windows-cpu]][ci-windows-cpu] |
-| android | [![Build Status][pass-android-cpu]][ci-android-cpu] |
+| System | CPU(x64) |
+|--------|----------|
+| Linux | [![Build Status][pass-linux-cpu]][ci-linux-cpu] |
+| Macos | [![Build Status][pass-macos-cpu]][ci-macos-cpu] |
+| Windows | [![Build Status][pass-windows-cpu]][ci-windows-cpu] |
+| Android | [![Build Status][pass-android-cpu]][ci-android-cpu] |
 
 [pass-linux-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/linux-cpu.yml?branch=master
 [pass-macos-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/macos-cpu.yml?branch=master

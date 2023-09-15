@@ -31,6 +31,15 @@
 | windows | [![Build Status][pass-windows-cpu]][ci-windows-cpu] |
 | android | [![Build Status][pass-android-cpu]][ci-android-cpu] |
 
+[pass-linux-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/linux-cpu.yml?branch=master
+[pass-macos-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/macos-cpu.yml?branch=master
+[pass-windows-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/windows-cpu.yml?branch=master
+[pass-android-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/android-cpu.yml?branch=master
+[ci-linux-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Alinux-cpu
+[ci-macos-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Amacos-cpu
+[ci-windows-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Awindows-cpu
+[ci-android-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Aandroid-cpu
+
 ### CPU-Only
 ```
 # linux

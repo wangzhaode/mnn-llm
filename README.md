@@ -3,18 +3,33 @@
 [Read me in english ](./README_en.md)
 
 ## 模型支持
-该项目支持将主流llm模型转换到mnn模型部署推理，目前支持以下模型：
+当前支持以模型：
 
-| 模型 | onnx-fp32 | mnn-int4 |
-|------|-----------|----------|
+| model | onnx-fp32 | mnn-int4 |
+|-------|-----------|----------|
 | chatglm-6b | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/chatglm-6b-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm-6b-mnn) |
 | chatglm2-6b | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/chatglm2-6b-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm2-6b-mnn) |
-| codegeex2-6b | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/codegeex2-6b-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/untagged-93eea51bfbbd01f29a5f) |
-| Qwen-7B-Chat | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/qwen-7b-chat-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/untagged-d109db4ac537bfce7a0b) |
-| Baichuan2-7B-Chat | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/baichuan2-7b-chat-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/untagged-6798382d6309a35e20d0) |
+| codegeex2-6b | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/codegeex2-6b-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/codegeex2-6b-mnn) |
+| Qwen-7B-Chat | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/qwen-7b-chat-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-7b-chat-mnn) |
+| Baichuan2-7B-Chat | [onnx](https://github.com/wangzhaode/llm-export/releases/tag/baichuan2-7b-chat-onnx) | [mnn](https://github.com/wangzhaode/mnn-llm/releases/tag/baichuan2-7b-chat-mnn) |
+
+### 下载
+```
+# int4 model, <model> like `chatglm-6b`
+./script/download_model.sh <model>
+```
 
 
 ## 构建
+
+当前构建状态：
+
+| system | cpu |
+|--------|-----|
+| linux | [![Build Status][pass-linux-cpu]][ci-linux-cpu] |
+| macos | [![Build Status][pass-macos-cpu]][ci-macos-cpu] |
+| windows | [![Build Status][pass-windows-cpu]][ci-windows-cpu] |
+| android | [![Build Status][pass-android-cpu]][ci-android-cpu] |
 
 ### CPU-Only
 ```

@@ -40,7 +40,11 @@
 ### 下载int4模型
 ```
 # <model> like `chatglm-6b`
+# linux/macos
 ./script/download_model.sh <model>
+
+# windows
+./script/download_model.ps1 <model>
 ```
 
 ## 构建

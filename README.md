@@ -5,6 +5,9 @@
 [Read me in english ](./README_en.md)
 
 ## 模型支持
+
+llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm-export)
+
 当前支持以模型：
 
 | model | onnx-fp32 | mnn-int4 |

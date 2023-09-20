@@ -1,0 +1,79 @@
+name: build-test
+on:
+  push:
+    branches:
+     - master
+     - 'feature/**'
+    paths:
+      - 'src/**'
+      - '.github/workflows/build-test.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'src/**'
+      - '.github/workflows/build-test.yml'
+
+jobs:
+  llm-build:
+    name: ${{ matrix.os }}-build
+    env:
+      PACAGE_DIR: ${{ matrix.os }}-package
+      PACAGE_FILE: ${{ matrix.os }}-package.zip
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+  
+    steps:
+      - uses: actions/checkout@v3
+      # linux and macos
+      - name: linux-macos-build-pack
+        if: matrix.os != 'windows-latest'
+        run: |
+            ./script/build.sh
+            ./script/package.sh $PACAGE_DIR
+            zip -r $PACAGE_FILE $PACAGE_DIR
+      # windows
+      - name: windows-build-pack
+        if: matrix.os == 'windows-latest'
+        run: |
+            .\script\build.ps1
+            .\script\package.ps1 windows-package
+            7z a -r windows-package.zip windows-package
+      # upload
+      - name: upload-zip
+        uses: actions/upload-artifact@v3
+        with:
+          path: ./*.zip
+
+  model-test:
+    needs: llm-build
+    name: ${{ matrix.model }}-${{ matrix.os }}-test
+    runs-on: ${{ matrix.os }}
+    env:
+      PACAGE_DIR: ${{ matrix.os }}-package
+      PACAGE_FILE: ${{ matrix.os }}-package.zip
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        model: [chatglm-6b, chatglm2-6b, codegeex2-6b, qwen-7b-chat, baichuan2-7b-chat, llama2-7b-chat]
+
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: workspace
+      - name: linux-macos-test
+        if: matrix.os != 'windows-latest'
+        run: |
+            cd workspace
+            unzip $PACAGE_FILE
+            cd $PACAGE_DIR
+            ./script/model_test.sh ${{ matrix.model }}
+      - name: windows-test
+        if: matrix.os == 'windows-latest'
+        run: |
+            cd workspace
+            7z x windows-package.zip
+            cd windows-package
+            ./script/model_test.ps1 ${{ matrix.model }}

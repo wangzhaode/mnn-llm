@@ -1,4 +1,4 @@
-name: android-cpu
+name: android-build
 on:
   push:
     branches:
@@ -6,12 +6,12 @@ on:
      - 'feature/**'
     paths:
       - 'src/**'
-      - '.github/workflows/android-cpu.yml'
+      - '.github/workflows/android-build.yml'
   pull_request:
     branches: [master]
     paths:
       - 'src/**'
-      - '.github/workflows/android-cpu.yml'
+      - '.github/workflows/android-build.yml'
 
 concurrency:
   group: android-${{ github.ref }}
@@ -20,9 +20,17 @@ permissions:
   contents: read
 
 jobs:
-  android_build:
+  android_adb_build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: build
         run: ./script/android_build.sh
+
+  android_app_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: ./script/android_app_build.sh
+

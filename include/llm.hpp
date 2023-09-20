@@ -109,10 +109,10 @@ private:
     virtual bool is_stop(int token_id) override;
 };
 
-class Baichuan2_7b : public Llm {
+class Llama2_7b : public Llm {
 public:
-    Baichuan2_7b() {
-        model_name_ = "Baichuan2_7b";
+    Llama2_7b() {
+        model_name_ = "Llama2_7b";
         layer_nums_ = 32;
         key_value_shape_ = {2, 1, 32, 0, 128};
     }

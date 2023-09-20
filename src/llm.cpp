@@ -83,8 +83,11 @@ Llm* Llm::createLLM(const std::string& path) {
         llm->model_name_ = "Codegeex2_6b";
     } else if (path.find("qwen") != std::string::npos) {
         llm = new Qwen_7b;
+    } else if (path.find("llama2") != std::string::npos) {
+        llm = new Llama2_7b;
     } else if (path.find("baichuan") != std::string::npos) {
-        llm = new Baichuan2_7b;
+        llm = new Llama2_7b;
+        llm->model_name_ = "Baichuan2_7b";
     }
     llm->is_single_ = is_single;
     return llm;
@@ -400,15 +403,22 @@ bool Qwen_7b::is_stop(int token_id) {
     return token_id >= 151645;
 }
 
-// Baichuan2_7b
-std::vector<int> Baichuan2_7b::tokenizer(const std::string& query) {
+// Llama2_7b
+std::vector<int> Llama2_7b::tokenizer(const std::string& query) {
     auto ids = tokenizer_encode(query);
-    ids.insert(ids.begin(), 195);
-    ids.push_back(196);
+    if (model_name_ == "Baichuan2_7b") {
+        // baichuan2: <reserved_106>{query}<reserved_107>: 195, query, 196
+        ids.insert(ids.begin(), 195);
+        ids.push_back(196);
+        return ids;
+    }
+    // llama2: <bos>[INST]{query}[/INST]: 1, 5539, 25580, 29962, query, 12452, 25580, 29962
+    ids.insert(ids.begin(), {1, 5539, 25580, 29962});
+    ids.insert(ids.end(), {12452, 25580, 29962});
     return ids;
 }
 
-VARP Baichuan2_7b::gen_attention_mask(int seq_len) {
+VARP Llama2_7b::gen_attention_mask(int seq_len) {
     if (seq_len == 1) {
         auto attention_mask = _Input({1, 1, 1, all_seq_len_ + 1}, NCHW, halide_type_of<float>());
         auto ptr = attention_mask->writeMap<float>();
@@ -428,7 +438,7 @@ VARP Baichuan2_7b::gen_attention_mask(int seq_len) {
     }
 }
 
-VARP Baichuan2_7b::gen_position_ids(int seq_len) {
+VARP Llama2_7b::gen_position_ids(int seq_len) {
     auto position_ids = _Input({1, seq_len}, NCHW, halide_type_of<int>());
     auto ptr = position_ids->writeMap<int>();
     if (seq_len == 1) {
@@ -441,6 +451,6 @@ VARP Baichuan2_7b::gen_position_ids(int seq_len) {
     return position_ids;
 }
 
-bool Baichuan2_7b::is_stop(int token_id) {
+bool Llama2_7b::is_stop(int token_id) {
     return token_id == 2;
 }

@@ -1,5 +1,5 @@
 # 1. clone MNN
-git clone https://github.com/alibaba/MNN.git -b 2.6.3 --depth=1
+git clone https://github.com/alibaba/MNN.git -b 2.7.1 --depth=1
 
 # 2. build MNN
 cd MNN

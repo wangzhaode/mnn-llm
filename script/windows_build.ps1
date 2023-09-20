@@ -1,13 +1,12 @@
 # 1. clone MNN
-git clone https://github.com/alibaba/MNN.git -b 2.6.3 --depth=1
+git clone https://github.com/alibaba/MNN.git -b 2.7.1 --depth=1
 
 # 2. build MNN
 cd MNN
 mkdir build
 cd build
-# cmake -DMNN_LOW_MEMORY=ON ..
-cmake ..
-cmake --build . -j 4
+cmake -DMNN_LOW_MEMORY=ON -DMNN_WIN_RUNTIME_MT=ON ..
+cmake --build . --config Release -j 4
 cd ../..
 
 # 3. copy headers and libs
@@ -24,5 +23,5 @@ cp .\pthreads\Pre-built.2\include\*.h .\include\
 mkdir build
 cd build
 cmake ..
-cmake --build .  -j 4
+cmake --build . --config Release -j 4
 cd ..

@@ -70,10 +70,16 @@ jobs:
             unzip $PACAGE_FILE
             cd $PACAGE_DIR
             ./script/model_test.sh ${{ matrix.model }}
-      - name: windows-test
+      - name: windows-download
         if: matrix.os == 'windows-latest'
         run: |
             cd workspace
             7z x windows-package.zip
             cd windows-package
-            ./script/model_test.ps1 ${{ matrix.model }}
+            echo ${{ matrix.model }}
+            ./script/model_download.ps1 ${{ matrix.model }}
+      - name: windows-test
+        if: matrix.os == 'windows-latest'
+        run: |
+            cd build
+            .\Release\cli_demo -m ..\${{ matrix.model }}

@@ -109,7 +109,7 @@ std::string Llm::response(const std::string& query, std::ostream* os) {
     int token = forward(input_ids);
     std::string output_str = decode(token);
     *os << output_str << std::flush;
-    while (true) {
+    while (gen_seq_len_ < max_seq_len_) {
         token = forward({token});
         if (is_stop(token)) {
             *os << std::endl << std::flush;

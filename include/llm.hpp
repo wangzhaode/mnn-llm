@@ -50,6 +50,7 @@ protected:
     // gen info
     int gen_seq_len_ = 0;
     int all_seq_len_ = 0;
+    int max_seq_len_ = 256;
     float load_progress_ = 0.f;
 private:
     // MNN Modules

@@ -1,20 +1,11 @@
-name: build-test
+name: all
 on:
   push:
-    branches:
-     - master
-     - 'feature/**'
-    paths:
-      - 'src/**'
-      - '.github/workflows/build-test.yml'
-  pull_request:
-    branches: [master]
-    paths:
-      - 'src/**'
-      - '.github/workflows/build-test.yml'
+    tags:
+      - '*'
 
 jobs:
-  llm-build:
+  all-build:
     name: ${{ matrix.os }}-build
     env:
       PACAGE_DIR: ${{ matrix.os }}-package
@@ -46,8 +37,8 @@ jobs:
         with:
           path: ./*.zip
 
-  model-test:
-    needs: llm-build
+  all-test:
+    needs: all-build
     name: ${{ matrix.model }}-${{ matrix.os }}-test
     runs-on: ${{ matrix.os }}
     env:
@@ -70,16 +61,14 @@ jobs:
             unzip $PACAGE_FILE
             cd $PACAGE_DIR
             ./script/model_test.sh ${{ matrix.model }}
-      - name: windows-download
-        if: matrix.os == 'windows-latest'
-        run: |
-            cd workspace
-            7z x windows-package.zip
-            cd windows-package
-            echo ${{ matrix.model }}
-            ./script/model_download.ps1 ${{ matrix.model }}
       - name: windows-test
         if: matrix.os == 'windows-latest'
         run: |
+            cd workspace
+            7z x package.zip
+            cd package
+            echo ${{ matrix.model }}
+            ./script/download_model.ps1 ${{ matrix.model }}
             cd build
             .\Release\cli_demo -m ..\${{ matrix.model }}
+            Exit 0

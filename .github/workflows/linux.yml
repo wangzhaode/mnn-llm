@@ -1,0 +1,53 @@
+name: linux
+on:
+  push:
+    branches:
+     - master
+     - 'feature/**'
+    paths:
+      - 'src/**'
+      - '.github/workflows/linux.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'src/**'
+      - '.github/workflows/linux.yml'
+
+jobs:
+  build:
+    name: linux-build
+    runs-on: ubuntu-latest
+  
+    steps:
+      - uses: actions/checkout@v3
+      # build
+      - name: build-pack
+        run: |
+            ./script/build.sh
+            ./script/package.sh package
+            zip -r package.zip package
+      # upload
+      - name: upload-zip
+        uses: actions/upload-artifact@v3
+        with:
+          path: ./*.zip
+
+  test:
+    needs: build
+    name: ${{ matrix.model }}-linux-test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        model: [chatglm-6b, chatglm2-6b, codegeex2-6b, qwen-7b-chat, baichuan2-7b-chat, llama2-7b-chat]
+
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: workspace
+      - name: model-test
+        run: |
+            cd workspace
+            unzip package.zip
+            cd package
+            ./script/model_test.sh ${{ matrix.model }}

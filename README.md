@@ -1,3 +1,5 @@
+![mnn-llm](resource/logo.png)
+
 # mnn-llm
 [![License](https://img.shields.io/github/license/wangzhaode/mnn-llm)](LICENSE.txt)
 [![Download](https://img.shields.io/github/downloads/wangzhaode/mnn-llm/total)](https://github.com/wangzhaode/mnn-llm/releases)
@@ -59,21 +61,21 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 
 当前构建状态：
 
-| System | CPU(x64) |
-|--------|----------|
+| System | build-test |
+|--------|------------|
 | Linux | [![Build Status][pass-linux-cpu]][ci-linux-cpu] |
 | Macos | [![Build Status][pass-macos-cpu]][ci-macos-cpu] |
 | Windows | [![Build Status][pass-windows-cpu]][ci-windows-cpu] |
 | Android | [![Build Status][pass-android-cpu]][ci-android-cpu] |
 
-[pass-linux-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/linux-cpu.yml?branch=master
-[pass-macos-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/macos-cpu.yml?branch=master
-[pass-windows-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/windows-cpu.yml?branch=master
-[pass-android-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/android-cpu.yml?branch=master
-[ci-linux-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Alinux-cpu
-[ci-macos-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Amacos-cpu
-[ci-windows-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Awindows-cpu
-[ci-android-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Aandroid-cpu
+[pass-linux-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/linux.yml?branch=master
+[pass-macos-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/macos.yml?branch=master
+[pass-windows-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/windows.yml?branch=master
+[pass-android-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/android.yml?branch=master
+[ci-linux-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Alinux
+[ci-macos-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Amacos
+[ci-windows-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Awindows
+[ci-android-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Aandroid
 
 ### CPU-Only
 ```

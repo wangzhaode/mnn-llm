@@ -6,11 +6,13 @@ on:
      - 'feature/**'
     paths:
       - 'src/**'
+      - 'android/**'
       - '.github/workflows/android-build.yml'
   pull_request:
     branches: [master]
     paths:
       - 'src/**'
+      - 'android/**'
       - '.github/workflows/android-build.yml'
 
 concurrency:

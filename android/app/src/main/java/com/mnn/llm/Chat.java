@@ -3,7 +3,7 @@ package com.mnn.llm;
 import java.io.Serializable;
 
 public class Chat implements Serializable {
-    public native boolean Init(String modelDir, String tokenizerDir);
+    public native boolean Init(String modelDir);
     public native boolean Ready();
     public native float Progress();
     public native String Submit(String input);

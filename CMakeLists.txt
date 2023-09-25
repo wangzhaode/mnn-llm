@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 project(mnn-llm)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
 option(BUILD_FOR_ANDROID "Build for android whith mini memory mode." OFF)
 option(WITH_CUDA "Enable CUDA support" OFF)
 
@@ -16,10 +14,12 @@ link_directories(${CMAKE_CURRENT_LIST_DIR}/libs)
 FILE(GLOB SRCS ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
 if (MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
     # compile static lib, surrpot Winwows
     add_library(llm STATIC ${SRCS})
     target_link_libraries(llm MNN.lib)
 else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
     # compile dynamic so, support Linux/Mac
     add_library(llm SHARED ${SRCS})
     set_target_properties(llm PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)

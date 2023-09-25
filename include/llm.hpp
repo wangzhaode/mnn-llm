@@ -19,18 +19,22 @@
 #include <MNN/expr/Module.hpp>
 #include <MNN/expr/MathOp.hpp>
 #include <MNN/expr/NeuralNetWorkOp.hpp>
+#include "tokenizer.hpp"
 
 using namespace MNN;
 using namespace Express;
 
 class Llm {
 public:
-    Llm() {}
+    Llm() {
+        // default tokenier is senrencepiece
+        tokenizer_.reset(new Sentencepiece);
+    }
     static Llm* createLLM(const std::string& path);
     VARP gen_embedding(const std::vector<int>& input_ids);
-    void load(const std::string& model_dir, const std::string& tokenizer_dir);
+    void load(const std::string& model_dir);
     int forward(const std::vector<int>& input_ids);
-    std::vector<int> tokenizer_encode(std::string input_str);
+    std::vector<int> tokenizer_encode(const std::string& input_str);
     std::string decode(int id);
     std::string response(const std::string& input_str, std::ostream* os = &std::cout);
     float load_progress() { return load_progress_; }
@@ -52,14 +56,15 @@ protected:
     int all_seq_len_ = 0;
     int max_seq_len_ = 256;
     float load_progress_ = 0.f;
+    // tokenizer
+    std::unique_ptr<Tokenizer> tokenizer_;
 private:
     // MNN Modules
     std::shared_ptr<Executor::RuntimeManager> runtime_manager_;
     std::vector<std::shared_ptr<Module>> modules_;
     std::vector<VARP> past_key_values_;
     // model dir
-    std::string model_dir_ = "../resource/models/fp16";
-    std::string tokenizer_dir_ = "../resource/tokenizer";
+    std::string model_dir_;
     // tokenizer
     std::vector<std::string> word_decoder_;
     std::unordered_map<std::string, int> word_encoder_;
@@ -102,6 +107,7 @@ public:
         model_name_ = "Qwen_7b";
         layer_nums_ = 32;
         key_value_shape_ = {2, 1, 0, 32, 128};
+        tokenizer_.reset(new Tiktoken);
     }
 private:
     virtual std::vector<int> tokenizer(const std::string& query) override;

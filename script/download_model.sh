@@ -12,6 +12,7 @@ if [ $is_7b ]; then
     block_num=31
 fi
 # download models
+wget -c -nv https://github.com/wangzhaode/mnn-llm/releases/download/$model-mnn/tokenizer.txt
 wget -c -nv https://github.com/wangzhaode/mnn-llm/releases/download/$model-mnn/embedding.mnn
 wget -c -nv https://github.com/wangzhaode/mnn-llm/releases/download/$model-mnn/lm.mnn
 for i in `seq 0 $block_num`

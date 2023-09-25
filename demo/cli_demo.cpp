@@ -48,12 +48,11 @@ int main(int argc, const char* argv[]) {
     app.add_option("-c,--cpusize", cpusize,"cpu memory size(G), default is 8G.");
     app.add_option("-g,--gpusize", gpusize,"gpu memory size(G)");
 	app.add_option("-m,--model_dir", model_dir, "model directory");
-    app.add_option("-t,--tokenizer_dir", tokenizer_dir, "tokenizer directory");
 
 	CLI11_PARSE(app, argc, argv);
     std::cout << "model path is " << model_dir << std::endl;
     std::unique_ptr<Llm> llm(Llm::createLLM(model_dir));
-    llm->load(model_dir, tokenizer_dir);
+    llm->load(model_dir);
     llm->response("你好");
     return 0;
 }

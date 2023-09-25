@@ -29,7 +29,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView mProcessPercent;
     // resource files
     private String mModelDir = "/data/local/tmp/model";
-    private String mTokenizerDir = "";
     private boolean mModelNeedDownload = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,7 +115,6 @@ public class MainActivity extends AppCompatActivity {
         mLoadButton.setText("模型加载中 ...");
         mProcessView.setVisibility(View.VISIBLE);
         mChat = new Chat();
-        prepareFiles();
         System.out.println("[MNN_DEBUG] is chat Ready: " + mChat.Ready());
         Handler handler = new Handler() {
             @Override
@@ -126,20 +124,10 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         // copy models
-        LoadThread loadT = new LoadThread(mChat, handler, mModelDir, mTokenizerDir);
+        LoadThread loadT = new LoadThread(mChat, handler, mModelDir);
         loadT.start();
         ProgressThread progressT = new ProgressThread(mChat, mProcessHandler);
         progressT.start();
-    }
-
-    public void prepareFiles() {
-        System.out.println("MNN_DEBUG: prepareFiles Start");
-        try {
-            mTokenizerDir = Common.copyAssetResource2File(this, "tokenizer");
-        } catch (Exception e) {
-            System.out.println(e.toString());
-        }
-        System.out.println("MNN_DEBUG: prepareFiles End" + mModelDir + " # " + mTokenizerDir);
     }
 }
 
@@ -147,16 +135,14 @@ class LoadThread extends Thread {
     private Chat mChat;
     private Handler mHandler;
     private String mModelDir;
-    private String mTokenizerDir;
-    LoadThread(Chat chat, Handler handler, String modelDir, String tokenizerDir) {
+    LoadThread(Chat chat, Handler handler, String modelDir) {
         mChat = chat;
         mHandler = handler;
         mModelDir = modelDir;
-        mTokenizerDir = tokenizerDir;
     }
     public void run() {
         super.run();
-        mChat.Init(mModelDir, mTokenizerDir);
+        mChat.Init(mModelDir);
         mHandler.sendMessage(new Message());
     }
 }

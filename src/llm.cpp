@@ -5,64 +5,10 @@
 //  ZhaodeWang
 //
 
-#include <fstream>
 #include <iostream>
 
 #include "llm.hpp"
-#include "cppjieba/Jieba.hpp"
 #include <MNN/expr/ExecutorScope.hpp>
-
-// base64
-typedef unsigned char BYTE;
-static const std::string base64_chars =
-             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-             "abcdefghijklmnopqrstuvwxyz"
-             "0123456789+/";
-
-static inline bool is_base64(BYTE c) {
-  return (isalnum(c) || (c == '+') || (c == '/'));
-}
-
-std::string base64_decode(std::string const& encoded_string) {
-  int in_len = encoded_string.size();
-  int i = 0;
-  int j = 0;
-  int in_ = 0;
-  BYTE char_array_4[4], char_array_3[3];
-  std::string ret;
-
-  while (in_len-- && ( encoded_string[in_] != '=') && is_base64(encoded_string[in_])) {
-    char_array_4[i++] = encoded_string[in_]; in_++;
-    if (i ==4) {
-      for (i = 0; i <4; i++)
-        char_array_4[i] = base64_chars.find(char_array_4[i]);
-
-      char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
-      char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
-      char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
-
-      for (i = 0; (i < 3); i++)
-          ret.push_back(char_array_3[i]);
-      i = 0;
-    }
-  }
-
-  if (i) {
-    for (j = i; j <4; j++)
-      char_array_4[j] = 0;
-
-    for (j = 0; j <4; j++)
-      char_array_4[j] = base64_chars.find(char_array_4[j]);
-
-    char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
-    char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
-    char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
-
-    for (j = 0; (j < i - 1); j++) ret.push_back(char_array_3[j]);
-  }
-
-  return ret;
-}
 
 Llm* Llm::createLLM(const std::string& path) {
     auto size = path.size();
@@ -129,9 +75,8 @@ void Llm::reset() {
     // TODO
 }
 
-void Llm::load(const std::string& model_dir, const std::string& tokenizer_dir) {
+void Llm::load(const std::string& model_dir) {
     model_dir_ = model_dir;
-    tokenizer_dir_ = tokenizer_dir;
     // init
     ScheduleConfig config;
     BackendConfig cpuBackendConfig;
@@ -143,19 +88,10 @@ void Llm::load(const std::string& model_dir, const std::string& tokenizer_dir) {
     config.backendConfig = &cpuBackendConfig;
     runtime_manager_.reset(Executor::RuntimeManager::createRuntimeManager(config));
     // 1. load vocab
-    {
-        std::string vocab_path = tokenizer_dir + "/" + model_name_ + "_vocab.txt";
-        printf("load %s ... ", vocab_path.c_str());
-        std::ifstream vocab_file(vocab_path);
-        int index = 0;
-        std::string word;
-        while (vocab_file >> word) {
-            word = base64_decode(word);
-            word_decoder_.push_back(word);
-            word_encoder_.insert(std::make_pair<std::string, int>(std::move(word), index++));
-        }
-        printf("Done!\n");
-    }
+    // std::string tokenizer_path = model_dir + "/tokenizer.model";
+    std::string tokenizer_path = model_dir + "/tokenizer.txt";
+    tokenizer_->load(tokenizer_path);
+    // 2. load model
     Module::Config module_config;
     module_config.shapeMutable = true;
     module_config.rearrange = true;
@@ -229,6 +165,7 @@ int Llm::forward(const std::vector<int>& input_ids) {
 }
 
 VARP Llm::gen_embedding(const std::vector<int>& input_ids) {
+    // disk embedding save memory
     size_t seq_len = input_ids.size();
     auto embedding = _Input({static_cast<int>(seq_len), 1, hidden_size_}, NCHW);
     // auto embedding = _Input({1, static_cast<int>(seq_len), hidden_size_}, NCHW);
@@ -249,33 +186,13 @@ VARP Llm::gen_embedding(const std::vector<int>& input_ids) {
     return embedding;
 }
 
-std::vector<int> Llm::tokenizer_encode(std::string input_str) {
-    std::vector<int> ids;
-    std::vector<std::string> words;
-    std::string dict_path = tokenizer_dir_ + "/jieba.dict.utf8";
-    std::string model_path = tokenizer_dir_ + "/hmm_model.utf8";
-    std::string user_dict_path = tokenizer_dir_ + "/user.dict.utf8";
-    std::string idf_path = tokenizer_dir_ + "/idf.utf8";
-    std::string stopWord_path = tokenizer_dir_ + "/stop_words.utf8";
-    cppjieba::Jieba jieba(
-        dict_path,
-        model_path,
-        user_dict_path,
-        idf_path,
-        stopWord_path
-    );
-    jieba.Cut(input_str, words, true);
-    for (auto word : words) {
-        const auto& iter = word_encoder_.find(word);
-        if (iter != word_encoder_.end()) {
-            ids.push_back(iter->second);
-        }
-    }
+std::vector<int> Llm::tokenizer_encode(const std::string& input_str) {
+    auto ids = tokenizer_->encode(input_str);
     return ids;
 }
 
 std::string Llm::decode(int id) {
-    auto word = word_decoder_[id];
+    std::string word = tokenizer_->decode(id);
     // Fix utf-8 garbled characters
     if (word.length() == 6 && word[0] == '<' && word[word.length()-1] == '>' && word[1] == '0' && word[2] == 'x') {
         int num = std::stoi(word.substr(3, 2), nullptr, 16);
@@ -329,7 +246,7 @@ bool Chatglm_6b::is_stop(int token_id) {
 
 // Chatglm2_6b
 std::vector<int> Chatglm2_6b::tokenizer(const std::string& query) {
-    auto prompt = "\n问：\n" + query + "答：\n";
+    auto prompt = "问：" + query + "\n答：";
     auto ids = tokenizer_encode(prompt);
     ids.insert(ids.begin(), 64792);
     ids.insert(ids.begin(), 64790);
@@ -370,8 +287,10 @@ bool Chatglm2_6b::is_stop(int token_id) {
 
 // Qwen_7b
 std::vector<int> Qwen_7b::tokenizer(const std::string& query) {
-    auto prompt = "\n<|im_start|>user\n" + query + "<|im_end|>\n<|im_start|>assistant\n";
-    auto ids = tokenizer_encode(prompt);
+    auto ids = tokenizer_encode(query);
+    // auto prompt = "\n<|im_start|>user\n" + query + "<|im_end|>\n<|im_start|>assistant\n";
+    ids.insert(ids.begin(), {198, 151644, 872, 198});
+    ids.insert(ids.end(), {151645, 198, 151644, 77091, 198});
     return ids;
 }
 

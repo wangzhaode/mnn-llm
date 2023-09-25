@@ -24,12 +24,11 @@ JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
     __android_log_print(ANDROID_LOG_DEBUG, "MNN_DEBUG", "JNI_OnUnload");
 }
 
-JNIEXPORT jboolean JNICALL Java_com_mnn_llm_Chat_Init(JNIEnv* env, jobject thiz, jstring modelDir, jstring tokenizerDir) {
+JNIEXPORT jboolean JNICALL Java_com_mnn_llm_Chat_Init(JNIEnv* env, jobject thiz, jstring modelDir) {
     if (llm->load_progress() < 100) {
         const char* model_dir = env->GetStringUTFChars(modelDir, 0);
-        const char* token_dir = env->GetStringUTFChars(tokenizerDir, 0);
         llm = Llm::createLLM(model_dir);
-        llm->load(model_dir, token_dir);
+        llm->load(model_dir);
     }
     return JNI_TRUE;
 }

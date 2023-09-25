@@ -10,7 +10,6 @@ cd ..
 
 # copy file
 echo 'copy files ...'
-cp -r resource\tokenizer $package_path\resource
 cp -r script $package_path
 cp -r build\Release $package_path\build
 cp libs\*.dll $package_path\build\Release

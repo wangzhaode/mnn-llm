@@ -61,23 +61,23 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 
 当前构建状态：
 
-| System | build-test |
-|--------|------------|
-| Linux | [![Build Status][pass-linux-cpu]][ci-linux-cpu] |
-| Macos | [![Build Status][pass-macos-cpu]][ci-macos-cpu] |
-| Windows | [![Build Status][pass-windows-cpu]][ci-windows-cpu] |
-| Android | [![Build Status][pass-android-cpu]][ci-android-cpu] |
+| System | Build Statud |
+|:------:|:------------:|
+| Linux | [![Build Status][pass-linux]][ci-linux] |
+| Macos | [![Build Status][pass-macos]][ci-macos] |
+| Windows | [![Build Status][pass-windows]][ci-windows] |
+| Android | [![Build Status][pass-android]][ci-android] |
 
-[pass-linux-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/linux.yml?branch=master
-[pass-macos-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/macos.yml?branch=master
-[pass-windows-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/windows.yml?branch=master
-[pass-android-cpu]: https://img.shields.io/github/actions/workflow/status/wangzhaode/mnn-llm/android.yml?branch=master
-[ci-linux-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Alinux
-[ci-macos-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Amacos
-[ci-windows-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Awindows
-[ci-android-cpu]: https://github.com/wangzhaode/mnn-llm/actions?query=workflow%3Aandroid
+[pass-linux]: https://github.com/wangzhaode/mnn-llm/actions/workflows/linux.yml/badge.svg
+[pass-macos]: https://github.com/wangzhaode/mnn-llm/actions/workflows/macos.yml/badge.svg
+[pass-windows]: https://github.com/wangzhaode/mnn-llm/actions/workflows/windows.yml/badge.svg
+[pass-android]: https://github.com/wangzhaode/mnn-llm/actions/workflows/android.yml/badge.svg
+[ci-linux]: https://github.com/wangzhaode/mnn-llm/actions/workflows/linux.yml
+[ci-macos]: https://github.com/wangzhaode/mnn-llm/actions/workflows/macos.yml
+[ci-windows]: https://github.com/wangzhaode/mnn-llm/actions/workflows/windows.yml
+[ci-android]: https://github.com/wangzhaode/mnn-llm/actions/workflows/android.yml
 
-### CPU-Only
+### 本地编译
 ```
 # linux
 ./script/linux_build.sh
@@ -91,8 +91,11 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 # android
 ./script/android_build.sh
 ```
-### CUDA/OPENCL
-`TODO`
+
+默认使用`CPU`后端，如果使用其他后端，可以在脚本中添加`MNN`编译宏
+- cuda: `-DMNN_CUDA=ON`
+- opencl: `-DMNN_OPENCL=ON`
+
 
 ### 4. 执行
 
@@ -104,6 +107,11 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 # windows
 .\Debug\cli_demo.exe
 .\Debug\web_demo.exe
+
+# android
+adb push libs/*.so build/libllm.so build/cli_demo /data/local/tmp
+adb push model_dir /data/local/tmp
+adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo -m model"
 ```
 
 

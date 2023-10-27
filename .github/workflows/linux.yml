@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        model: [chatglm-6b, chatglm2-6b, codegeex2-6b, qwen-7b-chat, baichuan2-7b-chat, llama2-7b-chat]
+        model: [chatglm-6b, chatglm2-6b, chatglm3-6b, codegeex2-6b, qwen-7b-chat, baichuan2-7b-chat, llama2-7b-chat]
 
     steps:
       - uses: actions/download-artifact@v3

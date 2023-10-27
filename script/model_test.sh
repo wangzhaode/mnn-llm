@@ -13,6 +13,7 @@ model_test() {
 test_all() {
     model_test chatglm-6b
     model_test chatglm2-6b
+    model_test chatglm3-6b
     model_test codegeex2-6b
     model_test qwen-7b-chat
     model_test baichuan2-7b-chat

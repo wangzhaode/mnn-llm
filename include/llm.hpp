@@ -23,6 +23,7 @@
 
 using namespace MNN;
 using namespace Express;
+class Tokenizer;
 
 class Llm {
 public:

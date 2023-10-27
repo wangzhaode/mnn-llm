@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "llm.hpp"
+#include "tokenizer.hpp"
 #include <MNN/expr/ExecutorScope.hpp>
 
 Llm* Llm::createLLM(const std::string& path) {
@@ -22,6 +23,9 @@ Llm* Llm::createLLM(const std::string& path) {
     Llm* llm = new Chatglm2_6b;
     if (path.find("chatglm2") != std::string::npos) {
         // llm = new Chatglm2_6b;
+    } else if (path.find("chatglm3") != std::string::npos) {
+        llm = new Chatglm2_6b;
+        llm->model_name_ = "Chatglm3_6b";
     } else if (path.find("chatglm") != std::string::npos) {
         llm = new Chatglm_6b;
     } else if (path.find("codegeex2") != std::string::npos) {
@@ -36,6 +40,7 @@ Llm* Llm::createLLM(const std::string& path) {
         llm->model_name_ = "Baichuan2_7b";
     }
     llm->is_single_ = is_single;
+    std::cout << "### model name : "<< llm->model_name_ << std::endl;
     return llm;
 }
 

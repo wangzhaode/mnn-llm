@@ -31,12 +31,14 @@ public:
         // default tokenier is senrencepiece
         tokenizer_.reset(new Sentencepiece);
     }
+    virtual ~Llm() = default;
     static Llm* createLLM(const std::string& path);
     VARP gen_embedding(const std::vector<int>& input_ids);
     void load(const std::string& model_dir);
     int forward(const std::vector<int>& input_ids);
     std::vector<int> tokenizer_encode(const std::string& input_str);
     std::string decode(int id);
+    void chat();
     std::string response(const std::string& input_str, std::ostream* os = &std::cout);
     float load_progress() { return load_progress_; }
     void reset();

@@ -53,6 +53,7 @@ int main(int argc, const char* argv[]) {
     std::cout << "model path is " << model_dir << std::endl;
     std::unique_ptr<Llm> llm(Llm::createLLM(model_dir));
     llm->load(model_dir);
-    llm->response("你好");
+    // llm->response("你好");
+    llm->chat();
     return 0;
 }

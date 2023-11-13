@@ -4,12 +4,15 @@
 //  Created by MNN on 2023/08/25.
 //  ZhaodeWang
 //
+// #define MNN_OPEN_TIME_TRACE 1
 
 #include <iostream>
 
 #include "llm.hpp"
 #include "tokenizer.hpp"
 #include <MNN/expr/ExecutorScope.hpp>
+#include <MNN/AutoTime.hpp>
+
 
 Llm* Llm::createLLM(const std::string& path) {
     auto size = path.size();
@@ -44,10 +47,21 @@ Llm* Llm::createLLM(const std::string& path) {
     return llm;
 }
 
+void Llm::chat() {
+    while (true) {
+        std::cout << "\nQ: ";
+        std::string input_str;
+        std::cin >> input_str;
+        std::cout << "\nA: " << std::flush;
+        response(input_str);
+        reset();
+        std::cout << std::endl;
+    }
+}
+
 std::string Llm::response(const std::string& query, std::ostream* os) {
     // init status
     if (is_single_) {
-        key_value_shape_.insert(key_value_shape_.begin(), layer_nums_);
         past_key_values_.push_back(_Input(key_value_shape_, NCHW));
     } else {
         for (int i = 0; i < layer_nums_; i++) {
@@ -70,14 +84,24 @@ std::string Llm::response(const std::string& query, std::ostream* os) {
         *os << word << std::flush;
         output_str += word;
     }
+#ifdef SHOW_SPEED
     auto et = std::chrono::system_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(et - st);
-    printf("\n[speed: %f tok/s]\n", gen_seq_len_ / (duration.count() * 1e-6));
+    auto duration_s = duration.count() * 1e-6;
+    printf("\n##########################\n");
+    printf("prompt tokens num  = %lu\n", input_ids.size());
+    printf("output tokens num  = %d\n", gen_seq_len_);
+    printf("forward total time = %f s\n", duration_s);
+    printf("average gene speed = %f tok/s\n", gen_seq_len_ / duration_s);
+    printf("###########################\n");
+#endif
     return output_str;
 }
 
 void Llm::reset() {
-    // TODO
+    past_key_values_.clear();
+    gen_seq_len_ = 0;
+    all_seq_len_ = 0;
 }
 
 void Llm::load(const std::string& model_dir) {
@@ -86,12 +110,14 @@ void Llm::load(const std::string& model_dir) {
     ScheduleConfig config;
     BackendConfig cpuBackendConfig;
     config.type          = MNN_FORWARD_CPU;
-    // config.type          = MNN_FORWARD_CUDA;
     config.numThread     = 4;
+    // config.type          = MNN_FORWARD_CUDA;
     cpuBackendConfig.precision = BackendConfig::Precision_Low;
     cpuBackendConfig.memory = BackendConfig::Memory_Low;
     config.backendConfig = &cpuBackendConfig;
     runtime_manager_.reset(Executor::RuntimeManager::createRuntimeManager(config));
+    // const char* cacheFileName = ".tempcache";
+    // runtime_manager_->setCache(cacheFileName);
     // 1. load vocab
     // std::string tokenizer_path = model_dir + "/tokenizer.model";
     std::string tokenizer_path = model_dir + "/tokenizer.txt";
@@ -102,6 +128,7 @@ void Llm::load(const std::string& model_dir) {
     module_config.rearrange = true;
     load_progress_ = 0.f;
     if (is_single_) {
+        key_value_shape_.insert(key_value_shape_.begin(), layer_nums_);
         modules_.resize(1);
         std::string model_path = model_dir;
         std::string external_path = model_dir + ".weight";
@@ -126,7 +153,7 @@ void Llm::load(const std::string& model_dir) {
         load_progress_ += step;
         printf("[%3.0f%% ] load %s model ... ", load_progress_, embedding_model_path.c_str());fflush(stdout);
         modules_[layer_nums_ + 1].reset(Module::load({}, {}, embedding_model_path.c_str(), runtime_manager_, &module_config));
-        printf("Done!\n");
+        // printf("Done!\n");
         load_progress_ += step;
         // load glm_block models
         for (int i = 0; i < layer_nums_; i++) {
@@ -156,13 +183,19 @@ int Llm::forward(const std::vector<int>& input_ids) {
     } else {
         // split block models
         auto hidden_states = modules_[layer_nums_ + 1]->onForward({inputs_ids_})[0];
+        // auto hidden_states = gen_embedding(input_ids);
         for (int i = 0; i < layer_nums_; i++) {
+            AUTOTIME;
             auto outputs = modules_[i]->onForward({hidden_states, attention_mask, position_ids, past_key_values_[i]});
             hidden_states = outputs[0];
             past_key_values_[i] = outputs[1];
         }
-        auto outputs = modules_[layer_nums_]->onForward({hidden_states});
-        id = outputs[0]->readMap<int>()[0];
+        {
+            AUTOTIME;
+            auto outputs = modules_[layer_nums_]->onForward({hidden_states});
+            id = outputs[0]->readMap<int>()[0];
+        }
+
     }
     all_seq_len_ += seq_len;
     gen_seq_len_++;
@@ -170,12 +203,13 @@ int Llm::forward(const std::vector<int>& input_ids) {
 }
 
 VARP Llm::gen_embedding(const std::vector<int>& input_ids) {
+    AUTOTIME;
     // disk embedding save memory
     size_t seq_len = input_ids.size();
     auto embedding = _Input({static_cast<int>(seq_len), 1, hidden_size_}, NCHW);
     // auto embedding = _Input({1, static_cast<int>(seq_len), hidden_size_}, NCHW);
     size_t size = hidden_size_ * sizeof(int16_t);
-    std::string file_path = model_dir_ + "/slim_word_embeddings_bf16.bin";
+    std::string file_path = model_dir_ + "/embeddings_bf16.bin";
     FILE* file = fopen(file_path.c_str(), "rb");
     std::unique_ptr<int16_t[]> buffer(new int16_t[hidden_size_]);
     for (size_t i = 0; i < seq_len; i++) {

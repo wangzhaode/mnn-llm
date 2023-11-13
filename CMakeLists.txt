@@ -24,9 +24,9 @@ else()
     add_library(llm SHARED ${SRCS})
     set_target_properties(llm PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
-    target_link_libraries(llm MNN MNN_Express)
+    #target_link_libraries(llm MNN MNN_Express)
+    target_link_libraries(llm MNN MNN_Express MNN_CL) # if using OPENCL
 endif()
-# target_link_libraries(llm MNN MNN_Express MNN_CL) # if using OPENCL
 
 if (BUILD_FOR_ANDROID)
     add_library(MNN SHARED IMPORTED)

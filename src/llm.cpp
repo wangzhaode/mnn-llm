@@ -13,6 +13,7 @@
 #include <MNN/expr/ExecutorScope.hpp>
 #include <MNN/AutoTime.hpp>
 
+#include <fstream>
 
 Llm* Llm::createLLM(const std::string& path) {
     auto size = path.size();
@@ -22,25 +23,34 @@ Llm* Llm::createLLM(const std::string& path) {
                       path[size - 3] == 'm' &&
                       path[size - 2] == 'n' &&
                       path[size - 1] == 'n');
-    // default is chatglm2
-    Llm* llm = new Chatglm2_6b;
-    if (path.find("chatglm2") != std::string::npos) {
-        // llm = new Chatglm2_6b;
-    } else if (path.find("chatglm3") != std::string::npos) {
-        llm = new Chatglm2_6b;
-        llm->model_name_ = "Chatglm3_6b";
-    } else if (path.find("chatglm") != std::string::npos) {
-        llm = new Chatglm_6b;
+    Llm* llm = nullptr;
+    if (path.find("chatglm") != std::string::npos) {
+        if (path.find("chatglm2") != std::string::npos) {
+            llm = new Chatglm2_6b;
+        } else if (path.find("chatglm3") != std::string::npos) {
+            llm = new Chatglm2_6b;
+            llm->model_name_ = "Chatglm3_6b";
+        } else {
+            llm = new Chatglm_6b;
+        }
     } else if (path.find("codegeex2") != std::string::npos) {
         llm = new Chatglm2_6b;
         llm->model_name_ = "Codegeex2_6b";
     } else if (path.find("qwen") != std::string::npos) {
-        llm = new Qwen_7b;
+        if (path.find("1.8") != std::string::npos) {
+            llm = new Qwen_1_8b;
+        } else {
+            llm = new Qwen_7b;
+        }
     } else if (path.find("llama2") != std::string::npos) {
         llm = new Llama2_7b;
     } else if (path.find("baichuan") != std::string::npos) {
         llm = new Llama2_7b;
         llm->model_name_ = "Baichuan2_7b";
+    }
+    if (!llm) {
+        std::cerr << "model type can't judge!" << std::endl;
+        return llm;
     }
     llm->is_single_ = is_single;
     std::cout << "### model name : "<< llm->model_name_ << std::endl;
@@ -71,9 +81,13 @@ std::string Llm::response(const std::string& query, std::ostream* os) {
     // response
     auto st = std::chrono::system_clock::now();
     auto input_ids = tokenizer(query);
+    // printf("token_num : %lu\n", input_ids.size());
     int token = forward(input_ids);
     std::string output_str = decode(token);
+    auto et = std::chrono::system_clock::now();
+    auto prefill_duration = std::chrono::duration_cast<std::chrono::microseconds>(et - st);
     *os << output_str << std::flush;
+    st = std::chrono::system_clock::now();
     while (gen_seq_len_ < max_seq_len_) {
         token = forward({token});
         if (is_stop(token)) {
@@ -84,22 +98,34 @@ std::string Llm::response(const std::string& query, std::ostream* os) {
         *os << word << std::flush;
         output_str += word;
     }
+    et = std::chrono::system_clock::now();
+    auto decode_duration = std::chrono::duration_cast<std::chrono::microseconds>(et - st);
+#define SHOW_SPEED
 #ifdef SHOW_SPEED
-    auto et = std::chrono::system_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(et - st);
-    auto duration_s = duration.count() * 1e-6;
-    printf("\n##########################\n");
+    auto prefill_s = prefill_duration.count() * 1e-6;
+    auto decode_s = decode_duration.count() * 1e-6;
+    auto total_s = prefill_s + decode_s;
+    printf("\n#################################\n");
+    printf(" total tokens num  = %lu\n", input_ids.size() + gen_seq_len_);
     printf("prompt tokens num  = %lu\n", input_ids.size());
     printf("output tokens num  = %d\n", gen_seq_len_);
-    printf("forward total time = %f s\n", duration_s);
-    printf("average gene speed = %f tok/s\n", gen_seq_len_ / duration_s);
-    printf("###########################\n");
+    printf("  total time = %.2f s\n", total_s);
+    printf("prefill time = %.2f s\n", prefill_s);
+    printf(" decode time = %.2f s\n", decode_s);
+    printf("  total speed = %.2f tok/s\n", (input_ids.size() + gen_seq_len_) / total_s);
+    printf("prefill speed = %.2f tok/s\n", input_ids.size() / prefill_s);
+    printf(" decode speed = %.2f tok/s\n", gen_seq_len_ / decode_s);
+    printf("   chat speed = %.2f tok/s\n", gen_seq_len_ / total_s);
+    printf("##################################\n");
 #endif
+    // update Cache
+    runtime_manager_->updateCache();
     return output_str;
 }
 
 void Llm::reset() {
     past_key_values_.clear();
+    past_key_values_.shrink_to_fit();
     gen_seq_len_ = 0;
     all_seq_len_ = 0;
 }
@@ -110,16 +136,17 @@ void Llm::load(const std::string& model_dir) {
     ScheduleConfig config;
     BackendConfig cpuBackendConfig;
     config.type          = MNN_FORWARD_CPU;
+    // config.type          = MNN_FORWARD_OPENCL;
     config.numThread     = 4;
-    // config.type          = MNN_FORWARD_CUDA;
     cpuBackendConfig.precision = BackendConfig::Precision_Low;
     cpuBackendConfig.memory = BackendConfig::Memory_Low;
     config.backendConfig = &cpuBackendConfig;
     runtime_manager_.reset(Executor::RuntimeManager::createRuntimeManager(config));
-    // const char* cacheFileName = ".tempcache";
-    // runtime_manager_->setCache(cacheFileName);
+    if (config.type == MNN_FORWARD_OPENCL) {
+        const char* cacheFileName = ".tempcache";
+        runtime_manager_->setCache(cacheFileName);
+    }
     // 1. load vocab
-    // std::string tokenizer_path = model_dir + "/tokenizer.model";
     std::string tokenizer_path = model_dir + "/tokenizer.txt";
     tokenizer_->load(tokenizer_path);
     // 2. load model
@@ -151,10 +178,12 @@ void Llm::load(const std::string& model_dir) {
         modules_[layer_nums_].reset(Module::load({}, {}, lm_model_path.c_str(), runtime_manager_, &module_config));
         printf("Done!\n");
         load_progress_ += step;
+#ifndef USING_DISK_EMBED
         printf("[%3.0f%% ] load %s model ... ", load_progress_, embedding_model_path.c_str());fflush(stdout);
         modules_[layer_nums_ + 1].reset(Module::load({}, {}, embedding_model_path.c_str(), runtime_manager_, &module_config));
-        // printf("Done!\n");
+        printf("Done!\n");
         load_progress_ += step;
+#endif
         // load glm_block models
         for (int i = 0; i < layer_nums_; i++) {
             load_progress_ += step;
@@ -167,6 +196,21 @@ void Llm::load(const std::string& model_dir) {
             fflush(stdout);
         }
     }
+    if (config.type == MNN_FORWARD_OPENCL) {
+        warmup();
+    }
+}
+
+void Llm::warmup() {
+    // warmup
+    printf("### warmup ... ");
+    for (int i = 0; i < layer_nums_; i++) {
+        past_key_values_.push_back(_Input(key_value_shape_, NCHW));
+    }
+    std::vector<int> tmp_0(1, 0);
+    forward(tmp_0);
+    reset();
+    printf("Done\n");
 }
 
 int Llm::forward(const std::vector<int>& input_ids) {
@@ -182,8 +226,11 @@ int Llm::forward(const std::vector<int>& input_ids) {
         past_key_values_[0] = outputs[1];
     } else {
         // split block models
+#ifdef USING_DISK_EMBED
+        auto hidden_states = disk_embedding(input_ids);
+#else
         auto hidden_states = modules_[layer_nums_ + 1]->onForward({inputs_ids_})[0];
-        // auto hidden_states = gen_embedding(input_ids);
+#endif
         for (int i = 0; i < layer_nums_; i++) {
             AUTOTIME;
             auto outputs = modules_[i]->onForward({hidden_states, attention_mask, position_ids, past_key_values_[i]});
@@ -202,12 +249,11 @@ int Llm::forward(const std::vector<int>& input_ids) {
     return id;
 }
 
-VARP Llm::gen_embedding(const std::vector<int>& input_ids) {
+VARP Llm::disk_embedding(const std::vector<int>& input_ids) {
     AUTOTIME;
     // disk embedding save memory
     size_t seq_len = input_ids.size();
     auto embedding = _Input({static_cast<int>(seq_len), 1, hidden_size_}, NCHW);
-    // auto embedding = _Input({1, static_cast<int>(seq_len), hidden_size_}, NCHW);
     size_t size = hidden_size_ * sizeof(int16_t);
     std::string file_path = model_dir_ + "/embeddings_bf16.bin";
     FILE* file = fopen(file_path.c_str(), "rb");

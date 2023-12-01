@@ -33,12 +33,13 @@ public:
     }
     virtual ~Llm() = default;
     static Llm* createLLM(const std::string& path);
-    VARP gen_embedding(const std::vector<int>& input_ids);
+    VARP disk_embedding(const std::vector<int>& input_ids);
     void load(const std::string& model_dir);
     int forward(const std::vector<int>& input_ids);
     std::vector<int> tokenizer_encode(const std::string& input_str);
     std::string decode(int id);
     void chat();
+    void warmup();
     std::string response(const std::string& input_str, std::ostream* os = &std::cout);
     float load_progress() { return load_progress_; }
     void reset();
@@ -68,9 +69,6 @@ private:
     std::vector<VARP> past_key_values_;
     // model dir
     std::string model_dir_;
-    // tokenizer
-    std::vector<std::string> word_decoder_;
-    std::unordered_map<std::string, int> word_encoder_;
 };
 
 // some llm models
@@ -110,6 +108,7 @@ public:
         model_name_ = "Qwen_7b";
         layer_nums_ = 32;
         key_value_shape_ = {2, 1, 0, 32, 128};
+        hidden_size_ = 4096;
         tokenizer_.reset(new Tiktoken);
     }
 private:
@@ -117,6 +116,17 @@ private:
     virtual VARP gen_attention_mask(int seq_len) override;
     virtual VARP gen_position_ids(int seq_len) override;
     virtual bool is_stop(int token_id) override;
+};
+
+class Qwen_1_8b : public Qwen_7b {
+public:
+    Qwen_1_8b() {
+        model_name_ = "Qwen_1.8b";
+        layer_nums_ = 24;
+        key_value_shape_ = {2, 1, 0, 16, 128};
+        hidden_size_ = 2048;
+        tokenizer_.reset(new Tiktoken);
+    }
 };
 
 class Llama2_7b : public Llm {

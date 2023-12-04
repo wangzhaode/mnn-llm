@@ -143,7 +143,7 @@ void Llm::load(const std::string& model_dir) {
     ScheduleConfig config;
     BackendConfig cpuBackendConfig;
     config.type          = MNN_FORWARD_CPU;
-    // config.type          = MNN_FORWARD_OPENCL;
+    config.type          = MNN_FORWARD_OPENCL;
     config.numThread     = 4;
     cpuBackendConfig.precision = BackendConfig::Precision_Low;
     cpuBackendConfig.memory = BackendConfig::Memory_Low;

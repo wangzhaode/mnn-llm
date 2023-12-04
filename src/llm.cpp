@@ -79,17 +79,20 @@ std::string Llm::response(const std::string& query, std::ostream* os) {
         }
     }
     // response
-    auto st = std::chrono::system_clock::now();
     auto input_ids = tokenizer(query);
+    prompt_len_ = input_ids.size();
     // printf("token_num : %lu\n", input_ids.size());
+    auto st = std::chrono::system_clock::now();
     int token = forward(input_ids);
     std::string output_str = decode(token);
     auto et = std::chrono::system_clock::now();
-    auto prefill_duration = std::chrono::duration_cast<std::chrono::microseconds>(et - st);
+    prefill_us_ = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
     *os << output_str << std::flush;
-    st = std::chrono::system_clock::now();
     while (gen_seq_len_ < max_seq_len_) {
+        st = std::chrono::system_clock::now();
         token = forward({token});
+        et = std::chrono::system_clock::now();
+        decode_us_ += std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
         if (is_stop(token)) {
             *os << std::endl << std::flush;
             break;
@@ -98,36 +101,40 @@ std::string Llm::response(const std::string& query, std::ostream* os) {
         *os << word << std::flush;
         output_str += word;
     }
-    et = std::chrono::system_clock::now();
-    auto decode_duration = std::chrono::duration_cast<std::chrono::microseconds>(et - st);
-#define SHOW_SPEED
-#ifdef SHOW_SPEED
-    auto prefill_s = prefill_duration.count() * 1e-6;
-    auto decode_s = decode_duration.count() * 1e-6;
-    auto total_s = prefill_s + decode_s;
-    printf("\n#################################\n");
-    printf(" total tokens num  = %lu\n", input_ids.size() + gen_seq_len_);
-    printf("prompt tokens num  = %lu\n", input_ids.size());
-    printf("output tokens num  = %d\n", gen_seq_len_);
-    printf("  total time = %.2f s\n", total_s);
-    printf("prefill time = %.2f s\n", prefill_s);
-    printf(" decode time = %.2f s\n", decode_s);
-    printf("  total speed = %.2f tok/s\n", (input_ids.size() + gen_seq_len_) / total_s);
-    printf("prefill speed = %.2f tok/s\n", input_ids.size() / prefill_s);
-    printf(" decode speed = %.2f tok/s\n", gen_seq_len_ / decode_s);
-    printf("   chat speed = %.2f tok/s\n", gen_seq_len_ / total_s);
-    printf("##################################\n");
+#ifdef DUMP_PROFILE_INFO
+    print_speed();
 #endif
     // update Cache
     runtime_manager_->updateCache();
     return output_str;
 }
 
+void Llm::print_speed() {
+    auto prefill_s = prefill_us_ * 1e-6;
+    auto decode_s = decode_us_ * 1e-6;
+    auto total_s = prefill_s + decode_s;
+    printf("\n#################################\n");
+    printf(" total tokens num  = %d\n", prompt_len_ + gen_seq_len_);
+    printf("prompt tokens num  = %d\n", prompt_len_);
+    printf("output tokens num  = %d\n", gen_seq_len_);
+    printf("  total time = %.2f s\n", total_s);
+    printf("prefill time = %.2f s\n", prefill_s);
+    printf(" decode time = %.2f s\n", decode_s);
+    printf("  total speed = %.2f tok/s\n", (prompt_len_ + gen_seq_len_) / total_s);
+    printf("prefill speed = %.2f tok/s\n", prompt_len_ / prefill_s);
+    printf(" decode speed = %.2f tok/s\n", gen_seq_len_ / decode_s);
+    printf("   chat speed = %.2f tok/s\n", gen_seq_len_ / total_s);
+    printf("##################################\n");
+}
+
 void Llm::reset() {
     past_key_values_.clear();
     past_key_values_.shrink_to_fit();
+    prompt_len_ = 0;
     gen_seq_len_ = 0;
     all_seq_len_ = 0;
+    prefill_us_ = 0;
+    decode_us_ = 0;
 }
 
 void Llm::load(const std::string& model_dir) {

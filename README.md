@@ -51,6 +51,32 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 [release-baichuan2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/baichuan2-7b-chat-mnn
 [release-llama2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/llama2-7b-chat-mnn
 
+### 速度
+
+| model              | arm (fp16/32)  | x86 (f32)     |
+|:------------------:|:--------------:|:-------------:|
+| qwen-1.8b-w4a16    | 100.21 / 22.22 | 84.85 / 19.93 |
+| qwen-1.8b-w8a16    |  99.95 / 16.94 | 67.70 / 13.45 |
+| chatglm-6b-w4a16   |  17.37 /  6.69 | 19.79 /  6.10 |
+| chatglm2-6b-w4a16  |  26.41 /  8.21 | 20.78 /  6.70 |
+| chatglm3-6b-w4a16  |  26.24 /  7.94 | 19.67 /  6.67 |
+| qwen-7b-w4a16      |  14.60 /  6.96 | 19.79 /  6.06 |
+| baichuan2-7b-w4a32 |  13.87 /  6.08 | 17.21 /  6.10 |
+| llama-2-7b-w4a32   |  12.83 /  3.73 | 19.72 /  4.97 |
+
+
+- arm
+  - 测试设备: XiaoMi12
+  -  处理器: Snapdragon 8gen1
+  - 内存大小: 8 GB
+- x86
+  - 测试设备: MacBook Pro 2019
+  -  处理器: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+  - 内存大小: 16 GB
+- 速度`tok/s`
+    - prefill speed
+    - decode speed
+
 
 ### 下载int4模型
 ```

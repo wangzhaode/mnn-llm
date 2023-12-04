@@ -43,6 +43,16 @@ public:
     std::string response(const std::string& input_str, std::ostream* os = &std::cout);
     float load_progress() { return load_progress_; }
     void reset();
+    void print_speed();
+public:
+    // forward info
+    int max_seq_len_ = 256;
+    int prompt_len_ = 0;
+    int gen_seq_len_ = 0;
+    int all_seq_len_ = 0;
+    // time
+    int64_t prefill_us_ = 0;
+    int64_t decode_us_ = 0;
 private:
     virtual std::vector<int> tokenizer(const std::string& query) = 0;
     virtual VARP gen_attention_mask(int seq_len) = 0;
@@ -56,9 +66,6 @@ protected:
     std::vector<int> key_value_shape_ = {};
     std::string model_name_ = "";
     // gen info
-    int gen_seq_len_ = 0;
-    int all_seq_len_ = 0;
-    int max_seq_len_ = 256;
     float load_progress_ = 0.f;
     // tokenizer
     std::unique_ptr<Tokenizer> tokenizer_;

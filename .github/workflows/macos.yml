@@ -50,4 +50,4 @@ jobs:
             cd workspace
             unzip package.zip
             cd package
-            ./script/model_test.sh ${{ matrix.model }}
+            ./script/model_test.sh ${{ matrix.model }} prompt.txt

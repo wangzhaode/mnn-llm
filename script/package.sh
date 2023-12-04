@@ -16,6 +16,7 @@ cd ..
 echo 'copy files ...'
 cp -r script $package_path
 cp build/*_demo $package_path/build
+cp resource/prompt.txt $package_path/build
 # linux
 cp libs/*.so build/*.so $package_path/build 2> /dev/null || :
 # macos

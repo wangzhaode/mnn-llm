@@ -6,7 +6,7 @@ model_test() {
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.
     # macos
     export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:.
-    ./cli_demo -m ../$1
+    ./cli_demo -m ../$1 prompt.txt
     cd ..
 }
 

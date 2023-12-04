@@ -53,5 +53,5 @@ jobs:
             echo ${{ matrix.model }}
             ./script/download_model.ps1 ${{ matrix.model }}
             cd build
-            .\Release\cli_demo -m ..\${{ matrix.model }}
+            .\Release\cli_demo ..\${{ matrix.model }} prompt.txt
             Exit 0

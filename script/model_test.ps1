@@ -6,7 +6,7 @@ function model_test($model) {
     Write-Output "test model : ${model}"
     powershell .\script\download_model.ps1 ${model}
     cd build
-    .\Release\cli_demo -m ..\${model}
+    .\Release\cli_demo ..\${model} prompt.txt
     cd ..
 }
 

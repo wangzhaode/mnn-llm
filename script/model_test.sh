@@ -11,6 +11,7 @@ model_test() {
 }
 
 test_all() {
+    model_test qwen-1.8b
     model_test chatglm-6b
     model_test chatglm2-6b
     model_test chatglm3-6b

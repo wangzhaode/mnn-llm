@@ -7,9 +7,13 @@ model=$1
 mkdir $model
 cd $model
 is_7b=`echo $model | grep '7b'`
+is_1_8b=`echo $model | grep '1.8b'`
 block_num=27
 if [ $is_7b ]; then
     block_num=31
+fi
+if [ $is_1_8b ]; then
+    block_num=24
 fi
 # download models
 wget -c -nv https://github.com/wangzhaode/mnn-llm/releases/download/$model-mnn/tokenizer.txt

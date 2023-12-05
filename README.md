@@ -76,7 +76,7 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
   - 测试设备: PC
   -  处理器: Intel(R) Core(TM) i7-13700K @ 3.40 GHz
   - 内存大小: 32 GB
-- 速度: prefill / decode `tok/s`
+- CPU 4线程速度: prefill / decode `tok/s`
 
 
 ### 下载int4模型

@@ -31,7 +31,7 @@ public class Conversation extends BaseActivity {
     private Button send;
     private DateFormat mDateFormat;
     private Chat mChat;
-    private boolean mHistory = false;
+    private boolean mHistory = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,12 +138,16 @@ public class Conversation extends BaseActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        /*
         if (mHistory) {
             Toast.makeText(getBaseContext(), "关闭上下文", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(getBaseContext(), "打开上下文", Toast.LENGTH_SHORT).show();
         }
         mHistory = !mHistory;
+        */
+        Toast.makeText(getBaseContext(), "清空记忆", Toast.LENGTH_SHORT).show();
+        mChat.Reset();
         return true;
     }
 }
@@ -168,7 +172,7 @@ class ResponseThread extends Thread {
         System.out.println("[MNN_DEBUG] start response\n");
         while (!last_response.contains("<eop>")) {
             try {
-                Thread.sleep(200);
+                Thread.sleep(50);
             } catch (Exception e) {}
             String response = new String(mChat.Response());
             if (response.equals(last_response)) {
@@ -177,6 +181,7 @@ class ResponseThread extends Thread {
                 last_response = response;
             }
             Message msg = new Message();
+            System.out.println("[MNN_DEBUG] " + response);
             msg.obj = response.replaceFirst("<eop>", "");
             mHandler.sendMessage(msg);
         }

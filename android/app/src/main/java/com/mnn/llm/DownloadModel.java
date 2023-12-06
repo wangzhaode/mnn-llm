@@ -2,11 +2,8 @@ package com.mnn.llm;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.view.View;
 import android.widget.Button;
 
@@ -29,8 +26,7 @@ public class DownloadModel extends BaseActivity {
         mDownloadAll = (Button)findViewById(R.id.download_all);
         // init Data
         String[] modelArray = this.getResources().getStringArray(R.array.model_list);
-        int[] modelSize = this.getResources().getIntArray(R.array.model_size);
-        mAdapter = new DownloadRecyclerView(this, modelArray, modelSize);
+        mAdapter = new DownloadRecyclerView(this, modelArray);
         mRecyclerView.setAdapter(mAdapter);
     }
     public void downloadAll(View view) {

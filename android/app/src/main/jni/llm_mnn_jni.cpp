@@ -10,7 +10,7 @@
 
 #include "llm.hpp"
 
-static Llm* llm;
+static std::unique_ptr<Llm> llm(nullptr);
 static std::stringstream response_buffer;
 
 extern "C" {
@@ -25,32 +25,33 @@ JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
 }
 
 JNIEXPORT jboolean JNICALL Java_com_mnn_llm_Chat_Init(JNIEnv* env, jobject thiz, jstring modelDir) {
-    if (llm->load_progress() < 100) {
-        const char* model_dir = env->GetStringUTFChars(modelDir, 0);
-        llm = Llm::createLLM(model_dir);
+    const char* model_dir = env->GetStringUTFChars(modelDir, 0);
+    if (!llm.get()) {
+        llm.reset(Llm::createLLM(model_dir));
         llm->load(model_dir);
     }
     return JNI_TRUE;
 }
 
 JNIEXPORT jboolean JNICALL Java_com_mnn_llm_Chat_Ready(JNIEnv* env, jobject thiz) {
-    if (llm->load_progress() >= 100) {
+    if (llm.get() && llm->load_progress() >= 100) {
         return JNI_TRUE;
     }
     return JNI_FALSE;
 }
 
 JNIEXPORT jfloat JNICALL Java_com_mnn_llm_Chat_Progress(JNIEnv* env, jobject thiz) {
+    if (!llm.get()) return jfloat(0);
     return jfloat(llm->load_progress());
 }
 
 JNIEXPORT jstring JNICALL Java_com_mnn_llm_Chat_Submit(JNIEnv* env, jobject thiz, jstring inputStr) {
-    if (llm->load_progress() < 100) {
+    if (!llm.get()) {
         return env->NewStringUTF("Failed, Chat is not ready!");
     }
     const char* input_str = env->GetStringUTFChars(inputStr, 0);
     auto chat = [&](std::string str) {
-        llm->response(str, &response_buffer);
+        llm->response(str, &response_buffer, "<eop>");
     };
     std::thread chat_thread(chat, input_str);
     chat_thread.detach();

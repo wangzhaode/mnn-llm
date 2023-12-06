@@ -25,7 +25,7 @@ public class DownloadRecyclerView extends RecyclerView.Adapter<RecyclerView.View
     private Handler mHandler;
     private Button mButton;
 
-    public DownloadRecyclerView(Context context, String[] models, int[] modelSize) {
+    public DownloadRecyclerView(Context context, String[] models) {
         this.mContext = context;
         this.mItems = new ArrayList<DownloadData>();
         final String modelDir = context.getCacheDir().toString() + "/model";
@@ -48,7 +48,7 @@ public class DownloadRecyclerView extends RecyclerView.Adapter<RecyclerView.View
             }
         };
         for (int i = 0; i < models.length; i++) {
-            this.mItems.add(new DownloadData(mHandler, modelDir, models[i], i, modelSize[i]));
+            this.mItems.add(new DownloadData(mHandler, modelDir, models[i], i, 25751300));
         }
     }
 

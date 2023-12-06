@@ -32,7 +32,7 @@ public:
         tokenizer_.reset(new Sentencepiece);
     }
     virtual ~Llm() = default;
-    static Llm* createLLM(const std::string& path);
+    static Llm* createLLM(const std::string& path, std::string model_type = "auto");
     VARP disk_embedding(const std::vector<int>& input_ids);
     void load(const std::string& model_dir);
     int forward(const std::vector<int>& input_ids);
@@ -40,13 +40,14 @@ public:
     std::string decode(int id);
     void chat();
     void warmup();
-    std::string response(const std::string& input_str, std::ostream* os = &std::cout);
+    std::string response(const std::string& input_str, std::ostream* os = &std::cout, const char* end_with = nullptr);
     float load_progress() { return load_progress_; }
     void reset();
     void print_speed();
 public:
+    std::vector<int> history_;
     // forward info
-    int max_seq_len_ = 256;
+    int max_seq_len_ = 1024;
     int prompt_len_ = 0;
     int gen_seq_len_ = 0;
     int all_seq_len_ = 0;

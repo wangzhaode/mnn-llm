@@ -9,20 +9,11 @@ import com.mnn.llm.R;
 
 public class HolderYou extends RecyclerView.ViewHolder {
 
-    private TextView time, chatText;
+    private TextView chatText;
 
     public HolderYou(View v) {
         super(v);
-        time = (TextView) v.findViewById(R.id.tv_time);
         chatText = (TextView) v.findViewById(R.id.tv_chat_text);
-    }
-
-    public TextView getTime() {
-        return time;
-    }
-
-    public void setTime(TextView time) {
-        this.time = time;
     }
 
     public TextView getChatText() {

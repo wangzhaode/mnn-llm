@@ -28,7 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:textSize="8pt"
-            android:text="ChatGLM-MNN" />
+            android:text="mnn-llm" />
     </LinearLayout>
 
     <LinearLayout

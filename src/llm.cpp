@@ -15,7 +15,7 @@
 
 #include <fstream>
 
-Llm* Llm::createLLM(const std::string& path) {
+Llm* Llm::createLLM(const std::string& path, std::string model_type) {
     auto size = path.size();
     // end with '.mnn' is single model file, otherwise split block models
     bool is_single = (size > 4 &&
@@ -24,27 +24,30 @@ Llm* Llm::createLLM(const std::string& path) {
                       path[size - 2] == 'n' &&
                       path[size - 1] == 'n');
     Llm* llm = nullptr;
-    if (path.find("chatglm") != std::string::npos) {
-        if (path.find("chatglm2") != std::string::npos) {
+    if (model_type == "auto") {
+        model_type = path;
+    }
+    if (model_type.find("chatglm") != std::string::npos) {
+        if (model_type.find("chatglm2") != std::string::npos) {
             llm = new Chatglm2_6b;
-        } else if (path.find("chatglm3") != std::string::npos) {
+        } else if (model_type.find("chatglm3") != std::string::npos) {
             llm = new Chatglm2_6b;
             llm->model_name_ = "Chatglm3_6b";
         } else {
             llm = new Chatglm_6b;
         }
-    } else if (path.find("codegeex2") != std::string::npos) {
+    } else if (model_type.find("codegeex2") != std::string::npos) {
         llm = new Chatglm2_6b;
         llm->model_name_ = "Codegeex2_6b";
-    } else if (path.find("qwen") != std::string::npos) {
-        if (path.find("1.8") != std::string::npos) {
+    } else if (model_type.find("qwen") != std::string::npos) {
+        if (model_type.find("1.8") != std::string::npos) {
             llm = new Qwen_1_8b;
         } else {
             llm = new Qwen_7b;
         }
-    } else if (path.find("llama2") != std::string::npos) {
+    } else if (model_type.find("llama2") != std::string::npos) {
         llm = new Llama2_7b;
-    } else if (path.find("baichuan") != std::string::npos) {
+    } else if (model_type.find("baichuan") != std::string::npos) {
         llm = new Llama2_7b;
         llm->model_name_ = "Baichuan2_7b";
     }
@@ -64,13 +67,20 @@ void Llm::chat() {
         std::cin >> input_str;
         std::cout << "\nA: " << std::flush;
         response(input_str);
-        reset();
         std::cout << std::endl;
     }
 }
 
-std::string Llm::response(const std::string& query, std::ostream* os) {
+std::string Llm::response(const std::string& query, std::ostream* os, const char* end_with) {
+    if (!end_with) {
+        end_with = "\n";
+    }
     // init status
+    gen_seq_len_ = 0;
+    all_seq_len_ = 0;
+    prefill_us_ = 0;
+    decode_us_ = 0;
+    past_key_values_.clear();
     if (is_single_) {
         past_key_values_.push_back(_Input(key_value_shape_, NCHW));
     } else {
@@ -80,12 +90,20 @@ std::string Llm::response(const std::string& query, std::ostream* os) {
     }
     // response
     auto input_ids = tokenizer(query);
+    if (!history_.empty()) {
+        std::copy(input_ids.begin(), input_ids.end(), std::back_inserter(history_));
+        input_ids = history_;
+    } else {
+        history_ = input_ids;
+    }
+
     prompt_len_ = input_ids.size();
     // printf("token_num : %lu\n", input_ids.size());
     auto st = std::chrono::system_clock::now();
     int token = forward(input_ids);
-    std::string output_str = decode(token);
     auto et = std::chrono::system_clock::now();
+    history_.push_back(token);
+    std::string output_str = decode(token);
     prefill_us_ = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
     *os << output_str << std::flush;
     while (gen_seq_len_ < max_seq_len_) {
@@ -94,9 +112,10 @@ std::string Llm::response(const std::string& query, std::ostream* os) {
         et = std::chrono::system_clock::now();
         decode_us_ += std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
         if (is_stop(token)) {
-            *os << std::endl << std::flush;
+            *os << end_with << std::flush;
             break;
         }
+        history_.push_back(token);
         auto word = decode(token);
         *os << word << std::flush;
         output_str += word;
@@ -105,7 +124,8 @@ std::string Llm::response(const std::string& query, std::ostream* os) {
     print_speed();
 #endif
     // update Cache
-    runtime_manager_->updateCache();
+    // runtime_manager_->updateCache();
+    // reset forward info
     return output_str;
 }
 
@@ -128,13 +148,7 @@ void Llm::print_speed() {
 }
 
 void Llm::reset() {
-    past_key_values_.clear();
-    past_key_values_.shrink_to_fit();
-    prompt_len_ = 0;
-    gen_seq_len_ = 0;
-    all_seq_len_ = 0;
-    prefill_us_ = 0;
-    decode_us_ = 0;
+    history_.clear();
 }
 
 void Llm::load(const std::string& model_dir) {
@@ -153,54 +167,55 @@ void Llm::load(const std::string& model_dir) {
         const char* cacheFileName = ".tempcache";
         runtime_manager_->setCache(cacheFileName);
     }
+    load_progress_ = 0.f;
     // 1. load vocab
     std::string tokenizer_path = model_dir + "/tokenizer.txt";
+    load_progress_ += 5.f;
     tokenizer_->load(tokenizer_path);
+    load_progress_ += 5.f;
     // 2. load model
     Module::Config module_config;
     module_config.shapeMutable = true;
     module_config.rearrange = true;
-    load_progress_ = 0.f;
     if (is_single_) {
         key_value_shape_.insert(key_value_shape_.begin(), layer_nums_);
         modules_.resize(1);
         std::string model_path = model_dir;
         std::string external_path = model_dir + ".weight";
-        printf("load %s ... ", model_path.c_str());
+        MNN_PRINT("load %s ... ", model_path.c_str());
         runtime_manager_->setExternalFile(external_path);
         modules_[0].reset(Module::load(
                 {"input_ids", "attention_mask", "position_ids", "past_key_values"},
                 {"token_id", "presents"}, model_path.c_str(), runtime_manager_, &module_config));
-        printf("Done!\n");
-        fflush(stdout);
+        MNN_PRINT("Done!\n");
+        load_progress_ += 90.f;
     } else {
         // 2. load models
         modules_.resize(layer_nums_ + 2);
-        float step = 100.0 / modules_.size();
+        float step = 90.0 / modules_.size();
         char buffer[50];
         // load lm model
         std::string lm_model_path = model_dir + "/lm.mnn";
         std::string embedding_model_path = model_dir + "/embedding.mnn";
-        printf("[%3.0f%% ] load %s model ... ", load_progress_, lm_model_path.c_str());
+        MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, lm_model_path.c_str());
         modules_[layer_nums_].reset(Module::load({}, {}, lm_model_path.c_str(), runtime_manager_, &module_config));
-        printf("Done!\n");
+        MNN_PRINT("Done!\n");
         load_progress_ += step;
 #ifndef USING_DISK_EMBED
-        printf("[%3.0f%% ] load %s model ... ", load_progress_, embedding_model_path.c_str());fflush(stdout);
+        MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, embedding_model_path.c_str());fflush(stdout);
         modules_[layer_nums_ + 1].reset(Module::load({}, {}, embedding_model_path.c_str(), runtime_manager_, &module_config));
-        printf("Done!\n");
+        MNN_PRINT("Done!\n");
         load_progress_ += step;
 #endif
         // load glm_block models
         for (int i = 0; i < layer_nums_; i++) {
             load_progress_ += step;
             std::string model_path = model_dir + "/block_" + std::to_string(i) + ".mnn";
-            printf("[%3.0f%% ] load %s model ... ", load_progress_, model_path.c_str());
+            MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, model_path.c_str());
             modules_[i].reset(Module::load(
                 {"inputs_embeds", "attention_mask", "position_ids", "past_key_values"},
                 {"hidden_states", "presents"}, model_path.c_str(), runtime_manager_, &module_config));
-            printf("Done!\n");
-            fflush(stdout);
+            MNN_PRINT("Done!\n");
         }
     }
     if (config.type == MNN_FORWARD_OPENCL) {
@@ -210,13 +225,18 @@ void Llm::load(const std::string& model_dir) {
 
 void Llm::warmup() {
     // warmup
-    printf("### warmup ... ");
-    for (int i = 0; i < layer_nums_; i++) {
+    MNN_PRINT("### warmup ... ");
+    if (is_single_) {
         past_key_values_.push_back(_Input(key_value_shape_, NCHW));
+    } else {
+        for (int i = 0; i < layer_nums_; i++) {
+            past_key_values_.push_back(_Input(key_value_shape_, NCHW));
+        }
     }
-    std::vector<int> tmp_0(1, 0);
-    forward(tmp_0);
-    reset();
+    std::vector<int> tmp(1, 0);
+    forward(tmp);
+    all_seq_len_ = 0;
+    gen_seq_len_ = 0;
     printf("Done\n");
 }
 

@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">ChatGLM-MNN</string>
+    <string name="app_name">mnn-llm</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="action_settings">Settings</string>
-    <string name="main_describe">本Demo基于ChatGLM-6B模型开发，对ChatGLM-6B模型进行了4bit量化，使用MNN进行推理加速。模型加载略慢，请稍作等待，点击下方按钮加载模型。</string>
+    <string name="main_describe">mnn-llm</string>
 </resources>

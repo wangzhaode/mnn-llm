@@ -101,7 +101,6 @@ public class ConversationRecyclerView extends RecyclerView.Adapter<RecyclerView.
     }
 
     private void configureViewHolder2(HolderYou vh1, int position) {
-            vh1.getTime().setText(items.get(position).getTime());
             vh1.getChatText().setText(items.get(position).getText());
     }
     private void configureViewHolder1(HolderDate vh1, int position) {

@@ -13,9 +13,9 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 import java.io.File;
+import java.io.IOException;
+
 
 public class MainActivity extends AppCompatActivity {
     private Chat mChat;
@@ -28,8 +28,9 @@ public class MainActivity extends AppCompatActivity {
     private TextView mProcessName;
     private TextView mProcessPercent;
     // resource files
-    private String mModelDir = "/data/local/tmp/model";
-    private boolean mModelNeedDownload = true;
+    private String mModelName = "qwen-1.8b-int4";
+    private String mModelDir = "/data/local/tmp/chat/" + mModelName; // default dir
+    private boolean mModelReady = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,7 +42,8 @@ public class MainActivity extends AppCompatActivity {
         mProcessBar = (ProgressBar)findViewById(R.id.process_bar);
         mProcessName = (TextView)findViewById(R.id.process_name);
         mProcessPercent = (TextView)findViewById(R.id.process_percent);
-        mModelDir = this.getCacheDir().toString() + "/model";
+        // using assert file
+        mModelDir = this.getCacheDir() + "/" + mModelName;
         mProcessHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -58,55 +60,56 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-        /*
-        File model = new File(mModelDir, "glm_block_0.mnn");
-        if (model.exists()) {
-            model.delete();
-        }
-         */
-        onCheckModels();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        onCheckModels();
     }
 
     public void onCheckModels() {
-        mModelNeedDownload = checkModelsNeedDownload();
-        if (mModelNeedDownload) {
+        mModelReady = checkModelsReady();
+        // try copy from assert file
+        if (!mModelReady) {
+            try {
+                mModelDir = Common.copyAssetResource2File(this, mModelName);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            mModelReady = checkModelsReady();
+        }
+        // download models
+        if (!mModelReady) {
             mModelInfo.setVisibility(View.VISIBLE);
-            mModelInfo.setText("使用前请先下载模型！");
+            mModelInfo.setText("请下载模型文件");
             mLoadButton.setText("下载模型");
         } else {
             mModelInfo.setVisibility(View.VISIBLE);
-            mModelInfo.setText("模型下载完毕，请加载模型！");
+            mModelInfo.setText(mModelName + "模型文件就绪，模型加载中");
             mLoadButton.setText("加载模型");
         }
     }
-    public boolean checkModelsNeedDownload() {
+    public boolean checkModelsReady() {
         System.out.println("### Check Models!");
         File dir = new File(mModelDir);
         if (!dir.exists()) {
-            return true;
+            return false;
         }
         String[] modelArray = this.getResources().getStringArray(R.array.model_list);
-        int[] modelSize = this.getResources().getIntArray(R.array.model_size);
         for (int i = 0; i < modelArray.length; i++) {
             File model = new File(mModelDir, modelArray[i]);
             if (!model.exists()) {
-                return true;
-            }
-            if (model.length() != modelSize[i]) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     public void loadModel(View view) {
-        if (mModelNeedDownload) {
+        onCheckModels();
+        if (!mModelReady) {
             startActivity(new Intent(this, DownloadModel.class));
             return;
         }
@@ -115,7 +118,6 @@ public class MainActivity extends AppCompatActivity {
         mLoadButton.setText("模型加载中 ...");
         mProcessView.setVisibility(View.VISIBLE);
         mChat = new Chat();
-        System.out.println("[MNN_DEBUG] is chat Ready: " + mChat.Ready());
         Handler handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {

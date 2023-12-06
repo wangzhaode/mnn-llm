@@ -25,6 +25,7 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 
 其他版本：
 - Qwen-1_8B-Chat-int8：[![Download][download-qwen-1.8b-mnn-int8]][release-qwen-1.8b-mnn-int8]
+- Android APK: [![Download][download-qwen-1.8b-apk]][release-qwen-1.8b-apk]
 
 [download-chatglm-6b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/chatglm-6b-onnx/total
 [download-chatglm2-6b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/chatglm2-6b-onnx/total
@@ -51,6 +52,8 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 [download-llama2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/llama2-7b-chat-mnn/total
 [download-qwen-1.8b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-mnn/total
 [download-qwen-1.8b-mnn-int8]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-mnn-int8/total
+[download-qwen-1.8b-apk]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-apk/total
+
 [release-chatglm-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm-6b-mnn
 [release-chatglm2-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm2-6b-mnn
 [release-chatglm3-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm3-6b-mnn
@@ -60,6 +63,8 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 [release-llama2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/llama2-7b-chat-mnn
 [release-qwen-1.8b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn
 [release-qwen-1.8b-mnn-int8]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn-int8
+[release-qwen-1.8b-apk]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-apk
+
 
 ### 速度
 
@@ -157,12 +162,13 @@ adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo -m model
 
 
 ## Reference
-- [chatglm-6b](https://huggingface.co/THUDM/chatglm-6b)
-- [chatglm2-6b](https://huggingface.co/THUDM/chatglm2-6b)
-- [codegeex2-6b](https://huggingface.co/THUDM/codegeex2-6b)
-- [Baichuan2-7B-Chat](https://huggingface.co/baichuan-inc/Baichuan2-7B-Chat)
-- [Qwen-7B-Chat](https://huggingface.co/tangger/Qwen-7B-Chat)
+- [chatglm-6b](https://modelscope.cn/models/ZhipuAI/chatglm-6b/summary)
+- [chatglm2-6b](https://modelscope.cn/models/ZhipuAI/chatglm2-6b/summary)
+- [chatglm3-6b](https://modelscope.cn/models/ZhipuAI/chatglm3-6b/summary)
+- [codegeex2-6b](https://modelscope.cn/models/ZhipuAI/codegeex2-6b/summary)
+- [Baichuan2-7B-Chat](https://modelscope.cn/models/baichuan-inc/baichuan-7B/summary)
+- [Qwen-7B-Chat](https://modelscope.cn/models/qwen/Qwen-7B-Chat/summary)
+- [Qwen-1.8B-Chat](https://modelscope.cn/models/qwen/Qwen-1_8B-Chat/summary)
 - [cpp-httplib](https://github.com/yhirose/cpp-httplib)
 - [chatgpt-web](https://github.com/xqdoo00o/chatgpt-web)
-- [cppjieba](https://github.com/yanyiwu/cppjieba)
 - [ChatViewDemo](https://github.com/BrettFX/ChatViewDemo)

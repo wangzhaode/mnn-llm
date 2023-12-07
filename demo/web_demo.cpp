@@ -45,11 +45,13 @@ int main(int argc, const char* argv[]) {
 #endif
     float cpusize = 8;
     std::string model_dir = "../resource/models";
+    std::string web_dir = "../resource/web";
     std::string data_type = "fp16";
     std::string tokenizer_dir = "../resource/tokenizer";
     app.add_option("-c,--cpusize", cpusize,"cpu memory size(G), default is 8G.");
     app.add_option("-g,--gpusize", gpusize,"gpu memory size(G)");
-	app.add_option("-m,--model_dir", model_dir, "model directory");
+    app.add_option("-m,--model_dir", model_dir, "model directory");
+    app.add_option("-w,--web_dir", web_dir, "web directory");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -65,8 +67,9 @@ int main(int argc, const char* argv[]) {
     auto chat = [&](std::string str) {
         waiting = true;
         llm->response(str, &ss);
-        waiting = false;
         std::cout << "### response : " << ss.str() << std::endl;
+        ss << "<eop>";
+        waiting = false;
     };
     svr.Post("/chat", [&](const httplib::Request &req, httplib::Response &res) {
         if (req.body == last_request) {
@@ -83,7 +86,7 @@ int main(int argc, const char* argv[]) {
             chat_thread.detach();
         }
     });
-    svr.set_mount_point("/", "../resource/web");
+    svr.set_mount_point("/", web_dir);
     printf(">>> please open http://0.0.0.0:5088\n");
     fflush(stdout);
     svr.listen("0.0.0.0", 5088);

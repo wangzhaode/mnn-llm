@@ -6,6 +6,13 @@
 
 [Read me in english ](./README_en.md)
 
+## 示例工程
+
+- [cli](./demo/cli_demo.cpp): 使用命令行编译，android编译参考[android_build.sh](./script/android_build.sh)
+- [web](./demo/web_demo.cpp): 使用命令行编译，运行时需要指定[web资源](./web)
+- [android](./android/): 使用Android Studio打开编译；APK下载: [![Download][download-qwen-1.8b-apk]][release-qwen-1.8b-apk]
+- [ios](./ios/mnn-llm/): 使用Xcode打开编译；🚀🚀🚀**该示例代码100%由ChatGPT生成**🚀🚀🚀
+
 ## 模型支持
 
 llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm-export)
@@ -25,7 +32,6 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 
 其他版本：
 - Qwen-1_8B-Chat-int8：[![Download][download-qwen-1.8b-mnn-int8]][release-qwen-1.8b-mnn-int8]
-- Android APK: [![Download][download-qwen-1.8b-apk]][release-qwen-1.8b-apk]
 
 [download-chatglm-6b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/chatglm-6b-onnx/total
 [download-chatglm2-6b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/chatglm2-6b-onnx/total

@@ -86,7 +86,7 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 | os | device | CPU | Memory |
 |:--:|:-------:|:----:|:--------:|
 | android | XiaoMi12 | Snapdragon 8gen1 | 8 GB |
-| macos | MacBook Pro 2019 | Intel(R) Core(TM) i7-9750H CPU | 16 GB |
+| macos | MacBook Pro 2019 | Intel(R) Core(TM) i7-9750H | 16 GB |
 | linux | PC | Intel(R) Core(TM) i7-13700K | 32GB |
 | windows | PC | Intel(R) Core(TM) i7-13700K | 32GB |
 

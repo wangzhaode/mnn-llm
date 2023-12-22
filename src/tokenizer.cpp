@@ -303,8 +303,6 @@ bool Sentencepiece::is_control(int id) const {
     return sentence_pieces_[id].type == PieceType::CONTROL;
 }
 
-const int CHARACTER_VOCABULARY_SIZE = 256;
-
 bool Tiktoken::load(const std::string& filename) {
     std::ifstream tok_file(filename);
     std::string token;

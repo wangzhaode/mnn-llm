@@ -50,6 +50,8 @@ Llm* Llm::createLLM(const std::string& path, std::string model_type) {
     } else if (model_type.find("baichuan") != std::string::npos) {
         llm = new Llama2_7b;
         llm->model_name_ = "Baichuan2_7b";
+    } else if (model_type.find("phi2") != std::string::npos) {
+        llm = new Phi_2;
     }
     if (!llm) {
         std::cerr << "model type can't judge!" << std::endl;
@@ -407,6 +409,17 @@ VARP Chatglm2_6b::gen_position_ids(int seq_len) {
 
 bool Chatglm2_6b::is_stop(int token_id) {
     return token_id <= 2;
+}
+
+// Phi_2
+std::vector<int> Phi_2::tokenizer(const std::string& query) {
+    auto prompt = query;
+    auto ids = tokenizer_encode(prompt);
+    return ids;
+}
+
+bool Phi_2::is_stop(int token_id) {
+    return token_id == 50256;
 }
 
 // Qwen_7b

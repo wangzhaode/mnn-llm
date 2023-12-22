@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/wangzhaode/mnn-llm)](LICENSE.txt)
 [![Download](https://img.shields.io/github/downloads/wangzhaode/mnn-llm/total)](https://github.com/wangzhaode/mnn-llm/releases)
 
-[Read me in english ](./README_en.md)
+[English](./README_en.md)
 
 ## 示例工程
 
@@ -15,7 +15,7 @@
 
 ## 模型支持
 
-llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm-export)
+llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wangzhaode/llm-export)
 
 当前支持以模型：
 
@@ -29,6 +29,7 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 | Baichuan2-7B-Chat | [![Download][download-baichuan2-7b-chat-onnx]][release-baichuan2-7b-chat-onnx] | [![Download][download-baichuan2-7b-chat-mnn]][release-baichuan2-7b-chat-mnn] |
 | Llama-2-7b-chat | [![Download][download-llama2-7b-chat-onnx]][release-llama2-7b-chat-onnx] | [![Download][download-llama2-7b-chat-mnn]][release-llama2-7b-chat-mnn] |
 | Qwen-1_8B-Chat | [![Download][download-qwen-1.8b-onnx]][release-qwen-1.8b-onnx] | [![Download][download-qwen-1.8b-mnn]][release-qwen-1.8b-mnn] |
+| phi-2 | [![Download][download-phi-2-onnx]][release-phi-2-onnx] | [![Download][download-phi2-mnn-int4]][release-phi2-mnn-int4] |
 
 其他版本：
 - Qwen-1_8B-Chat-int8：[![Download][download-qwen-1.8b-mnn-int8]][release-qwen-1.8b-mnn-int8]
@@ -41,6 +42,7 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 [download-baichuan2-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/baichuan2-7b-chat-onnx/total
 [download-llama2-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/llama2-7b-chat-onnx/total
 [download-qwen-1.8b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen-1.8b-onnx/total
+[download-phi-2-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/phi-2-onnx/total
 [release-chatglm-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm-6b-onnx
 [release-chatglm2-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm2-6b-onnx
 [release-chatglm3-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm3-6b-onnx
@@ -49,6 +51,7 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 [release-baichuan2-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/baichuan2-7b-chat-onnx
 [release-llama2-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/llama2-7b-chat-onnx
 [release-qwen-1.8b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen-1.8b-onnx
+[release-phi-2-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/phi-2-onnx
 [download-chatglm-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm-6b-mnn/total
 [download-chatglm2-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm2-6b-mnn/total
 [download-chatglm3-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm3-6b-mnn/total
@@ -57,6 +60,7 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 [download-baichuan2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/baichuan2-7b-chat-mnn/total
 [download-llama2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/llama2-7b-chat-mnn/total
 [download-qwen-1.8b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-mnn/total
+[download-phi2-mnn-int4]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/phi2-mnn-int4/total
 [download-qwen-1.8b-mnn-int8]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-mnn-int8/total
 [download-qwen-1.8b-apk]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-apk/total
 
@@ -68,6 +72,7 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 [release-baichuan2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/baichuan2-7b-chat-mnn
 [release-llama2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/llama2-7b-chat-mnn
 [release-qwen-1.8b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn
+[release-phi2-mnn-int4]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-phi2-mnn-int4
 [release-qwen-1.8b-mnn-int8]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn-int8
 [release-qwen-1.8b-apk]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-apk
 
@@ -153,17 +158,17 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 
 ```bash
 # linux/macos
-./cli_demo # cli demo
-./web_demo # web ui demo
+./cli_demo qwen-1.8b-int4 # cli demo
+./web_demo qwen-1.8b-int4 ../web # web ui demo
 
 # windows
-.\Debug\cli_demo.exe
-.\Debug\web_demo.exe
+.\Debug\cli_demo.exe qwen-1.8b-int4
+.\Debug\web_demo.exe qwen-1.8b-int4 ../web
 
 # android
 adb push libs/*.so build/libllm.so build/cli_demo /data/local/tmp
 adb push model_dir /data/local/tmp
-adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo -m model"
+adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo qwen-1.8b-int4"
 ```
 
 

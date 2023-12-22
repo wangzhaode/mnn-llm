@@ -130,6 +130,19 @@ private:
     virtual bool is_stop(int token_id) override;
 };
 
+class Phi_2 : public Chatglm2_6b {
+public:
+    Phi_2() {
+        model_name_ = "Phi_2";
+        layer_nums_ = 32;
+        key_value_shape_ = {1, 0, 2, 32, 80};
+        hidden_size_ = 2560;
+        tokenizer_.reset(new Tiktoken);
+    }
+private:
+    virtual std::vector<int> tokenizer(const std::string& query) override;
+    virtual bool is_stop(int token_id) override;
+};
 
 class Qwen_7b : public Llm {
 public:

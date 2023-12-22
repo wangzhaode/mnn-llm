@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/wangzhaode/mnn-llm)](LICENSE.txt)
 [![Download](https://img.shields.io/github/downloads/wangzhaode/mnn-llm/total)](https://github.com/wangzhaode/mnn-llm/releases)
 
-[Read me in english ](./README_en.md)
+[English](./README_en.md)
 
 ## 示例工程
 
@@ -15,7 +15,7 @@
 
 ## 模型支持
 
-llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm-export)
+llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wangzhaode/llm-export)
 
 当前支持以模型：
 
@@ -153,17 +153,17 @@ llm模型导出onnx模型请使用[llm-export](https://github.com/wangzhaode/llm
 
 ```bash
 # linux/macos
-./cli_demo # cli demo
-./web_demo # web ui demo
+./cli_demo qwen-1.8b-int4 # cli demo
+./web_demo qwen-1.8b-int4 ../web # web ui demo
 
 # windows
-.\Debug\cli_demo.exe
-.\Debug\web_demo.exe
+.\Debug\cli_demo.exe qwen-1.8b-int4
+.\Debug\web_demo.exe qwen-1.8b-int4 ../web
 
 # android
 adb push libs/*.so build/libllm.so build/cli_demo /data/local/tmp
 adb push model_dir /data/local/tmp
-adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo -m model"
+adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo qwen-1.8b-int4"
 ```
 
 

@@ -1,6 +1,6 @@
 # mnn-llm ios demo
 
-🚀 本项目全部代码由`ChatGPT-4`生成。
+🚀 本示例代码全部由`ChatGPT-4`生成。
 
 ## 速度
 

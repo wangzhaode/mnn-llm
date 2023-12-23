@@ -17,6 +17,7 @@
 
 Llm* Llm::createLLM(const std::string& path, std::string model_type) {
     auto size = path.size();
+
     // end with '.mnn' is single model file, otherwise split block models
     bool is_single = (size > 4 &&
                       path[size - 4] == '.' &&
@@ -52,6 +53,9 @@ Llm* Llm::createLLM(const std::string& path, std::string model_type) {
         llm->model_name_ = "Baichuan2_7b";
     } else if (model_type.find("phi2") != std::string::npos) {
         llm = new Phi_2;
+    } else if (model_type.find("internlm") != std::string::npos) {
+        llm = new Llama2_7b;
+        llm->model_name_ = "Internlm_7b";
     }
     if (!llm) {
         std::cerr << "model type can't judge!" << std::endl;
@@ -468,6 +472,13 @@ std::vector<int> Llama2_7b::tokenizer(const std::string& query) {
         ids.push_back(196);
         return ids;
     }
+    if (model_name_ == "Internlm_7b") {
+        // internlm: "<|User|>:" + query + "<eoh>\n<|Bot|>:";
+        // 1, 333, 352, 1621, 352, 27232, query, 103027, 364, 333, 352, 23845, 352, 27232
+        ids.insert(ids.begin(), {1, 333, 352, 1621, 352, 27232});
+        ids.insert(ids.end(), {103027, 364, 333, 352, 23845, 352, 27232});
+        return ids;
+    }
     // llama2: <bos>[INST]{query}[/INST]: 1, 5539, 25580, 29962, query, 12452, 25580, 29962
     ids.insert(ids.begin(), {1, 5539, 25580, 29962});
     ids.insert(ids.end(), {12452, 25580, 29962});
@@ -508,5 +519,9 @@ VARP Llama2_7b::gen_position_ids(int seq_len) {
 }
 
 bool Llama2_7b::is_stop(int token_id) {
+    if (model_name_ == "Internlm_7b") {
+        // 103028: <eoa>
+        return token_id == 2 || token_id == 103028;
+    }
     return token_id == 2;
 }

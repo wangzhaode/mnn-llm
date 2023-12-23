@@ -28,6 +28,7 @@ Current supported models：
 | Qwen-7B-Chat | [![Download][download-qwen-7b-chat-onnx]][release-qwen-7b-chat-onnx] | [![Download][download-qwen-7b-chat-mnn]][release-qwen-7b-chat-mnn] |
 | Baichuan2-7B-Chat | [![Download][download-baichuan2-7b-chat-onnx]][release-baichuan2-7b-chat-onnx] | [![Download][download-baichuan2-7b-chat-mnn]][release-baichuan2-7b-chat-mnn] |
 | Llama-2-7b-chat | [![Download][download-llama2-7b-chat-onnx]][release-llama2-7b-chat-onnx] | [![Download][download-llama2-7b-chat-mnn]][release-llama2-7b-chat-mnn] |
+| internlm-chat-7b | [![Download][download-internlm-7b-onnx]][release-internlm-7b-onnx] | [![Download][download-internlm-chat-7b-mnn]][release-internlm-chat-7b-mnn] |
 | Qwen-1_8B-Chat | [![Download][download-qwen-1.8b-onnx]][release-qwen-1.8b-onnx] | [![Download][download-qwen-1.8b-mnn]][release-qwen-1.8b-mnn] |
 | phi-2 | [![Download][download-phi-2-onnx]][release-phi-2-onnx] | [![Download][download-phi2-mnn-int4]][release-phi2-mnn-int4] |
 
@@ -41,6 +42,7 @@ Other versions：
 [download-qwen-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen-7b-chat-onnx/total
 [download-baichuan2-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/baichuan2-7b-chat-onnx/total
 [download-llama2-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/llama2-7b-chat-onnx/total
+[download-internlm-7b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/internlm-7b-onnx/total
 [download-qwen-1.8b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen-1.8b-onnx/total
 [download-phi-2-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/phi-2-onnx/total
 [release-chatglm-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm-6b-onnx
@@ -50,6 +52,7 @@ Other versions：
 [release-qwen-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen-7b-chat-onnx
 [release-baichuan2-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/baichuan2-7b-chat-onnx
 [release-llama2-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/llama2-7b-chat-onnx
+[release-internlm-7b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/internlm-7b-onnx
 [release-qwen-1.8b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen-1.8b-onnx
 [release-phi-2-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/phi-2-onnx
 [download-chatglm-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm-6b-mnn/total
@@ -59,6 +62,7 @@ Other versions：
 [download-qwen-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-7b-chat-mnn/total
 [download-baichuan2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/baichuan2-7b-chat-mnn/total
 [download-llama2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/llama2-7b-chat-mnn/total
+[download-internlm-chat-7b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/internlm-chat-7b-mnn/total
 [download-qwen-1.8b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-mnn/total
 [download-phi2-mnn-int4]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/phi2-mnn-int4/total
 [download-qwen-1.8b-mnn-int8]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-mnn-int8/total
@@ -71,6 +75,7 @@ Other versions：
 [release-qwen-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-7b-chat-mnn
 [release-baichuan2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/baichuan2-7b-chat-mnn
 [release-llama2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/llama2-7b-chat-mnn
+[release-internlm-chat-7b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/internlm-chat-7b-mnn
 [release-qwen-1.8b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn
 [release-phi2-mnn-int4]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-phi2-mnn-int4
 [release-qwen-1.8b-mnn-int8]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn-int8
@@ -176,6 +181,9 @@ adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo qwen-1.8
 - [Baichuan2-7B-Chat](https://modelscope.cn/models/baichuan-inc/baichuan-7B/summary)
 - [Qwen-7B-Chat](https://modelscope.cn/models/qwen/Qwen-7B-Chat/summary)
 - [Qwen-1.8B-Chat](https://modelscope.cn/models/qwen/Qwen-1_8B-Chat/summary)
+- [Llama-2-7b-chat-ms](https://modelscope.cn/models/modelscope/Llama-2-7b-chat-ms/summary)
+- [internlm-chat-7b](https://modelscope.cn/models/Shanghai_AI_Laboratory/internlm-chat-7b/summary)
+- [phi-2](https://modelscope.cn/models/AI-ModelScope/phi-2/summary)
 - [cpp-httplib](https://github.com/yhirose/cpp-httplib)
 - [chatgpt-web](https://github.com/xqdoo00o/chatgpt-web)
 - [ChatViewDemo](https://github.com/BrettFX/ChatViewDemo)

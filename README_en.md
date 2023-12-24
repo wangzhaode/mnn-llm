@@ -138,13 +138,13 @@ Current build status:
 ### Local Compilation
 ```
 # linux
-./script/linux_build.sh
+./script/build.sh
 
 # macos
-./script/macos_build.sh
+./script/build.sh
 
 # windows msvc
-./script/windows_build.ps1
+./script/build.ps1
 
 # android
 ./script/android_build.sh

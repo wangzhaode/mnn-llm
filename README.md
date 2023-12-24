@@ -142,13 +142,13 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 ### 本地编译
 ```
 # linux
-./script/linux_build.sh
+./script/build.sh
 
 # macos
-./script/macos_build.sh
+./script/build.sh
 
 # windows msvc
-./script/windows_build.ps1
+./script/build.ps1
 
 # android
 ./script/android_build.sh

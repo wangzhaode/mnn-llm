@@ -37,6 +37,14 @@
         android:layout_alignParentBottom="true"
         android:orientation="vertical">
 
+        <Spinner
+            android:id="@+id/spinner_models"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginHorizontal="10pt"
+            android:prompt="@string/spinner_prompt"
+            android:spinnerMode="dropdown"/>
         <TextView
             android:id="@+id/model_info"
             android:layout_width="wrap_content"

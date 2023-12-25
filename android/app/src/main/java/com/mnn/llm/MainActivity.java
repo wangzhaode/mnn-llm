@@ -8,13 +8,18 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -27,9 +32,11 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar mProcessBar;
     private TextView mProcessName;
     private TextView mProcessPercent;
+    private Spinner mSpinnerModels;
     // resource files
+    private String mSearchPath = "/data/local/tmp/mnn-llm/";
     private String mModelName = "qwen-1.8b-int4";
-    private String mModelDir = "/data/local/tmp/chat/" + mModelName; // default dir
+    private String mModelDir = mSearchPath + mModelName; // default dir
     private boolean mModelReady = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,8 +49,24 @@ public class MainActivity extends AppCompatActivity {
         mProcessBar = (ProgressBar)findViewById(R.id.process_bar);
         mProcessName = (TextView)findViewById(R.id.process_name);
         mProcessPercent = (TextView)findViewById(R.id.process_percent);
-        // using assert file
+        mSpinnerModels = (Spinner) findViewById(R.id.spinner_models);
+        // default using assert file
         mModelDir = this.getCacheDir() + "/" + mModelName;
+        populateFoldersSpinner();
+        mSpinnerModels.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position > 0) {
+                    mModelName = (String) parent.getItemAtPosition(position);
+                    mModelInfo.setText("选择模型：" + mModelName);
+                    mModelInfo.setVisibility(View.VISIBLE);
+                    mModelDir = mSearchPath + mModelName;
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
         mProcessHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -107,6 +130,26 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    private ArrayList<String> getFoldersList(String path) {
+        File directory = new File(path);
+        File[] files = directory.listFiles();
+        ArrayList<String> foldersList = new ArrayList<>();
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    foldersList.add(file.getName());
+                }
+            }
+        }
+        return foldersList;
+    }
+    private void populateFoldersSpinner() {
+        ArrayList<String> folders = getFoldersList("/data/local/tmp/mnn-llm");
+        folders.add(0, getString(R.string.spinner_prompt));
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, folders);
+        mSpinnerModels.setAdapter(adapter);
+    }
     public void loadModel(View view) {
         onCheckModels();
         if (!mModelReady) {

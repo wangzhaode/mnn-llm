@@ -7,13 +7,18 @@
 // #define MNN_OPEN_TIME_TRACE 1
 
 #include <iostream>
+#include <fstream>
+#include <regex>
 
-#include "llm.hpp"
-#include "tokenizer.hpp"
 #include <MNN/expr/ExecutorScope.hpp>
 #include <MNN/AutoTime.hpp>
+#include "llm.hpp"
+#include "tokenizer.hpp"
 
-#include <fstream>
+#ifdef USING_VISUAL_MODEL
+#include "httplib.h"
+#include <cv/cv.hpp>
+#endif
 
 Llm* Llm::createLLM(const std::string& path, std::string model_type) {
     auto size = path.size();
@@ -43,6 +48,8 @@ Llm* Llm::createLLM(const std::string& path, std::string model_type) {
     } else if (model_type.find("qwen") != std::string::npos) {
         if (model_type.find("1.8") != std::string::npos) {
             llm = new Qwen_1_8b;
+        } else if (model_type.find("vl") != std::string::npos) {
+            llm = new Qwen_vl;
         } else {
             llm = new Qwen_7b;
         }
@@ -223,6 +230,14 @@ void Llm::load(const std::string& model_dir) {
         MNN_PRINT("Done!\n");
         load_progress_ += step;
 #endif
+        if (is_visual_) {
+            std::string visual_model_path = model_dir + "/visual.mnn";
+            MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, visual_model_path.c_str());fflush(stdout);
+            module_config.rearrange = false;
+            visual_module_.reset(Module::load({}, {}, visual_model_path.c_str(), runtime_manager_, &module_config));
+            MNN_PRINT("Done!\n");
+            module_config.rearrange = true;
+        }
         // load glm_block models
         for (int i = 0; i < layer_nums_; i++) {
             load_progress_ += step;
@@ -269,11 +284,7 @@ int Llm::forward(const std::vector<int>& input_ids) {
         past_key_values_[0] = outputs[1];
     } else {
         // split block models
-#ifdef USING_DISK_EMBED
-        auto hidden_states = disk_embedding(input_ids);
-#else
-        auto hidden_states = modules_[layer_nums_ + 1]->onForward({inputs_ids_})[0];
-#endif
+        auto hidden_states = embedding(input_ids);
         for (int i = 0; i < layer_nums_; i++) {
             AUTOTIME;
             auto outputs = modules_[i]->onForward({hidden_states, attention_mask, position_ids, past_key_values_[i]});
@@ -292,9 +303,15 @@ int Llm::forward(const std::vector<int>& input_ids) {
     return id;
 }
 
-VARP Llm::disk_embedding(const std::vector<int>& input_ids) {
+VARP Llm::txt_embedding(const std::vector<int>& input_ids) {
+#ifndef USING_DISK_EMBED
+    // using model forward
+    auto inputs_ids_ = _Const(input_ids.data(), {static_cast<int>(input_ids.size())}, NCHW, halide_type_of<int>());
+    auto hidden_states = modules_[layer_nums_ + 1]->onForward({inputs_ids_})[0];
+    return hidden_states;
+#endif
     AUTOTIME;
-    // disk embedding save memory
+    // disk embedding to save memory
     size_t seq_len = input_ids.size();
     auto embedding = _Input({static_cast<int>(seq_len), 1, hidden_size_}, NCHW);
     size_t size = hidden_size_ * sizeof(int16_t);
@@ -312,6 +329,13 @@ VARP Llm::disk_embedding(const std::vector<int>& input_ids) {
     }
     fclose(file);
     return embedding;
+}
+
+VARP Llm::embedding(const std::vector<int>& input_ids) {
+    if (is_visual_ && !gen_seq_len_) {
+        return visual_embedding(input_ids);
+    }
+    return txt_embedding(input_ids);
 }
 
 std::vector<int> Llm::tokenizer_encode(const std::string& input_str) {
@@ -461,6 +485,132 @@ VARP Qwen_7b::gen_position_ids(int seq_len) {
 
 bool Qwen_7b::is_stop(int token_id) {
     return token_id >= 151645;
+}
+
+// Qwen_vl
+std::vector<int> Qwen_vl::url_encode(const std::string& url) {
+    std::vector<int> ascii_values(imgpad_len_, img_pad_);
+    ascii_values[0] = img_start_;
+    ascii_values[imgpad_len_ - 1] = img_end_;
+    for (int i = 0; i < url.size(); i++) {
+        ascii_values[i + 1] = static_cast<int>(url[i]);
+    }
+    return ascii_values;
+}
+
+VARP Qwen_vl::visual_embedding(const std::vector<int>& input_ids) {
+#ifdef USING_VISUAL_MODEL
+    int start_pos = 0, pad_pos = 0, end_pos = 0;
+    for (int i = 0; i < input_ids.size(); i++) {
+        int id = input_ids[i];
+        if (id == img_start_ && !start_pos) {
+            start_pos = i;
+        }
+        if (id == img_pad_ && !pad_pos) {
+            pad_pos = i;
+        }
+        if (id == img_end_ && !end_pos) {
+            end_pos = i;
+        }
+    }
+    if (!start_pos) {
+        return txt_embedding(input_ids);
+    }
+    std::vector<int> prefix(input_ids.begin(), input_ids.begin() + start_pos);
+    std::vector<int> img_ascii(input_ids.begin() + start_pos + 1, input_ids.begin() + pad_pos);
+    std::vector<int> suffix(input_ids.begin() + end_pos + 1, input_ids.end());
+    std::string img_path;
+    for (auto ascii_val : img_ascii) {
+        img_path += static_cast<char>(ascii_val);
+    }
+    VARP image = nullptr;
+    if (img_path.substr(0, 4) == "http") {
+        std::regex url_regex(R"(^https?://([^/]+)(/.*))");
+        std::smatch url_match_result;
+        std::string host, path;
+        if (std::regex_search(img_path, url_match_result, url_regex) && url_match_result.size() == 3) {
+            host = url_match_result[1].str();
+            path = url_match_result[2].str();
+        }
+        std::cout << host << "#" << path << std::endl;
+        httplib::Client cli(host);
+        auto res = cli.Get(path);
+        std::string img_file = "downloaded_image.jpg";
+        if (res && res->status == 200) {
+            std::ofstream file(img_file, std::ios::binary);
+            if (file.is_open()) {
+                file.write(res->body.c_str(), res->body.size());
+                std::cout << "Image has been downloaded successfully." << std::endl;
+                file.close();
+            } else {
+                std::cerr << "Unable to open file to write image." << std::endl;
+                exit(0);
+            }
+        } else {
+            std::cerr << "Failed to download image. Status code: " << (res ? res->status : 0) << std::endl;
+            exit(0);
+        }
+        image = MNN::CV::imread(img_file);
+    } else {
+        image = MNN::CV::imread(img_path);
+    }
+    image = MNN::CV::resize(image, {img_size_, img_size_}, 0, 0, MNN::CV::INTER_LINEAR, MNN::CV::COLOR_BGR2RGB,
+                            {123.25239296, 117.20384, 104.50194688}, {0.0145414 , 0.01494914, 0.01416452});
+    image = MNN::Express::_Unsqueeze(image, {0});
+    image = MNN::Express::_Convert(image, NC4HW4);
+    auto image_embedding = visual_module_->forward(image);
+    image_embedding = MNN::Express::_Permute(image_embedding, {1, 0, 2});
+    auto prefix_embedding = txt_embedding(prefix);
+    auto suffix_embedding = txt_embedding(suffix);
+    auto embeddings = MNN::Express::_Concat({prefix_embedding, image_embedding, suffix_embedding}, 0);
+#else
+    auto embeddings = txt_embedding(input_ids);
+#endif
+    return embeddings;
+}
+
+std::vector<int> Qwen_vl::tokenizer(const std::string& query) {
+    // split query
+    std::regex img_regex("<img>(.*?)</img>");
+    std::string::const_iterator searchStart(query.cbegin());
+    std::smatch match;
+    std::vector<std::string> img_info, txt_info;
+    std::vector<int> ids {};
+    while (std::regex_search(searchStart, query.cend(), match, img_regex)) {
+        auto txt_ids = tokenizer_encode(match.prefix().str());
+        ids.insert(ids.end(), txt_ids.begin(), txt_ids.end());
+        auto img_ids = url_encode(match[1].str());
+        ids.insert(ids.end(), img_ids.begin(), img_ids.end());
+        searchStart = match.suffix().first;
+    }
+    if (searchStart != query.cend()) {
+        auto txt_ids = tokenizer_encode(std::string(searchStart, query.cend()));
+        ids.insert(ids.end(), txt_ids.begin(), txt_ids.end());
+    }
+    // auto prompt = "\n<|im_start|>user\n" + query + "<|im_end|>\n<|im_start|>assistant\n";
+    ids.insert(ids.begin(), {198, 151644, 872, 198});
+    ids.insert(ids.end(), {151645, 198, 151644, 77091, 198});
+    return ids;
+}
+
+VARP Qwen_vl::gen_attention_mask(int seq_len) {
+    if (seq_len == 1) {
+        auto attention_mask = _Input({1, 1, 1, all_seq_len_ + 1}, NCHW, halide_type_of<float>());
+        auto ptr = attention_mask->writeMap<float>();
+        for (int i = 0; i < all_seq_len_ + 1; i++) {
+            ptr[i] = 0;
+        }
+        return attention_mask;
+    } else {
+        auto attention_mask = _Input({1, 1, seq_len, seq_len}, NCHW, halide_type_of<float>());
+        auto ptr = attention_mask->writeMap<float>();
+        for (int i = 0; i < seq_len; i++) {
+            for (int j = 0; j < seq_len; j++) {
+                ptr[seq_len * i + j] = (j > i) * std::numeric_limits<float>::lowest();
+            }
+        }
+        return attention_mask;
+    }
 }
 
 // Llama2_7b

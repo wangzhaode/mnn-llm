@@ -54,11 +54,7 @@ public:
     }
     virtual ~Llm() = default;
     static Llm* createLLM(const std::string& path, std::string model_type = "auto");
-    VARP disk_embedding(const std::vector<int>& input_ids);
     void load(const std::string& model_dir);
-    int forward(const std::vector<int>& input_ids);
-    std::vector<int> tokenizer_encode(const std::string& input_str);
-    std::string decode(int id);
     void chat();
     void warmup();
     std::string response(const std::string& input_str, std::ostream* os = &std::cout, const char* end_with = nullptr);
@@ -75,14 +71,16 @@ public:
     // time
     int64_t prefill_us_ = 0;
     int64_t decode_us_ = 0;
-private:
-    virtual std::vector<int> tokenizer(const std::string& query) = 0;
-    virtual VARP gen_attention_mask(int seq_len) = 0;
-    virtual VARP gen_position_ids(int seq_len) = 0;
-    virtual bool is_stop(int token_id) = 0;
+protected:
+    VARP embedding(const std::vector<int>& input_ids);
+    VARP txt_embedding(const std::vector<int>& input_ids);
+    int forward(const std::vector<int>& input_ids);
+    std::vector<int> tokenizer_encode(const std::string& input_str);
+    std::string decode(int id);
 protected:
     // model configs
     bool is_single_ = false;
+    bool is_visual_ = false;
     int layer_nums_ = 0;
     int hidden_size_ = 4096;
     std::vector<int> key_value_shape_ = {};
@@ -91,6 +89,13 @@ protected:
     float load_progress_ = 0.f;
     // tokenizer
     std::unique_ptr<Tokenizer> tokenizer_;
+    std::shared_ptr<Module> visual_module_;
+private:
+    virtual VARP visual_embedding(const std::vector<int>& input_ids) { return nullptr; }
+    virtual std::vector<int> tokenizer(const std::string& query) = 0;
+    virtual VARP gen_attention_mask(int seq_len) = 0;
+    virtual VARP gen_position_ids(int seq_len) = 0;
+    virtual bool is_stop(int token_id) = 0;
 private:
     // MNN Modules
     std::shared_ptr<Executor::RuntimeManager> runtime_manager_;
@@ -158,6 +163,29 @@ private:
     virtual VARP gen_attention_mask(int seq_len) override;
     virtual VARP gen_position_ids(int seq_len) override;
     virtual bool is_stop(int token_id) override;
+};
+
+class Qwen_vl : public Qwen_7b {
+public:
+    Qwen_vl() {
+        model_name_ = "Qwen_vl";
+        is_visual_ = true;
+        layer_nums_ = 32;
+        key_value_shape_ = {2, 1, 0, 32, 128};
+        hidden_size_ = 4096;
+        tokenizer_.reset(new Tiktoken);
+    }
+private:
+    const int img_size_ = 448;
+    const int imgpad_len_ = 256;
+    const int img_start_ = 151857;
+    const int img_end_ = 151858;
+    const int img_pad_ = 151859;
+private:
+    std::vector<int> url_encode(const std::string& url);
+    virtual VARP visual_embedding(const std::vector<int>& input_ids) override;
+    virtual std::vector<int> tokenizer(const std::string& query) override;
+    virtual VARP gen_attention_mask(int seq_len) override;
 };
 
 class Qwen_1_8b : public Qwen_7b {

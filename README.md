@@ -107,8 +107,6 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 | windows | PC | Intel(R) Core(TM) i7-13700K | 32GB |
 
 
-
-
 ### 下载int4模型
 ```
 # <model> like `chatglm-6b`
@@ -154,10 +152,16 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 ./script/android_build.sh
 ```
 
-默认使用`CPU`后端，如果使用其他后端，可以在脚本中添加`MNN`编译宏
+一些编译宏：
+- `BUILD_FOR_ANDROID`: 编译到Android设备；
+- `USING_VISUAL_MODEL`: 支持多模态能力的模型，需要依赖`libMNNOpenCV`；
+- `USING_DISK_EMBED`: 使用硬盘加载的方式实现embedding，节省内存；
+- `DUMP_PROFILE_INFO`: 每次对话后dump出性能数据到命令行中；
+
+默认使用`CPU`后端且不实用多模态能力，如果使用其他后端或能力，可以在编译MNN的脚本中添加`MNN`编译宏
 - cuda: `-DMNN_CUDA=ON`
 - opencl: `-DMNN_OPENCL=ON`
-
+- opencv: `-DMNN_BUILD_OPENCV=ON -DMNN_IMGCODECS=ON`
 
 ### 4. 执行
 
@@ -184,6 +188,7 @@ adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo qwen-1.8
 - [codegeex2-6b](https://modelscope.cn/models/ZhipuAI/codegeex2-6b/summary)
 - [Baichuan2-7B-Chat](https://modelscope.cn/models/baichuan-inc/baichuan-7B/summary)
 - [Qwen-7B-Chat](https://modelscope.cn/models/qwen/Qwen-7B-Chat/summary)
+- [Qwen-VL-Chat](https://modelscope.cn/models/qwen/Qwen-VL-Chat/summary)
 - [Qwen-1.8B-Chat](https://modelscope.cn/models/qwen/Qwen-1_8B-Chat/summary)
 - [Llama-2-7b-chat-ms](https://modelscope.cn/models/modelscope/Llama-2-7b-chat-ms/summary)
 - [internlm-chat-7b](https://modelscope.cn/models/Shanghai_AI_Laboratory/internlm-chat-7b/summary)

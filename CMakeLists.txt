@@ -2,12 +2,16 @@ cmake_minimum_required(VERSION 3.0)
 project(mnn-llm)
 
 option(BUILD_FOR_ANDROID "Build for android whith mini memory mode." OFF)
+option(USING_VISUAL_MODEL "Using visual model will need dpes: MNNOpenCV and httplib." OFF)
 option(USING_DISK_EMBED "Using disk embedding to save memory." OFF)
 option(DUMP_PROFILE_INFO "Dump profile info when chat." OFF)
-option(WITH_CUDA "Enable CUDA support" OFF)
 
 if (USING_DISK_EMBED)
     add_definitions(-DUSING_DISK_EMBED)
+endif()
+
+if (USING_VISUAL_MODEL)
+    add_definitions(-DUSING_VISUAL_MODEL)
 endif()
 
 if (DUMP_PROFILE_INFO)
@@ -35,6 +39,9 @@ else()
     set_target_properties(llm PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
     target_link_libraries(llm MNN MNN_Express)
+    if (USING_VISUAL_MODEL)
+        target_link_libraries(llm MNNOpenCV)
+    endif()
 endif()
 
 if (BUILD_FOR_ANDROID)

@@ -69,7 +69,7 @@ def eval_chat(model, tokenizer, subject, dev_df, test_df, num_few_shot, max_leng
         label = test_df.iloc[i, test_df.shape[1] - 1]
 
         pred, history = model.chat(tokenizer, prompt, history=None)
-        print(f'{i} of {test_df.shape[0]}: prompt: {prompt}, pred: {pred}, label: {label}')
+        # print(f'{i} of {test_df.shape[0]}: prompt: {prompt}, pred: {pred}, label: {label}')
         if pred and pred[0] in choices:
             cors.append(pred[0] == label)
         all_preds.append(pred.replace("\n", ""))

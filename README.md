@@ -12,6 +12,7 @@
 - [web](./demo/web_demo.cpp): 使用命令行编译，运行时需要指定[web资源](./web)
 - [android](./android/): 使用Android Studio打开编译；APK下载: [![Download][download-qwen-1.8b-apk]][release-qwen-1.8b-apk]
 - [ios](./ios/README.md): 使用Xcode打开编译；🚀🚀🚀**该示例代码100%由ChatGPT生成**🚀🚀🚀
+- [python](./python): 基于`pymnn`实现的纯python推理代码；
 
 ## 模型支持
 

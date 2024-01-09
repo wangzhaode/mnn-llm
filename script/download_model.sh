@@ -13,7 +13,7 @@ if [ $is_7b ]; then
     block_num=31
 fi
 if [ $is_1_8b ]; then
-    block_num=24
+    block_num=23
 fi
 # download models
 wget -c -nv https://github.com/wangzhaode/mnn-llm/releases/download/$model-mnn/tokenizer.txt

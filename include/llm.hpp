@@ -52,7 +52,11 @@ public:
         // default tokenier is senrencepiece
         tokenizer_.reset(new Sentencepiece);
     }
-    virtual ~Llm() = default;
+    virtual ~Llm() {
+        modules_.clear();
+        visual_module_.reset();
+        runtime_manager_.reset();
+    }
     static Llm* createLLM(const std::string& path, std::string model_type = "auto");
     void load(const std::string& model_dir);
     void chat();

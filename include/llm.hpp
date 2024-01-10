@@ -235,6 +235,7 @@ public:
     void load(const std::string& model_dir);
     VARP embedding(const std::string& txt);
     void print_speed();
+    int dim() { return hidden_size_; }
 public:
     // time
     int64_t embedding_us_ = 0;
@@ -275,5 +276,29 @@ private:
 };
 
 // Embedding end
+
+// TextVectorStore strat
+class TextVectorStore {
+public:
+    TextVectorStore() {}
+    ~TextVectorStore() {}
+    static TextVectorStore* load(const std::string& path);
+    void set_embedding(std::shared_ptr<Embedding> embedding) {
+        embedding_ = embedding;
+    }
+    void save(const std::string& path);
+    void add_text(const std::string& text);
+    void add_texts(const std::vector<std::string>& texts);
+    std::vector<std::string> search_similar_texts(const std::string& txt, int topk = 1);
+    void bench();
+protected:
+    inline VARP text2vector(const std::string& text);
+private:
+    std::shared_ptr<Embedding> embedding_;
+    VARP vectors_;
+    std::vector<std::string> texts_;
+    int dim_ = 1024;
+};
+// TextVectorStore end
 
 #endif // LLM_hpp

@@ -44,6 +44,10 @@ else()
     endif()
 endif()
 
+add_executable(cli_demo ${CMAKE_CURRENT_LIST_DIR}/demo/cli_demo.cpp)
+add_executable(embedding_demo ${CMAKE_CURRENT_LIST_DIR}/demo/embedding_demo.cpp)
+add_executable(store_demo ${CMAKE_CURRENT_LIST_DIR}/demo/store_demo.cpp)
+
 if (BUILD_FOR_ANDROID)
     add_library(MNN SHARED IMPORTED)
     add_library(MNN_Express SHARED IMPORTED)
@@ -57,22 +61,20 @@ if (BUILD_FOR_ANDROID)
         PROPERTIES IMPORTED_LOCATION
         ${CMAKE_CURRENT_LIST_DIR}/libs/libMNN_Express.so
         )
-    # just cli demo
-    add_executable(cli_demo ${CMAKE_CURRENT_LIST_DIR}/demo/cli_demo.cpp)
     target_link_libraries(cli_demo llm log)
+    target_link_libraries(embedding_demo llm log)
+    target_link_libraries(store_demo llm log)
 else()
-    # cli demo
-    add_executable(cli_demo ${CMAKE_CURRENT_LIST_DIR}/demo/cli_demo.cpp)
+    # web demo
     add_executable(web_demo ${CMAKE_CURRENT_LIST_DIR}/demo/web_demo.cpp)
-    add_executable(embedding_demo ${CMAKE_CURRENT_LIST_DIR}/demo/embedding_demo.cpp)
+    target_link_libraries(cli_demo llm)
+    target_link_libraries(embedding_demo llm)
+    target_link_libraries(store_demo llm)
     if (MSVC)
-        target_link_libraries(cli_demo llm)
         target_link_libraries(web_demo llm pthreadVC2)
         # copy all lib to target dir
         file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/libs/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Debug/)
     else()
-        target_link_libraries(cli_demo llm)
-        target_link_libraries(embedding_demo llm)
         target_link_libraries(web_demo llm pthread)
     endif()
 endif()

@@ -685,7 +685,7 @@ bool Llama2_7b::is_stop(int token_id) {
 
 // Embedding start
 float Embedding::dist(VARP var0, VARP var1) {
-    auto distVar = _ReduceSum(_Square(var0 - var1));
+    auto distVar = _Sqrt(_ReduceSum(_Square(var0 - var1)));
     auto dist = distVar->readMap<float>()[0];
     return dist;
 }
@@ -789,3 +789,80 @@ VARP Bge::gen_position_ids(int seq_len) {
     return position_ids;
 }
 // Embedding end
+
+// TextVectorStore strat
+
+TextVectorStore* TextVectorStore::load(const std::string& path) {
+    auto vars = Variable::load(path.c_str());
+    return nullptr;
+    // TODO
+}
+
+void TextVectorStore::save(const std::string& path) {
+    std::vector<VARP> vars;
+    Variable::save(vars, path.c_str());
+    // TODO
+}
+
+void TextVectorStore::add_text(const std::string& text) {
+    auto vector = text2vector(text);
+    texts_.push_back(text);
+    if (vectors_ == nullptr) {
+        vectors_ = vector;
+    } else {
+        vectors_ = _Concat({vectors_, vector}, 0);
+    }
+}
+
+void TextVectorStore::add_texts(const std::vector<std::string>& texts) {
+    for (const auto& text : texts) {
+        add_text(text);
+    }
+}
+
+std::vector<std::string> TextVectorStore::search_similar_texts(const std::string& text, int topk) {
+    auto vector = text2vector(text);
+    auto dist = _Sqrt(_ReduceSum(_Square(vectors_ - vector), {-1}));
+    auto indices = _Sort(dist, 0, true);
+    auto ptr = dist->readMap<float>();
+    auto iptr = indices->readMap<int>();
+    auto idx_ptr = indices->readMap<int>();
+    std::vector<std::string> res;
+    for (int i = 0; i < topk; i++) {
+        int pos = idx_ptr[i];
+        if (pos >= 0 && pos < texts_.size()) {
+            res.push_back(texts_[pos]);
+        }
+    }
+    return res;
+}
+
+void TextVectorStore::bench() {
+    const int n = 50000;
+    const int d = 1024;
+    std::vector<int> shape0_v = {n, d};
+    std::vector<int> shape1_v = {1, d};
+    auto shape0 = _Const(shape0_v.data(), {2});
+    auto shape1 = _Const(shape1_v.data(), {2});
+    vectors_ = _RandomUnifom(shape0, halide_type_of<float>());
+    auto vec = _RandomUnifom(shape1, halide_type_of<float>());
+    auto start = std::chrono::high_resolution_clock::now();
+    auto dist = _Sqrt(_ReduceSum(_Square(vectors_ - vec), {-1}));
+    auto ptr = dist->readMap<float>();
+    auto indices = _Sort(dist, 0, true);
+    auto iptr = indices->readMap<int>();
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "search took " << duration.count() << " milliseconds." << std::endl;
+    for (int i = 0; i < 5; i++) {
+        printf("index: %d, distance: %f\n", iptr[i], ptr[iptr[i]]);
+    }
+    vectors_ = nullptr;
+}
+
+VARP TextVectorStore::text2vector(const std::string& text) {
+    auto vector = embedding_->embedding(text);
+    return vector;
+}
+
+// TextVectorStore end

@@ -20,6 +20,7 @@
 #include <cv/cv.hpp>
 #endif
 
+// Llm start
 Llm* Llm::createLLM(const std::string& path, std::string model_type) {
     auto size = path.size();
 
@@ -192,6 +193,11 @@ void Llm::load(const std::string& model_dir) {
     printf("load tokenizer\n");
     // 1. load vocab
     std::string tokenizer_path = model_dir + "/tokenizer.txt";
+    if (is_single_) {
+        size_t pos = model_dir.find_last_of("/\\");
+        std::string dir_path = (pos != std::string::npos) ? model_dir.substr(0, pos + 1) : "";
+        tokenizer_path = dir_path + "/tokenizer.txt";
+    }
     load_progress_ += 5.f;
     tokenizer_->load(tokenizer_path);
     load_progress_ += 5.f;
@@ -675,3 +681,111 @@ bool Llama2_7b::is_stop(int token_id) {
     }
     return token_id == 2;
 }
+// Llm end
+
+// Embedding start
+float Embedding::dist(VARP var0, VARP var1) {
+    auto distVar = _ReduceSum(_Square(var0 - var1));
+    auto dist = distVar->readMap<float>()[0];
+    return dist;
+}
+
+Embedding* Embedding::createEmbedding(const std::string& path, std::string model_type) {
+    auto size = path.size();
+
+    Embedding* embedding = nullptr;
+    if (model_type == "auto") {
+        model_type = path;
+    }
+    if (model_type.find("bge") != std::string::npos) {
+        embedding = new Bge;
+    }
+    if (!embedding) {
+        std::cerr << "model type can't judge!" << std::endl;
+        return embedding;
+    }
+    std::cout << "### model name : "<< embedding->model_name_ << std::endl;
+    return embedding;
+}
+
+void Embedding::load(const std::string& model_dir) {
+    model_dir_ = model_dir;
+    // init
+    ScheduleConfig config;
+    BackendConfig cpuBackendConfig;
+    config.type          = MNN_FORWARD_CPU;
+    // config.type          = MNN_FORWARD_OPENCL;
+    config.numThread     = 4;
+    cpuBackendConfig.precision = BackendConfig::Precision_Low;
+    cpuBackendConfig.memory = BackendConfig::Memory_Low;
+    config.backendConfig = &cpuBackendConfig;
+    runtime_manager_.reset(Executor::RuntimeManager::createRuntimeManager(config));
+    printf("load tokenizer\n");
+    // 1. load vocab
+    size_t pos = model_dir.find_last_of("/\\");
+    std::string dir_path = (pos != std::string::npos) ? model_dir.substr(0, pos + 1) : "";
+    std::string tokenizer_path = dir_path + "/tokenizer.txt";
+    tokenizer_->load(tokenizer_path);
+    printf("load tokenizer Done\n");
+    // 2. load model
+    Module::Config module_config;
+    module_config.shapeMutable = true;
+    module_config.rearrange = true;
+    std::string model_path = model_dir;
+    MNN_PRINT("load %s ... ", model_path.c_str());
+    module_.reset(Module::load(
+            {"input_ids", "attention_mask", "position_ids"},
+            {"sentence_embeddings"}, model_path.c_str(), runtime_manager_, &module_config));
+    MNN_PRINT("Done!\n");
+}
+
+VARP Embedding::embedding(const std::string& txt) {
+    auto ids = tokenizer(txt);
+    prompt_len_ = ids.size();
+    auto inputs_ids = _Const(ids.data(), {prompt_len_}, NCHW, halide_type_of<int>());
+    auto attention_mask = gen_attention_mask(prompt_len_);
+    auto position_ids = gen_position_ids(prompt_len_);
+    auto outputs = module_->onForward({inputs_ids, attention_mask, position_ids});
+    auto sentence_embeddings = outputs[0];
+    return sentence_embeddings;
+}
+
+void Embedding::print_speed() {
+    auto total_s = embedding_us_ * 1e-6;
+    printf("\n#################################\n");
+    printf("  total token = %d\n", prompt_len_);
+    printf("  total time  = %.2f s\n", total_s);
+    printf("  total speed = %.2f tok/s\n", prompt_len_ / total_s);
+    printf("##################################\n");
+}
+
+std::vector<int> Embedding::tokenizer_encode(const std::string& input_str) {
+    auto ids = tokenizer_->encode(input_str);
+    return ids;
+}
+
+std::vector<int> Bge::tokenizer(const std::string& query) {
+    auto ids = tokenizer_encode(query);
+    ids.insert(ids.begin(), 101);
+    ids.push_back(102);
+    return ids;
+}
+
+VARP Bge::gen_attention_mask(int seq_len) {
+    auto attention_mask = _Input({1, 1, 1, seq_len}, NCHW, halide_type_of<int>());
+    auto ptr = attention_mask->writeMap<int>();
+    for (int i = 0; i < seq_len; i++) {
+        ptr[i] = 1;
+    }
+    return attention_mask;
+}
+
+VARP Bge::gen_position_ids(int seq_len) {
+    auto position_ids = _Input({1, seq_len}, NCHW, halide_type_of<int>());
+    auto ptr = position_ids->writeMap<int>();
+    for (int i = 0; i < seq_len; i++) {
+        ptr[i] = i;
+    }
+    return position_ids;
+}
+// Embedding end

@@ -27,8 +27,8 @@ using namespace MNN;
 using namespace Express;
 class Tokenizer;
 
+// Llm start
 // llm stream buffer with callback
-
 class LlmStreamBuffer : public std::streambuf {
 public:
     using CallBack = std::function<void(const char* str, size_t len)>;;
@@ -216,5 +216,64 @@ private:
     virtual VARP gen_position_ids(int seq_len) override;
     virtual bool is_stop(int token_id) override;
 };
+
+// Llm end
+
+// Embedding start
+class Embedding {
+public:
+    Embedding() {
+        // default tokenier is Tiktoken
+        tokenizer_.reset(new Tiktoken);
+    }
+    virtual ~Embedding() {
+        module_.reset();
+        runtime_manager_.reset();
+    }
+    static Embedding* createEmbedding(const std::string& path, std::string model_type = "auto");
+    static float dist(VARP var0, VARP var1);
+    void load(const std::string& model_dir);
+    VARP embedding(const std::string& txt);
+    void print_speed();
+public:
+    // time
+    int64_t embedding_us_ = 0;
+    int prompt_len_ = 0;
+protected:
+    std::vector<int> tokenizer_encode(const std::string& input_str);
+protected:
+    // model configs
+    int layer_nums_ = 0;
+    int hidden_size_ = 1024;
+    std::string model_name_ = "";
+    // tokenizer
+    std::unique_ptr<Tokenizer> tokenizer_;
+private:
+    virtual std::vector<int> tokenizer(const std::string& query) = 0;
+    virtual VARP gen_attention_mask(int seq_len) = 0;
+    virtual VARP gen_position_ids(int seq_len) = 0;
+private:
+    // MNN Modules
+    std::shared_ptr<Executor::RuntimeManager> runtime_manager_;
+    std::shared_ptr<Module> module_;
+    // model dir
+    std::string model_dir_;
+};
+
+// some embedding models
+class Bge : public Embedding {
+public:
+    Bge() {
+        model_name_ = "Bge";
+        layer_nums_ = 24;
+        hidden_size_ = 1024;
+    }
+private:
+    virtual std::vector<int> tokenizer(const std::string& query) override;
+    virtual VARP gen_attention_mask(int seq_len) override;
+    virtual VARP gen_position_ids(int seq_len) override;
+};
+
+// Embedding end
 
 #endif // LLM_hpp

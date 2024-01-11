@@ -46,5 +46,12 @@ int main(int argc, const char* argv[]) {
     for (const auto& text : similar_texts) {
         std::cout << text << std::endl;
     }
+    store->save("./tmp.mnn");
+    store.reset(TextVectorStore::load("./tmp.mnn"));
+    store->set_embedding(embedding);
+    similar_texts = store->search_similar_texts(text, 2);
+    for (const auto& text : similar_texts) {
+        std::cout << text << std::endl;
+    }
     return 0;
 }

@@ -809,7 +809,7 @@ void TextVectorStore::save(const std::string& path) {
     std::vector<VARP> vars;
     vars.push_back(vectors_);
     for (auto text : texts_) {
-        auto text_var = _Const(text.data(), {text.size()}, NHWC, halide_type_of<int8_t>());
+        auto text_var = _Const(text.data(), {static_cast<int>(text.size())}, NHWC, halide_type_of<int8_t>());
         vars.push_back(text_var);
     }
     Variable::save(vars, path.c_str());

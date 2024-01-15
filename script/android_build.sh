@@ -5,7 +5,7 @@ git clone https://github.com/alibaba/MNN.git --depth=1
 cd MNN/project/android
 mkdir build
 cd build
-../build_64.sh
+../build_64.sh -DMNN_LOW_MEMORY=ON
 cd ../../../..
 
 # 3. copy headers and libs

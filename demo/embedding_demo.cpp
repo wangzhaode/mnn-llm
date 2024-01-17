@@ -25,7 +25,7 @@ static void dumpVARP(VARP var) {
 
 int main(int argc, const char* argv[]) {
     if (argc < 2) {
-        std::cout << "Usage: " << argv[0] << " model.mnn" << std::endl;
+        std::cout << "Usage: " << argv[0] << " embedding.mnn" << std::endl;
         return 0;
     }
     std::string model_dir = argv[1];

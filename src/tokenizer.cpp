@@ -66,6 +66,14 @@ static std::string base64_decode(const std::string& str) {
     return ret;
 }
 
+static inline void to_lower_case(std::string& str) {
+    for (auto &c : str) {
+        if (c >= 'A' && c <= 'Z') {
+            c = std::tolower(static_cast<unsigned char>(c));
+        }
+    }
+}
+
 bool Sentencepiece::load(const std::string& filename) {
     std::ifstream tok_file(filename);
     std::string line, token;
@@ -305,6 +313,10 @@ bool Sentencepiece::is_control(int id) const {
 
 bool Tiktoken::load(const std::string& filename) {
     std::ifstream tok_file(filename);
+    if (!tok_file.good()) {
+        printf("Failed: can't load tokenzier from: %s.\n", filename.c_str());
+        return false;
+    }
     std::string token;
     while (tok_file >> token) {
         token = base64_decode(token);
@@ -357,4 +369,92 @@ std::string Tiktoken::decode(int id) {
         return "";
     }
     return decoder_[id];
+}
+
+std::vector<int> BertTokenizer::word_piece(const std::string& token) {
+    auto it = encoder_.find(token);
+    if (it != encoder_.end()) {
+        return {it->second};
+    }
+    std::vector<int> ids;
+    std::string current = token;
+    while (!current.empty()) {
+        int match_id = -1;
+        size_t match_pos = 0;
+        for (int len = current.size(); len > 0; --len) {
+            std::string candidate = current.substr(0, len);
+            if (!ids.empty()) {
+                candidate = "##" + candidate;
+            }
+            auto it = encoder_.find(candidate);
+            if (it != encoder_.end()) {
+                match_id = it->second;
+                match_pos = len;
+                break;
+            }
+        }
+        // [UNK]
+        if (match_id == -1) {
+            ids.push_back(100);
+            break;
+        }
+        ids.push_back(match_id);
+        // not first word, adding ## prefix
+        current = current.substr(match_pos);
+    }
+    return ids;
+}
+
+std::vector<int> BertTokenizer::encode(const std::string& str) {
+    std::vector<int> ids;
+    std::vector<std::string> tokens;
+    std::string current_token;
+    size_t i = 0;
+    while (i < str.size()) {
+        current_token.clear();
+        unsigned char c = static_cast<unsigned char>(str[i]);
+        // handle multi-byte UTF-8 characters
+        if ((c & 0x80) != 0) {
+            unsigned char mask = 0xE0; // 1110 0000 for 3-byte char
+            if ((c & mask) == mask) {
+                current_token = str.substr(i, 3);
+                i += 3;
+            } else {
+                ++i;
+                continue;
+            }
+        }
+        // handle continuous sequence of letters and digits
+        else if (std::isalnum(c)) {
+            while (i < str.size() && std::isalnum(static_cast<unsigned char>(str[i]))) {
+                current_token += std::tolower(str[i]);
+                ++i;
+            }
+        }
+        // handle punctuation and symbols
+        else if (std::ispunct(c)) {
+            current_token = str[i];
+            ++i;
+        }
+        // handle space, tab, enter
+        else if (std::isspace(c)) {
+            ++i;
+            continue;
+        }
+        // handle any other single-byte characters
+        else {
+            current_token = str[i];
+            ++i;
+        }
+        if (!current_token.empty()) {
+            tokens.push_back(current_token);
+        }
+    }
+
+    for (auto token : tokens) {
+        for (auto id : word_piece(token)) {
+            ids.push_back(id);
+        }
+    }
+    return ids;
 }

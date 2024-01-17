@@ -94,10 +94,7 @@ void Llm::chat() {
     reset();
 }
 
-std::string Llm::response(const std::string& query, std::ostream* os, const char* end_with) {
-    if (!end_with) {
-        end_with = "\n";
-    }
+void Llm::response_init() {
     // init status
     gen_seq_len_ = 0;
     all_seq_len_ = 0;
@@ -111,15 +108,9 @@ std::string Llm::response(const std::string& query, std::ostream* os, const char
             past_key_values_.push_back(_Input(key_value_shape_, NCHW));
         }
     }
-    // response
-    auto input_ids = tokenizer(query);
-    if (!history_.empty()) {
-        std::copy(input_ids.begin(), input_ids.end(), std::back_inserter(history_));
-        input_ids = history_;
-    } else {
-        history_ = input_ids;
-    }
+}
 
+std::string Llm::response_impl(const std::vector<int>& input_ids, std::ostream* os, const char* end_with) {
     prompt_len_ = static_cast<int>(input_ids.size());
     auto st = std::chrono::system_clock::now();
     int token = forward(input_ids);
@@ -145,10 +136,33 @@ std::string Llm::response(const std::string& query, std::ostream* os, const char
 #ifdef DUMP_PROFILE_INFO
     print_speed();
 #endif
-    // update Cache
-    // runtime_manager_->updateCache();
-    // reset forward info
     return output_str;
+}
+
+std::string Llm::response(const std::string& query, std::ostream* os, const char* end_with) {
+    response_init();
+    if (!end_with) {
+        end_with = "\n";
+    }
+    // response
+    auto input_ids = tokenizer(query);
+    if (!history_.empty()) {
+        std::copy(input_ids.begin(), input_ids.end(), std::back_inserter(history_));
+        input_ids = history_;
+    } else {
+        history_ = input_ids;
+    }
+    return response_impl(input_ids, os, end_with);
+}
+
+std::string Llm::response_nohistory(const std::string& query, std::ostream* os, const char* end_with) {
+    response_init();
+    if (!end_with) {
+        end_with = "\n";
+    }
+    // response
+    auto input_ids = tokenizer(query);
+    return response_impl(input_ids, os, end_with);
 }
 
 void Llm::print_speed() {
@@ -490,7 +504,8 @@ VARP Qwen_7b::gen_position_ids(int seq_len) {
 }
 
 bool Qwen_7b::is_stop(int token_id) {
-    return token_id >= 151645;
+    // <|endoftext|>  <|im_end|>
+    return token_id == 151643 || token_id == 151645;
 }
 
 // Qwen_vl
@@ -705,10 +720,14 @@ Embedding* Embedding::createEmbedding(const std::string& path, std::string model
         return embedding;
     }
     std::cout << "### model name : "<< embedding->model_name_ << std::endl;
+    embedding->load(path);
     return embedding;
 }
 
 void Embedding::load(const std::string& model_dir) {
+    if (model_dir_ == model_dir) {
+        return;
+    }
     model_dir_ = model_dir;
     // init
     ScheduleConfig config;
@@ -745,8 +764,12 @@ VARP Embedding::embedding(const std::string& txt) {
     auto inputs_ids = _Const(ids.data(), {prompt_len_}, NCHW, halide_type_of<int>());
     auto attention_mask = gen_attention_mask(prompt_len_);
     auto position_ids = gen_position_ids(prompt_len_);
+    auto st = std::chrono::system_clock::now();
     auto outputs = module_->onForward({inputs_ids, attention_mask, position_ids});
+    auto et = std::chrono::system_clock::now();
+    embedding_us_ = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
     auto sentence_embeddings = outputs[0];
+    // print_speed();
     return sentence_embeddings;
 }
 
@@ -765,7 +788,11 @@ std::vector<int> Embedding::tokenizer_encode(const std::string& input_str) {
 }
 
 std::vector<int> Bge::tokenizer(const std::string& query) {
-    auto ids = tokenizer_encode(query);
+    auto prompt = query;
+    if (query.size() <= 256) {
+        prompt = "为这个句子生成表示以用于检索相关文章：" + query;
+    }
+    auto ids = tokenizer_encode(prompt);
     ids.insert(ids.begin(), 101);
     ids.push_back(102);
     return ids;
@@ -791,7 +818,7 @@ VARP Bge::gen_position_ids(int seq_len) {
 // Embedding end
 
 // TextVectorStore strat
-TextVectorStore* TextVectorStore::load(const std::string& path) {
+TextVectorStore* TextVectorStore::load(const std::string& path, const std::string& embedding_path) {
     auto vars = Variable::load(path.c_str());
     if (vars.size() < 2) {
         return nullptr;
@@ -802,14 +829,20 @@ TextVectorStore* TextVectorStore::load(const std::string& path) {
         const char* txt = vars[i]->readMap<char>();
         store->texts_.push_back(txt);
     }
+    if (!embedding_path.empty()) {
+        store->embedding_.reset(Embedding::createEmbedding(embedding_path));
+    }
     return store;
 }
 
 void TextVectorStore::save(const std::string& path) {
+    if (vectors_ == nullptr && texts_.empty()) {
+        return;
+    }
     std::vector<VARP> vars;
     vars.push_back(vectors_);
     for (auto text : texts_) {
-        auto text_var = _Const(text.data(), {text.size()}, NHWC, halide_type_of<int8_t>());
+        auto text_var = _Const(text.data(), {static_cast<int>(text.size() + 1)}, NHWC, halide_type_of<int8_t>());
         vars.push_back(text_var);
     }
     Variable::save(vars, path.c_str());
@@ -836,10 +869,10 @@ std::vector<std::string> TextVectorStore::search_similar_texts(const std::string
     auto vector = text2vector(text);
     auto dist = _Sqrt(_ReduceSum(_Square(vectors_ - vector), {-1}));
     auto indices = _Sort(dist, 0, true);
-    // auto ptr = dist->readMap<float>();
+    auto ptr = dist->readMap<float>();
     auto idx_ptr = indices->readMap<int>();
     std::vector<std::string> res;
-    for (int i = 0; i < topk; i++) {
+    for (int i = 0; i < std::max(topk, 1); i++) {
         int pos = idx_ptr[i];
         if (pos >= 0 && pos < texts_.size()) {
             res.push_back(texts_[pos]);
@@ -864,16 +897,366 @@ void TextVectorStore::bench() {
     auto iptr = indices->readMap<int>();
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "search took " << duration.count() << " milliseconds." << std::endl;
-    for (int i = 0; i < 5; i++) {
-        printf("index: %d, distance: %f\n", iptr[i], ptr[iptr[i]]);
-    }
+    printf("# [%d, %d] search took %ld ms.\n", n, d, duration.count());
     vectors_ = nullptr;
 }
 
 VARP TextVectorStore::text2vector(const std::string& text) {
+    if (embedding_ == nullptr) {
+        std::cerr << "Not set embedding for TextVectorStore." << std::endl;
+        return nullptr;
+    }
     auto vector = embedding_->embedding(text);
     return vector;
 }
-
 // TextVectorStore end
+
+// Document start
+std::vector<std::string> Document::split(int chunk_size) {
+    // judge from extention
+    if (type_ == DOCTYPE::AUTO) {
+        static const std::unordered_map<std::string, DOCTYPE> extensionMap = {
+            {".txt",  DOCTYPE::TXT},
+            {".md",   DOCTYPE::MD},
+            {".html", DOCTYPE::HTML},
+            {".pdf",  DOCTYPE::PDF}
+        };
+        size_t dotIndex = path_.find_last_of(".");
+        if (dotIndex != std::string::npos) {
+            auto extention = path_.substr(dotIndex);
+            auto it = extensionMap.find(extention);
+            if (it != extensionMap.end()) {
+                type_ = it->second;
+            }
+        }
+    }
+    std::vector<std::string> segments;
+    switch (type_) {
+        case DOCTYPE::AUTO:
+        case DOCTYPE::TXT:
+        case DOCTYPE::MD:
+        case DOCTYPE::HTML:
+            segments = load_txt();
+            break;
+        case DOCTYPE::PDF:
+            segments = load_pdf();
+            break;
+        default:
+            break;
+    }
+    if (segments.empty() || chunk_size < 0) {
+        return segments;
+    }
+    // merge segments by chunk_size
+    std::vector<std::string> merged_segments;
+    std::string current_chunk;
+    for (const auto& segment : segments) {
+        if (current_chunk.empty()) {
+            current_chunk = segment;
+        } else {
+            if (current_chunk.length() + segment.length() < chunk_size) {
+                current_chunk += "\n" + segment;
+            } else {
+                merged_segments.push_back(current_chunk);
+                current_chunk = segment;
+            }
+        }
+    }
+    return merged_segments;
+}
+
+std::vector<std::string> Document::load_txt() {
+    std::vector<std::string> segments;
+    std::ifstream file(path_);
+    std::string line;
+    std::stringstream buffer;
+
+    std::function<bool(const std::string&)> do_segment = [](const std::string& line) {
+        return line.empty();
+    };
+    if (type_ == DOCTYPE::MD) {
+        do_segment = [](const std::string& line) {
+            // segment markdown by third title
+            return line.size() > 3 && line.substr(0, 3) == "###";
+        };
+    }
+
+    while (getline(file, line)) {
+        if (std::all_of(line.begin(), line.end(), [](unsigned char c) {return std::isspace(c);})) {
+            line.clear();
+        }
+        if (do_segment(line) || file.eof()) {
+            if (buffer.tellp() > 0) {
+                segments.push_back(buffer.str());
+                buffer.str(std::string());
+                buffer.clear();
+            }
+            if (!line.empty()) {
+                buffer << line << "\n";
+            }
+        } else {
+            buffer << line << "\n";
+        }
+    }
+    if (!buffer.str().empty()) {
+        segments.push_back(buffer.str());
+    }
+    return segments;
+}
+
+std::vector<std::string> Document::load_pdf() {
+    // TODO
+    return {};
+}
+// Document end
+
+// Memory start
+void MemoryBase::load_store(const std::string& path) {
+    auto store_path = path + ".mnn";
+    std::ifstream file(store_path);
+    if (file.good()) {
+        store_.reset(TextVectorStore::load(store_path));
+    } else {
+        store_.reset(new TextVectorStore);
+    }
+}
+
+void MemoryBase::save_store(const std::string& path) {
+    store_->save(path + ".mnn");
+}
+
+std::vector<std::string> MemoryBase::search(const std::string& query, int topk) {
+    return store_->search_similar_texts(query, topk);
+}
+
+inline std::string format_date(std::string date) {
+    date.replace(7, 1, "月");
+    date.replace(4, 1, "年");
+    date += "日";
+    return date;
+}
+
+std::string now_date() {
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
+    std::tm now_tm = *std::localtime(&now_time_t);
+
+    char buffer[80];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", &now_tm);
+
+    return std::string(buffer);
+}
+
+ChatMemory* ChatMemory::load(const std::string& path) {
+    // load json memory
+    std::ifstream file(path);
+    if (!file.good()) {
+        std::cerr << "Unable to open file " << path << std::endl;
+        return nullptr;
+    }
+    auto chat_memory = new ChatMemory;
+    chat_memory->memory_ = json::parse(file);
+    chat_memory->load_store(path);
+    return chat_memory;
+}
+
+void ChatMemory::save(const std::string& path) {
+    // save to json
+    std::ofstream file(path);
+    if (file.is_open()) {
+        file << memory_.dump(4);
+        file.close();
+    } else {
+        std::cerr << "Unable to open file " << path << std::endl;
+    }
+    save_store(path);
+}
+
+void ChatMemory::build_vectors() {
+    auto& summary = memory_["summary"];
+    std::vector<std::string> sum_strs;
+    for (auto& element : summary.items()) {
+        auto date = element.key();
+        auto content = element.value();
+        auto record = "对话日期：" + format_date(date) + "\n对话内容总结：" + content.dump();
+        sum_strs.push_back(record);
+    }
+    store_->add_texts(sum_strs);
+}
+
+void ChatMemory::add(const std::vector<Prompt>& prompts) {
+    auto date = now_date();
+    auto& history = memory_["history"];
+    if (!history.contains(date)) {
+        history[date] = nlohmann::json::array({});
+    }
+    std::string query, response;
+    for (const auto& prompt : prompts) {
+        if (prompt.type == PROMPT_TYPE::USER) {
+            query = prompt.str;
+        }
+        if (prompt.type == PROMPT_TYPE::ASSISTANT) {
+            response = prompt.str;
+            json new_entry = {
+                {"query", query},
+                {"response", response}
+            };
+            history[date].push_back(new_entry);
+        }
+    }
+}
+
+std::string ChatMemory::get_latest(std::string key) {
+    if (memory_.contains(key)) {
+        std::string latest_date = "";
+        json latest_value;
+        for (const auto& element : memory_[key].items()) {
+            if (element.key() > latest_date) {
+                latest_date = element.key();
+                latest_value = element.value();
+            }
+        }
+        return latest_value.dump();
+    }
+    return "";
+}
+
+void ChatMemory::summarize(std::shared_ptr<Llm> llm) {
+    auto user = memory_["user"].dump();
+    auto& history = memory_["history"];
+    auto& summary = memory_["summary"];
+    auto& personality = memory_["personality"];
+    for (auto& element : history.items()) {
+        auto date = element.key();
+        auto content = element.value();
+        auto chat_str = content.dump();
+        if (!summary.contains(date)) {
+            auto summary_prompt = "请总结以下的对话内容，尽可能精炼，提取对话的主题和关键信息。如果有多个关键事件，可以分点总结。对话内容：\n" + chat_str + "\n总结：";
+            auto sum = llm->response_nohistory(summary_prompt);
+            summary[date] = sum;
+        }
+        if (!personality.contains(date)) {
+            auto personality_prompt = "请根据以下的对话推测总结" + user + "的性格特点和心情，并根据你的推测制定回复策略。对话内容：\n" + chat_str + "\n总结：";
+            auto pers = llm->response_nohistory(personality_prompt);
+            personality[date] = pers;
+        }
+    }
+    // summarize overall_history and overall_personality
+}
+
+Knowledge* Knowledge::load(const std::string& path) {
+    auto knowledge = new Knowledge;
+    knowledge->document_.reset(new Document(path));
+    knowledge->load_store(path);
+    return knowledge;
+}
+
+void Knowledge::save(const std::string& path) {
+    save_store(path);
+}
+
+void Knowledge::build_vectors() {
+    auto segments = document_->split();
+    store_->add_texts(segments);
+}
+
+// Memory end
+Pipeline* Pipeline::load(const std::string& path) {
+    auto pipeline = new Pipeline;
+    std::ifstream file(path);
+    if (!file.good()) {
+        std::cerr << "Unable to open file " << path << std::endl;
+        return nullptr;
+    }
+    auto config = json::parse(file);
+    if (config.contains("user")) {
+        pipeline->user_ = config["user"];
+    }
+    if (config.contains("assistant")) {
+        pipeline->assistant_ = config["assistant"];
+    }
+    if (config.contains("system")) {
+        pipeline->system_ = config["system"];
+    }
+    if (config.contains("llm")) {
+        pipeline->llm_.reset(Llm::createLLM(config["llm"]));
+        pipeline->llm_->load(config["llm"]);
+    }
+    if (config.contains("embedding")) {
+        pipeline->embedding_.reset(Embedding::createEmbedding(config["embedding"]));
+        if (config.contains("memory")) {
+            pipeline->memory_.reset(ChatMemory::load(config["memory"]));
+            pipeline->memory_->set_embedding(pipeline->embedding_);
+        }
+        if (config.contains("knowledge")) {
+            pipeline->knowledge_.reset(Knowledge::load(config["knowledge"]));
+            pipeline->knowledge_->set_embedding(pipeline->embedding_);
+        }
+    }
+    pipeline->config_ = std::move(config);
+    return pipeline;
+}
+
+void Pipeline::invoke(const std::string& str) {
+    Prompt user_prompt {PROMPT_TYPE::USER, str, {}};
+    prompts_.emplace_back(std::move(user_prompt));
+    auto prompt = build_prompt(str);
+    std::cout << prompt;
+    if (llm_) {
+        auto res = llm_->response_nohistory(prompt);
+        Prompt assistant_prompt {PROMPT_TYPE::ASSISTANT, res, {}};
+        prompts_.emplace_back(std::move(assistant_prompt));
+    }
+}
+
+bool Pipeline::need_memory(const std::string& str) {
+    // TODO: using lm model to judge
+    const std::vector<std::string> contextKeywords = {
+        "之前", "先前", "上次", "那天", "刚才", "我们谈过", "你说过", "记得吗", "如你所提",
+        "你提到", "你提及", "你记得", "你还记得", "上回", "上一次", "那一次", "前面", "过去",
+        "以前", "历史上", "之间讨论", "之间的对话", "那时候", "曾经", "你曾说", "你曾提到",
+        "最近谈到", "最近说过", "你之前说过"
+    };
+    for (const auto& keyword : contextKeywords) {
+        if (str.find(keyword) != std::string::npos) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Pipeline::need_knowledge(const std::string& str) {
+    return false;
+}
+
+std::string Pipeline::build_prompt(const std::string& str) {
+    std::string prompt = system_ + "\n";
+    if (memory_) {
+        if (need_memory(str)) {
+            prompt += "根据当前用户的问题，你开始回忆你们二人过去的对话，你想起与问题最相关的[回忆]是：\n";
+            auto related_memory = memory_->search(str, 1)[0];
+            prompt += related_memory + "\n";
+        }
+        auto personality = memory_->get_latest("personality");
+        if (!personality.empty()) {
+            prompt += "这是最近一次对话时用户的[性格]以及你的[回复策略]：\n" + personality + "\n";
+        }
+    }
+    if (knowledge_ && need_knowledge(str)) {
+        prompt += "根据当前用户的问题，你搜索了一些相关资料，与问题最相关的[资料]是：\n";
+        auto related_knowledge = knowledge_->search(str, 1)[0];
+        prompt += related_knowledge + "\n";
+    }
+    prompt += "\n";
+    for (auto p : prompts_) {
+        if (p.type == PROMPT_TYPE::USER) {
+            prompt += user_ + "：" + p.str + "\n";
+        }
+        if (p.type == PROMPT_TYPE::ASSISTANT) {
+            prompt += assistant_ + "：" + p.str + "\n";
+        }
+    }
+    prompt += assistant_ + "： ";
+    return prompt;
+}
+// Pipeline end

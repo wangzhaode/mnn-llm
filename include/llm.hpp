@@ -22,10 +22,13 @@
 #include <MNN/expr/MathOp.hpp>
 #include <MNN/expr/NeuralNetWorkOp.hpp>
 #include "tokenizer.hpp"
+#include "json.hpp"
 
 using namespace MNN;
 using namespace Express;
+using json = nlohmann::json;
 class Tokenizer;
+class Pipeline;
 
 // Llm start
 // llm stream buffer with callback
@@ -46,6 +49,20 @@ private:
     CallBack callback_ = nullptr;
 };
 
+enum PROMPT_TYPE {
+    SYSTEM = 0,
+    ATTACHMENT = 1,
+    USER = 2,
+    ASSISTANT = 3,
+    OTHER = 4
+};
+
+struct Prompt {
+    PROMPT_TYPE type;
+    std::string str;
+    std::vector<int> tokens;
+};
+
 class Llm {
 public:
     Llm() {
@@ -62,9 +79,11 @@ public:
     void chat();
     void warmup();
     std::string response(const std::string& input_str, std::ostream* os = &std::cout, const char* end_with = nullptr);
+    std::string response_nohistory(const std::string& input_str, std::ostream* os = &std::cout, const char* end_with = nullptr);
     float load_progress() { return load_progress_; }
     void reset();
     void print_speed();
+    friend class Pipeline;
 public:
     std::vector<int> history_;
     // forward info
@@ -76,6 +95,8 @@ public:
     int64_t prefill_us_ = 0;
     int64_t decode_us_ = 0;
 protected:
+    void response_init();
+    std::string response_impl(const std::vector<int>& input_ids, std::ostream* os, const char* end_with);
     VARP embedding(const std::vector<int>& input_ids);
     VARP txt_embedding(const std::vector<int>& input_ids);
     int forward(const std::vector<int>& input_ids);
@@ -223,8 +244,8 @@ private:
 class Embedding {
 public:
     Embedding() {
-        // default tokenier is Tiktoken
-        tokenizer_.reset(new Tiktoken);
+        // default tokenier is Bert
+        tokenizer_.reset(new BertTokenizer);
     }
     virtual ~Embedding() {
         module_.reset();
@@ -280,9 +301,10 @@ private:
 // TextVectorStore strat
 class TextVectorStore {
 public:
-    TextVectorStore() {}
+    TextVectorStore() : embedding_(nullptr) {}
+    TextVectorStore(std::shared_ptr<Embedding> embedding) : embedding_(embedding) {}
     ~TextVectorStore() {}
-    static TextVectorStore* load(const std::string& path);
+    static TextVectorStore* load(const std::string& path, const std::string& embedding_path = "");
     void set_embedding(std::shared_ptr<Embedding> embedding) {
         embedding_ = embedding;
     }
@@ -293,12 +315,99 @@ public:
     void bench();
 protected:
     inline VARP text2vector(const std::string& text);
-private:
+// private:
+public:
     std::shared_ptr<Embedding> embedding_;
     VARP vectors_;
     std::vector<std::string> texts_;
     int dim_ = 1024;
 };
 // TextVectorStore end
+
+// Document start
+class Document {
+public:
+    enum DOCTYPE {
+        AUTO = 0,
+        TXT  = 1,
+        MD   = 2,
+        HTML = 3,
+        PDF  = 4
+    };
+    Document(const std::string& path, DOCTYPE type = AUTO) : path_(path), type_(type) {}
+    ~Document() = default;
+    std::vector<std::string> split(int chunk_size = -1);
+private:
+    DOCTYPE type_;
+    std::string path_;
+    std::vector<std::string> load_txt();
+    std::vector<std::string> load_pdf();
+};
+// Document end
+
+// MemoryBase start
+class MemoryBase {
+public:
+    MemoryBase() {}
+    virtual ~MemoryBase() {}
+    void set_embedding(std::shared_ptr<Embedding> embedding) {
+        store_->set_embedding(embedding);
+    }
+    virtual std::vector<std::string> search(const std::string& query, int topk);
+    virtual void save(const std::string& path) = 0;
+    virtual void build_vectors() = 0;
+protected:
+    void load_store(const std::string& path);
+    void save_store(const std::string& path);
+public:
+    std::shared_ptr<TextVectorStore> store_;
+};
+
+class ChatMemory : public MemoryBase {
+public:
+    ChatMemory() {}
+    ~ChatMemory() override {}
+    static ChatMemory* load(const std::string& path);
+    void save(const std::string& path) override;
+    void build_vectors() override;
+    std::string get_latest(std::string key);
+    void add(const std::vector<Prompt>& prompts);
+    void summarize(std::shared_ptr<Llm> llm);
+private:
+    json memory_;
+};
+
+class Knowledge : public MemoryBase {
+public:
+    Knowledge() {}
+    ~Knowledge() override {}
+    static Knowledge* load(const std::string& path);
+    void save(const std::string& path) override;
+    void build_vectors() override;
+private:
+    std::unique_ptr<Document> document_;
+};
+// MemoryBase end
+
+// Pipeline start
+class Pipeline {
+public:
+    Pipeline() {}
+    ~Pipeline() {}
+    static Pipeline* load(const std::string& path);
+    void invoke(const std::string& str);
+private:
+    bool need_memory(const std::string& str);
+    bool need_knowledge(const std::string& str);
+    std::string build_prompt(const std::string& str);
+    std::unique_ptr<Llm> llm_;
+    std::shared_ptr<Embedding> embedding_;
+    std::unique_ptr<Knowledge> knowledge_;
+    std::unique_ptr<ChatMemory> memory_;
+    std::string system_, user_, assistant_;
+    std::vector<Prompt> prompts_;
+    json config_;
+};
+// Pipeline end
 
 #endif // LLM_hpp

@@ -79,9 +79,17 @@ public:
     virtual bool load(const std::string& filename) override;
     virtual std::vector<int> encode(const std::string& str) override;
     virtual std::string decode(int id) override;
-private:
+protected:
     std::unordered_map<std::string, int> encoder_;
     std::vector<std::string> decoder_;
+};
+
+class BertTokenizer : public Tiktoken {
+public:
+    BertTokenizer() = default;
+    virtual std::vector<int> encode(const std::string& str) override;
+private:
+    std::vector<int> word_piece(const std::string& token);
 };
 
 #endif // TOKENIZER_hpp

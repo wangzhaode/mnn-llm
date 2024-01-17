@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <regex>
 
 #include <MNN/expr/ExecutorScope.hpp>
@@ -897,7 +898,7 @@ void TextVectorStore::bench() {
     auto iptr = indices->readMap<int>();
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    printf("# [%d, %d] search took %ld ms.\n", n, d, duration.count());
+    printf("# [%d, %d] search took %lld ms.\n", n, d, duration.count());
     vectors_ = nullptr;
 }
 

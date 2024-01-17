@@ -13,6 +13,7 @@
 - [android](./android/): 使用Android Studio打开编译；APK下载: [![Download][download-qwen-1.8b-apk]][release-qwen-1.8b-apk]
 - [ios](./ios/README.md): 使用Xcode打开编译；🚀🚀🚀**该示例代码100%由ChatGPT生成**🚀🚀🚀
 - [python](./python): 基于`pymnn`实现的纯python推理代码；
+- 🔥新增文本embedding，向量查询，文本解析，记忆库与知识库能力；
 
 ## 模型支持
 
@@ -32,6 +33,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 | internlm-chat-7b | [![Download][download-internlm-7b-onnx]][release-internlm-7b-onnx] | [![Download][download-internlm-chat-7b-mnn]][release-internlm-chat-7b-mnn] |
 | Qwen-1_8B-Chat | [![Download][download-qwen-1.8b-onnx]][release-qwen-1.8b-onnx] | [![Download][download-qwen-1.8b-mnn]][release-qwen-1.8b-mnn] |
 | phi-2 | [![Download][download-phi-2-onnx]][release-phi-2-onnx] | [![Download][download-phi2-mnn-int4]][release-phi2-mnn-int4] |
+| bge-large-zh | [![Download][download-bge-large-zh-onnx]][release-bge-large-zh-onnx] | [![Download][download-bge-large-zh-mnn]][release-bge-large-zh-mnn] |
 
 其他版本：
 - Qwen-1_8B-Chat-int8：[![Download][download-qwen-1.8b-mnn-int8]][release-qwen-1.8b-mnn-int8]
@@ -46,6 +48,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [download-internlm-7b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/internlm-7b-onnx/total
 [download-qwen-1.8b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen-1.8b-onnx/total
 [download-phi-2-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/phi-2-onnx/total
+[download-bge-large-zh-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/bge-large-zh-onnx/total
 [release-chatglm-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm-6b-onnx
 [release-chatglm2-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm2-6b-onnx
 [release-chatglm3-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm3-6b-onnx
@@ -56,6 +59,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [release-internlm-7b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/internlm-7b-onnx
 [release-qwen-1.8b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen-1.8b-onnx
 [release-phi-2-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/phi-2-onnx
+[release-bge-large-zh-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/bge-large-zh-onnx
 [download-chatglm-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm-6b-mnn/total
 [download-chatglm2-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm2-6b-mnn/total
 [download-chatglm3-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm3-6b-mnn/total
@@ -66,6 +70,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [download-internlm-chat-7b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/internlm-chat-7b-mnn/total
 [download-qwen-1.8b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-mnn/total
 [download-phi2-mnn-int4]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/phi2-mnn-int4/total
+[download-bge-large-zh-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/bge-large-zh-mnn/total
 [download-qwen-1.8b-mnn-int8]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-mnn-int8/total
 [download-qwen-1.8b-apk]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-apk/total
 
@@ -79,6 +84,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [release-internlm-chat-7b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/internlm-chat-7b-mnn
 [release-qwen-1.8b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn
 [release-phi2-mnn-int4]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-phi2-mnn-int4
+[release-bge-large-zh-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/bge-large-zh-mnn
 [release-qwen-1.8b-mnn-int8]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn-int8
 [release-qwen-1.8b-apk]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-apk
 

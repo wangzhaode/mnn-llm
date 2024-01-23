@@ -238,6 +238,16 @@ private:
     virtual bool is_stop(int token_id) override;
 };
 
+class TinyLlama : public Llama2_7b {
+public:
+    TinyLlama() {
+        model_name_ = "TinyLlama";
+        layer_nums_ = 22;
+        key_value_shape_ = {2, 1, 4, 0, 64};
+    }
+private:
+    virtual std::vector<int> tokenizer(const std::string& query) override;
+};
 // Llm end
 
 // Embedding start

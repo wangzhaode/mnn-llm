@@ -65,6 +65,9 @@ Llm* Llm::createLLM(const std::string& path, std::string model_type) {
     } else if (model_type.find("internlm") != std::string::npos) {
         llm = new Llama2_7b;
         llm->model_name_ = "Internlm_7b";
+    } else if (model_type.find("tinyllama") != std::string::npos) {
+        llm = new TinyLlama;
+        llm->model_name_ = "TinyLlama";
     }
     if (!llm) {
         std::cerr << "model type can't judge!" << std::endl;
@@ -697,6 +700,22 @@ bool Llama2_7b::is_stop(int token_id) {
     }
     return token_id == 2;
 }
+
+std::vector<int> TinyLlama::tokenizer(const std::string& query) {
+    auto ids = tokenizer_encode(query);
+    /*
+    <|system|>
+    You are a friendly chatbot who always responds in the style of a pirate</s>
+    <|user|>
+    {query}</s>
+    <|assistant|>
+    */
+    ids.insert(ids.begin(), {1, 529, 29989, 5205, 29989, 29958, 13, 3492, 526, 263, 19780, 13563,
+                             7451, 1058, 2337, 10049, 29879, 297, 278, 3114, 310, 263, 21625,
+                             403, 2, 29871, 13, 29966, 29989, 1792, 29989, 29958, 13});
+    ids.insert(ids.end(), {2, 29871, 13, 29966, 29989, 465, 22137, 29989, 29958, 13});
+    return ids;
+}
 // Llm end
 
 // Embedding start
@@ -898,7 +917,7 @@ void TextVectorStore::bench() {
     auto iptr = indices->readMap<int>();
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    printf("# [%d, %d] search took %lld ms.\n", n, d, duration.count());
+    std::cout << "bench search time (ms): " << duration.count();
     vectors_ = nullptr;
 }
 

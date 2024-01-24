@@ -65,6 +65,10 @@ Llm* Llm::createLLM(const std::string& path, std::string model_type) {
     } else if (model_type.find("internlm") != std::string::npos) {
         llm = new Llama2_7b;
         llm->model_name_ = "Internlm_7b";
+    } else if (model_type.find("deepseek") != std::string::npos) {
+        llm = new Llama2_7b;
+        llm->model_name_ = "deepseek_7b";
+        llm->layer_nums_ = 30;
     } else if (model_type.find("tinyllama") != std::string::npos) {
         llm = new TinyLlama;
         llm->model_name_ = "TinyLlama";
@@ -657,6 +661,12 @@ std::vector<int> Llama2_7b::tokenizer(const std::string& query) {
         ids.insert(ids.end(), {103027, 364, 333, 352, 23845, 352, 27232});
         return ids;
     }
+    if (model_name_ == "deepseek_7b") {
+        // "<|begin▁of▁sentence|>User:" + query + "\n\nAssistant:"
+        ids.insert(ids.begin(), {100000, 5726, 25, 207});
+        ids.insert(ids.end(), {185, 185, 77398, 25});
+        return ids;
+    }
     // llama2: <bos>[INST]{query}[/INST]: 1, 5539, 25580, 29962, query, 12452, 25580, 29962
     ids.insert(ids.begin(), {1, 5539, 25580, 29962});
     ids.insert(ids.end(), {12452, 25580, 29962});
@@ -700,6 +710,9 @@ bool Llama2_7b::is_stop(int token_id) {
     if (model_name_ == "Internlm_7b") {
         // 103028: <eoa>
         return token_id == 2 || token_id == 103028;
+    }
+    if (model_name_ == "deepseek_7b") {
+        return token_id == 100001;
     }
     return token_id == 2;
 }

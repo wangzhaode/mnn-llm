@@ -248,6 +248,17 @@ public:
 private:
     virtual std::vector<int> tokenizer(const std::string& query) override;
 };
+
+class Yi_6b : public Llama2_7b {
+public:
+    Yi_6b() {
+        model_name_ = "Yi_6b";
+        key_value_shape_ = {2, 1, 4, 0, 128};
+    }
+private:
+    virtual std::vector<int> tokenizer(const std::string& query) override;
+    virtual bool is_stop(int token_id) override;
+};
 // Llm end
 
 // Embedding start

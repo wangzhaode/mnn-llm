@@ -68,6 +68,9 @@ Llm* Llm::createLLM(const std::string& path, std::string model_type) {
     } else if (model_type.find("tinyllama") != std::string::npos) {
         llm = new TinyLlama;
         llm->model_name_ = "TinyLlama";
+    } else if (model_type.find("yi") != std::string::npos) {
+        llm = new Yi_6b;
+        llm->model_name_ = "Yi_6b";
     }
     if (!llm) {
         std::cerr << "model type can't judge!" << std::endl;
@@ -715,6 +718,16 @@ std::vector<int> TinyLlama::tokenizer(const std::string& query) {
                              403, 2, 29871, 13, 29966, 29989, 1792, 29989, 29958, 13});
     ids.insert(ids.end(), {2, 29871, 13, 29966, 29989, 465, 22137, 29989, 29958, 13});
     return ids;
+}
+
+std::vector<int> Yi_6b::tokenizer(const std::string& query) {
+    auto prompt = "<|im_start|> user\n" + query + "<|im_end|>\n<|im_start|> assistant\n";
+    auto ids = tokenizer_encode(prompt);
+    return ids;
+}
+
+bool Yi_6b::is_stop(int token_id) {
+    return token_id == 7 || token_id == 64001;
 }
 // Llm end
 

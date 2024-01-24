@@ -32,6 +32,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 | Llama-2-7b-chat | [![Download][download-llama2-7b-chat-onnx]][release-llama2-7b-chat-onnx] | [![Download][download-llama2-7b-chat-mnn]][release-llama2-7b-chat-mnn] |
 | internlm-chat-7b | [![Download][download-internlm-7b-onnx]][release-internlm-7b-onnx] | [![Download][download-internlm-chat-7b-mnn]][release-internlm-chat-7b-mnn] |
 | Yi-6B-Chat | [![Download][download-yi-6b-chat-onnx]][release-yi-6b-chat-onnx] | [![Download][download-yi-6b-chat-mnn]][release-yi-6b-chat-mnn] |
+| deepseek-llm-7b-chat | [![Download][download-deepseek-7b-chat-onnx]][release-deepseek-7b-chat-onnx] | [![Download][download-deepseek-7b-chat-mnn]][release-deepseek-7b-chat-mnn] |
 | Qwen-1_8B-Chat | [![Download][download-qwen-1.8b-onnx]][release-qwen-1.8b-onnx] | [![Download][download-qwen-1.8b-mnn]][release-qwen-1.8b-mnn] |
 | phi-2 | [![Download][download-phi-2-onnx]][release-phi-2-onnx] | [![Download][download-phi2-mnn-int4]][release-phi2-mnn-int4] |
 | bge-large-zh | [![Download][download-bge-large-zh-onnx]][release-bge-large-zh-onnx] | [![Download][download-bge-large-zh-mnn]][release-bge-large-zh-mnn] |
@@ -49,6 +50,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [download-llama2-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/llama2-7b-chat-onnx/total
 [download-internlm-7b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/internlm-7b-onnx/total
 [download-yi-6b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/yi-6b-chat-onnx/total
+[download-deepseek-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/deepseek-7b-chat-onnx/total
 [download-qwen-1.8b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen-1.8b-onnx/total
 [download-phi-2-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/phi-2-onnx/total
 [download-bge-large-zh-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/bge-large-zh-onnx/total
@@ -62,6 +64,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [release-llama2-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/llama2-7b-chat-onnx
 [release-internlm-7b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/internlm-7b-onnx
 [release-yi-6b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/yi-6b-chat-onnx
+[release-deepseek-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/deepseek-7b-chat-onnx
 [release-qwen-1.8b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen-1.8b-onnx
 [release-phi-2-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/phi-2-onnx
 [release-bge-large-zh-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/bge-large-zh-onnx
@@ -75,6 +78,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [download-llama2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/llama2-7b-chat-mnn/total
 [download-internlm-chat-7b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/internlm-chat-7b-mnn/total
 [download-yi-6b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/yi-6b-chat-mnn/total
+[download-deepseek-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/deepseek-7b-chat-mnn/total
 [download-qwen-1.8b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-mnn/total
 [download-phi2-mnn-int4]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/phi2-mnn-int4/total
 [download-bge-large-zh-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/bge-large-zh-mnn/total
@@ -90,6 +94,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [release-llama2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/llama2-7b-chat-mnn
 [release-internlm-chat-7b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/internlm-chat-7b-mnn
 [release-yi-6b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/yi-6b-chat-mnn
+[release-deepseek-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/deepseek-7b-chat-mnn
 [release-qwen-1.8b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn
 [release-phi2-mnn-int4]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-phi2-mnn-int4
 [release-bge-large-zh-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/bge-large-zh-mnn

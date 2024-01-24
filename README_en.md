@@ -21,8 +21,8 @@ For exporting the llm model to `ONNX` or `mnn`, please use[llm-export](https://g
 
 Current supported models：
 
-| model | onnx-fp32 | mnn-int4 |
-|-------|-----------|----------|
+| model | onnx-fp32 | mnn-quant |
+|-------|-----------|-----------|
 | chatglm-6b | [![Download][download-chatglm-6b-onnx]][release-chatglm-6b-onnx] | [![Download][download-chatglm-6b-mnn]][release-chatglm-6b-mnn] |
 | chatglm2-6b | [![Download][download-chatglm2-6b-onnx]][release-chatglm2-6b-onnx] | [![Download][download-chatglm2-6b-mnn]][release-chatglm2-6b-mnn] |
 | chatglm3-6b | [![Download][download-chatglm3-6b-onnx]][release-chatglm3-6b-onnx] | [![Download][download-chatglm3-6b-mnn]][release-chatglm3-6b-mnn] |
@@ -31,6 +31,7 @@ Current supported models：
 | Baichuan2-7B-Chat | [![Download][download-baichuan2-7b-chat-onnx]][release-baichuan2-7b-chat-onnx] | [![Download][download-baichuan2-7b-chat-mnn]][release-baichuan2-7b-chat-mnn] |
 | Llama-2-7b-chat | [![Download][download-llama2-7b-chat-onnx]][release-llama2-7b-chat-onnx] | [![Download][download-llama2-7b-chat-mnn]][release-llama2-7b-chat-mnn] |
 | internlm-chat-7b | [![Download][download-internlm-7b-onnx]][release-internlm-7b-onnx] | [![Download][download-internlm-chat-7b-mnn]][release-internlm-chat-7b-mnn] |
+| Yi-6B-Chat | [![Download][download-yi-6b-chat-onnx]][release-yi-6b-chat-onnx] | [![Download][download-yi-6b-chat-mnn]][release-yi-6b-chat-mnn] |
 | Qwen-1_8B-Chat | [![Download][download-qwen-1.8b-onnx]][release-qwen-1.8b-onnx] | [![Download][download-qwen-1.8b-mnn]][release-qwen-1.8b-mnn] |
 | phi-2 | [![Download][download-phi-2-onnx]][release-phi-2-onnx] | [![Download][download-phi2-mnn-int4]][release-phi2-mnn-int4] |
 | bge-large-zh | [![Download][download-bge-large-zh-onnx]][release-bge-large-zh-onnx] | [![Download][download-bge-large-zh-mnn]][release-bge-large-zh-mnn] |
@@ -47,6 +48,7 @@ Other version:
 [download-baichuan2-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/baichuan2-7b-chat-onnx/total
 [download-llama2-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/llama2-7b-chat-onnx/total
 [download-internlm-7b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/internlm-7b-onnx/total
+[download-yi-6b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/yi-6b-chat-onnx/total
 [download-qwen-1.8b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen-1.8b-onnx/total
 [download-phi-2-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/phi-2-onnx/total
 [download-bge-large-zh-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/bge-large-zh-onnx/total
@@ -59,6 +61,7 @@ Other version:
 [release-baichuan2-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/baichuan2-7b-chat-onnx
 [release-llama2-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/llama2-7b-chat-onnx
 [release-internlm-7b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/internlm-7b-onnx
+[release-yi-6b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/yi-6b-chat-onnx
 [release-qwen-1.8b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen-1.8b-onnx
 [release-phi-2-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/phi-2-onnx
 [release-bge-large-zh-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/bge-large-zh-onnx
@@ -71,6 +74,7 @@ Other version:
 [download-baichuan2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/baichuan2-7b-chat-mnn/total
 [download-llama2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/llama2-7b-chat-mnn/total
 [download-internlm-chat-7b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/internlm-chat-7b-mnn/total
+[download-yi-6b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/yi-6b-chat-mnn/total
 [download-qwen-1.8b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-mnn/total
 [download-phi2-mnn-int4]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/phi2-mnn-int4/total
 [download-bge-large-zh-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/bge-large-zh-mnn/total
@@ -85,12 +89,14 @@ Other version:
 [release-baichuan2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/baichuan2-7b-chat-mnn
 [release-llama2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/llama2-7b-chat-mnn
 [release-internlm-chat-7b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/internlm-chat-7b-mnn
+[release-yi-6b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/yi-6b-chat-mnn
 [release-qwen-1.8b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn
 [release-phi2-mnn-int4]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-phi2-mnn-int4
 [release-bge-large-zh-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/bge-large-zh-mnn
 [release-qwen-1.8b-mnn-int8]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn-int8
 [release-tinyllama-1.1b-chat-mnn-int8]: https://github.com/wangzhaode/mnn-llm/releases/tag/tinyllama-1.1b-chat-mnn-int8
 [release-qwen-1.8b-apk]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-apk
+
 
 ### Performance
 
@@ -191,10 +197,15 @@ adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo qwen-1.8
 - [codegeex2-6b](https://modelscope.cn/models/ZhipuAI/codegeex2-6b/summary)
 - [Baichuan2-7B-Chat](https://modelscope.cn/models/baichuan-inc/baichuan-7B/summary)
 - [Qwen-7B-Chat](https://modelscope.cn/models/qwen/Qwen-7B-Chat/summary)
+- [Qwen-VL-Chat](https://modelscope.cn/models/qwen/Qwen-VL-Chat/summary)
 - [Qwen-1.8B-Chat](https://modelscope.cn/models/qwen/Qwen-1_8B-Chat/summary)
 - [Llama-2-7b-chat-ms](https://modelscope.cn/models/modelscope/Llama-2-7b-chat-ms/summary)
 - [internlm-chat-7b](https://modelscope.cn/models/Shanghai_AI_Laboratory/internlm-chat-7b/summary)
 - [phi-2](https://modelscope.cn/models/AI-ModelScope/phi-2/summary)
+- [bge-large-zh](https://modelscope.cn/models/AI-ModelScope/bge-large-zh/summary)
+- [TinyLlama-1.1B-Chat-v0.6](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v0.6)
+- [Yi-6B-Chat](https://modelscope.cn/models/01ai/Yi-6B-Chat/summary)
 - [cpp-httplib](https://github.com/yhirose/cpp-httplib)
 - [chatgpt-web](https://github.com/xqdoo00o/chatgpt-web)
 - [ChatViewDemo](https://github.com/BrettFX/ChatViewDemo)
+- [nlohmann/json](https://github.com/nlohmann/json)

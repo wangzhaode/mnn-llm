@@ -238,6 +238,19 @@ private:
     virtual bool is_stop(int token_id) override;
 };
 
+class Qwen2_4b : public Llama2_7b {
+public:
+    Qwen2_4b() {
+        model_name_ = "Qwen2_4b";
+        layer_nums_ = 40;
+        key_value_shape_ = {2, 1, 20, 0, 128};
+        hidden_size_ = 2560;
+    }
+private:
+    virtual std::vector<int> tokenizer(const std::string& query) override;
+    virtual bool is_stop(int token_id) override;
+};
+
 class TinyLlama : public Llama2_7b {
 public:
     TinyLlama() {

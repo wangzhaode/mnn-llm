@@ -47,6 +47,10 @@ Llm* Llm::createLLM(const std::string& path, std::string model_type) {
     } else if (model_type.find("codegeex2") != std::string::npos) {
         llm = new Chatglm2_6b;
         llm->model_name_ = "Codegeex2_6b";
+    } else if (model_type.find("qwen2") != std::string::npos) {
+        if (model_type.find("4") != std::string::npos) {
+            llm = new Qwen2_4b;
+        }
     } else if (model_type.find("qwen") != std::string::npos) {
         if (model_type.find("1.8") != std::string::npos) {
             llm = new Qwen_1_8b;
@@ -715,6 +719,18 @@ bool Llama2_7b::is_stop(int token_id) {
         return token_id == 100001;
     }
     return token_id == 2;
+}
+
+std::vector<int> Qwen2_4b::tokenizer(const std::string& query) {
+    auto ids = tokenizer_encode(query);
+    // auto prompt = "\n<|im_start|>user\n" + query + "<|im_end|>\n<|im_start|>assistant\n";
+    ids.insert(ids.begin(), {198, 151644, 872, 198});
+    ids.insert(ids.end(), {151645, 198, 151644, 77091, 198});
+    return ids;
+}
+
+bool Qwen2_4b::is_stop(int token_id) {
+    return token_id == 151645 || token_id == 151643;
 }
 
 std::vector<int> TinyLlama::tokenizer(const std::string& query) {

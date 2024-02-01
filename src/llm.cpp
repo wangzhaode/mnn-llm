@@ -326,12 +326,12 @@ int Llm::forward(const std::vector<int>& input_ids) {
             hidden_states = outputs[0];
             past_key_values_[i] = outputs[1];
         }
+        ExecutorScope::Current()->gc(Executor::FULL);
         {
             AUTOTIME;
             auto outputs = modules_[layer_nums_]->onForward({hidden_states});
             id = outputs[0]->readMap<int>()[0];
         }
-
     }
     all_seq_len_ += seq_len;
     gen_seq_len_++;

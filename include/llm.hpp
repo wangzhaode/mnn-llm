@@ -245,6 +245,7 @@ public:
         layer_nums_ = 40;
         key_value_shape_ = {2, 1, 20, 0, 128};
         hidden_size_ = 2560;
+        tokenizer_.reset(new HuggingfaceTokenizer);
     }
 private:
     virtual std::vector<int> tokenizer(const std::string& query) override;

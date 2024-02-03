@@ -11,6 +11,9 @@
 #include <queue>
 #include <functional>
 #include <random>
+#include <codecvt>
+#include <regex>
+#include <set>
 
 // base64
 static const std::string base64_chars =
@@ -457,4 +460,182 @@ std::vector<int> BertTokenizer::encode(const std::string& str) {
         }
     }
     return ids;
+}
+
+std::wstring utf8_to_wstring(const std::string& str) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+    return myconv.from_bytes(str);
+}
+
+std::string wstring_to_utf8(const std::wstring& str) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+    return myconv.to_bytes(str);
+}
+
+// Given a token as a UTF8 string, encode each byte into an wchar_t
+void byte_encode_token(const std::string& token,
+                       const std::unordered_map<uint8_t, wchar_t>& b2u,
+                       std::wstring* result) {
+  result->resize(0);
+  for (char c : token) {
+    wchar_t wc = b2u.at(uint8_t(c));
+    result->push_back(wc);
+  }
+}
+
+bool HuggingfaceTokenizer::load(const std::string& filename) {
+    std::ifstream tok_file(filename);
+    std::string line, token;
+    // get nums
+    int vocab_len, merge_len;
+    std::getline(tok_file, line);
+    std::istringstream line_str(line);
+    line_str >> vocab_len >> merge_len;
+    // load vocab
+    decoder_.resize(vocab_len);
+    for (int i = 0; i < vocab_len; i++) {
+        std::getline(tok_file, line);
+        encoder_.insert({line, i});
+        decoder_[i] = line;
+    }
+    // load merge_rule
+    for (int i = 0; i < merge_len; i++) {
+        std::getline(tok_file, line);
+        int d = line.find(" ");
+        bpe_ranks_.insert({{utf8_to_wstring(line.substr(0, d)),
+                            utf8_to_wstring(line.substr(d + 1))}, i});
+    }
+    tok_file.close();
+    // bytes_to_unicode
+     auto _insert_range = [=](int start, int end) {
+        for (int c = start; c <= end; c++) {
+            b2u_.insert({uint8_t(c), wchar_t(c)});
+        }
+    };
+
+    b2u_.clear();
+    _insert_range(L'!', L'~');
+    _insert_range(L'¡', L'¬');
+    _insert_range(L'®', L'ÿ');
+
+    int n = 0;
+    for (int b = 0; b < 256; b++) {
+        if (b2u_.find(uint8_t(b)) == b2u_.end()) {
+            b2u_.insert({uint8_t(b), wchar_t(256 + n)});
+            n++;
+        }
+    }
+    for (auto e : b2u_) {
+        u2b_.insert({e.second, e.first});
+    }
+    return true;
+}
+
+void get_pairs(const std::wstring& word, std::vector<std::pair<std::wstring, std::wstring>>* pairs) {
+    pairs->clear();
+
+    if (word.size() < 2) return;
+
+    wchar_t previous = word[0];
+    for (int i = 1; i < word.size(); i++) {
+        pairs->push_back({std::wstring(1, previous), std::wstring(1, word[i])});
+        previous = word[i];
+    }
+}
+
+void HuggingfaceTokenizer::bpe(const std::wstring& token, const BPERanks& bpe_ranks, std::vector<std::wstring>* result) {
+    std::set<int> merged;  // records indices in pairs that were merged.
+    auto _left = [](int i, std::set<int>& merged) {
+        for (int j = i - 1; j >= -1; j--) {
+        if (merged.find(j) == merged.end()) return j;
+        }
+        return -1;
+    };
+    auto _right = [](int i, int cap, std::set<int>& merged) {
+        for (int j = i + 1; j < cap; j++) {
+        if (merged.find(j) == merged.end()) return j;
+        }
+        return cap;
+    };
+
+    std::vector<std::pair<std::wstring, std::wstring>> pairs;
+    get_pairs(token, &pairs);
+
+    while (true) {
+        int min_score = INT_MAX;
+        int to_merge = -1;  // indices into pairs.
+
+        for (int i = 0; i < pairs.size(); ++i) {
+        if (merged.find(i) == merged.end()) {  // pair i is not merged.
+            auto iter = bpe_ranks.find(pairs[i]);
+            int score = iter != bpe_ranks.end() ? iter->second : INT_MAX;
+            if (score < min_score) {
+            min_score = score;
+            to_merge = i;
+            }
+        }
+        }
+
+        if (to_merge == -1) break;
+
+        merged.insert(to_merge);
+        std::wstring merge_into = pairs[to_merge].first + pairs[to_merge].second;
+
+        int l = _left(to_merge, merged);
+        if (l >= 0) pairs[l].second = merge_into;
+        int r = _right(to_merge, pairs.size(), merged);
+        if (r < pairs.size()) pairs[r].first = merge_into;
+    }  // end while (true)
+
+    if (merged.size() == pairs.size()) {
+        result->push_back(token);
+
+    } else {
+        for (int i = 0; i < pairs.size(); ++i) {
+            if (merged.find(i) == merged.end()) {
+                if (_left(i, merged) < 0) result->push_back(pairs[i].first);
+                result->push_back(pairs[i].second);
+            }
+        }
+    }
+}
+
+std::vector<int> HuggingfaceTokenizer::encode(const std::string& str) {
+    std::regex re("('s|'t|'re|'ve|'m|'ll|'d| ?[[:alpha:]]+| ?[[:digit:]]+| ?[^\\s\\w]+|\\s+)");
+    std::string input = str;
+    std::vector<std::string> result;
+    std::string token;
+    std::smatch match;
+    while (std::regex_search(input, match, re)) {
+        token = match.str(0);
+        input = match.suffix().str();
+        std::wstring wtoken;
+        for (char c : token) {
+            wtoken.push_back(b2u_.at(uint8_t(c)));
+        }
+
+        std::vector<std::wstring> bpe_tokens;
+        bpe(wtoken, bpe_ranks_, &bpe_tokens);
+
+        for (auto ws : bpe_tokens) {
+            result.push_back(wstring_to_utf8(ws));
+        }
+    }
+    std::vector<int> ids;
+    for (auto s : result) {
+        ids.push_back(encoder_.at(s));
+    }
+    return ids;
+}
+
+std::string HuggingfaceTokenizer::decode(int id) {
+    if (id >= decoder_.size()) {
+        return "";
+    }
+    std::wstring w = utf8_to_wstring(decoder_.at(id));
+    std::string r;
+    for (wchar_t c : w) {
+        r.push_back(char(u2b_.at(c)));
+    }
+    return r;
 }

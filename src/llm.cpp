@@ -723,8 +723,8 @@ bool Llama2_7b::is_stop(int token_id) {
 
 std::vector<int> Qwen2_4b::tokenizer(const std::string& query) {
     auto ids = tokenizer_encode(query);
-    // auto prompt = "\n<|im_start|>user\n" + query + "<|im_end|>\n<|im_start|>assistant\n";
-    ids.insert(ids.begin(), {198, 151644, 872, 198});
+    // auto prompt = "<|im_start|>user\n" + query + "<|im_end|>\n<|im_start|>assistant\n";
+    ids.insert(ids.begin(), {151644, 872, 198});
     ids.insert(ids.end(), {151645, 198, 151644, 77091, 198});
     return ids;
 }

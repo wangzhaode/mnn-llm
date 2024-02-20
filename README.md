@@ -19,7 +19,7 @@
 
 llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wangzhaode/llm-export)
 
-当前支持以模型：
+当前支持以下模型：
 
 | model | onnx-fp32 | mnn-quant |
 |-------|-----------|-----------|

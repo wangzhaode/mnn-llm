@@ -105,11 +105,13 @@ protected:
 protected:
     // model configs
     bool is_single_ = false;
+    bool is_disk_embedding_ = false;
     bool is_visual_ = false;
     int layer_nums_ = 0;
     int hidden_size_ = 4096;
     std::vector<int> key_value_shape_ = {};
     std::string model_name_ = "";
+    std::string disk_embedding_file_ = "";
     // gen info
     float load_progress_ = 0.f;
     // tokenizer

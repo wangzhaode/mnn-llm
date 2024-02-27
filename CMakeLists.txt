@@ -3,12 +3,7 @@ project(mnn-llm)
 
 option(BUILD_FOR_ANDROID "Build for android whith mini memory mode." OFF)
 option(USING_VISUAL_MODEL "Using visual model will need dpes: MNNOpenCV and httplib." OFF)
-option(USING_DISK_EMBED "Using disk embedding to save memory." OFF)
 option(DUMP_PROFILE_INFO "Dump profile info when chat." OFF)
-
-if (USING_DISK_EMBED)
-    add_definitions(-DUSING_DISK_EMBED)
-endif()
 
 if (USING_VISUAL_MODEL)
     add_definitions(-DUSING_VISUAL_MODEL)

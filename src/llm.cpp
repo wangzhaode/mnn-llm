@@ -214,6 +214,7 @@ void Llm::load(const std::string& model_dir) {
     cpuBackendConfig.memory = BackendConfig::Memory_Low;
     config.backendConfig = &cpuBackendConfig;
     runtime_manager_.reset(Executor::RuntimeManager::createRuntimeManager(config));
+    runtime_manager_->setHint(MNN::Interpreter::MEM_ALLOCATOR_TYPE, 0);
     if (config.type == MNN_FORWARD_OPENCL) {
         const char* cacheFileName = ".tempcache";
         // runtime_manager_->setCache(cacheFileName);
@@ -225,12 +226,20 @@ void Llm::load(const std::string& model_dir) {
     if (is_single_) {
         size_t pos = model_dir.find_last_of("/\\");
         std::string dir_path = (pos != std::string::npos) ? model_dir.substr(0, pos + 1) : "";
+        model_dir_ = dir_path;
         tokenizer_path = dir_path + "/tokenizer.txt";
     }
     load_progress_ += 5.f;
     tokenizer_->load(tokenizer_path);
     load_progress_ += 5.f;
     printf("load tokenizer Done\n");
+    {
+        disk_embedding_file_ = model_dir_ + "/embeddings_bf16.bin";
+        std::ifstream embedding_bin(disk_embedding_file_);
+        is_disk_embedding_ = embedding_bin.good();
+        MNN_PRINT("### disk embedding is %d\n", is_disk_embedding_);
+        embedding_bin.close();
+    }
     // 2. load model
     Module::Config module_config;
     module_config.shapeMutable = true;
@@ -254,17 +263,17 @@ void Llm::load(const std::string& model_dir) {
         char buffer[50];
         // load lm model
         std::string lm_model_path = model_dir + "/lm.mnn";
-        std::string embedding_model_path = model_dir + "/embedding.mnn";
         MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, lm_model_path.c_str());
         modules_[layer_nums_].reset(Module::load({}, {}, lm_model_path.c_str(), runtime_manager_, &module_config));
         MNN_PRINT("Done!\n");
         load_progress_ += step;
-#ifndef USING_DISK_EMBED
-        MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, embedding_model_path.c_str());fflush(stdout);
-        modules_[layer_nums_ + 1].reset(Module::load({}, {}, embedding_model_path.c_str(), runtime_manager_, &module_config));
-        MNN_PRINT("Done!\n");
-        load_progress_ += step;
-#endif
+        if (!is_disk_embedding_) {
+            std::string embedding_model_path = model_dir + "/embedding.mnn";
+            MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, embedding_model_path.c_str());fflush(stdout);
+            modules_[layer_nums_ + 1].reset(Module::load({}, {}, embedding_model_path.c_str(), runtime_manager_, &module_config));
+            MNN_PRINT("Done!\n");
+            load_progress_ += step;
+        }
         if (is_visual_) {
             std::string visual_model_path = model_dir + "/visual.mnn";
             MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, visual_model_path.c_str());fflush(stdout);
@@ -308,18 +317,23 @@ void Llm::warmup() {
 
 int Llm::forward(const std::vector<int>& input_ids) {
     int seq_len = input_ids.size();
-    auto inputs_ids_ = _Const(input_ids.data(), {seq_len}, NCHW, halide_type_of<int>());
     auto attention_mask = gen_attention_mask(seq_len);
     auto position_ids = gen_position_ids(seq_len);
     int id = -1;
     if (is_single_) {
         // single model
-        auto outputs = modules_.back()->onForward({inputs_ids_, attention_mask, position_ids, past_key_values_[0]});
+        auto hidden_states = _Const(input_ids.data(), {seq_len}, NCHW, halide_type_of<int>());
+        if (is_disk_embedding_) {
+            hidden_states = embedding(input_ids);
+        }
+        auto outputs = modules_.back()->onForward({hidden_states, attention_mask, position_ids, past_key_values_[0]});
+        ExecutorScope::Current()->gc(Executor::FULL);
         id = outputs[0]->readMap<int>()[0];
         past_key_values_[0] = outputs[1];
     } else {
         // split block models
         auto hidden_states = embedding(input_ids);
+        ExecutorScope::Current()->gc(Executor::FULL);
         for (int i = 0; i < layer_nums_; i++) {
             AUTOTIME;
             auto outputs = modules_[i]->onForward({hidden_states, attention_mask, position_ids, past_key_values_[i]});
@@ -339,19 +353,18 @@ int Llm::forward(const std::vector<int>& input_ids) {
 }
 
 VARP Llm::txt_embedding(const std::vector<int>& input_ids) {
-#ifndef USING_DISK_EMBED
-    // using model forward
-    auto inputs_ids_ = _Const(input_ids.data(), {static_cast<int>(input_ids.size())}, NCHW, halide_type_of<int>());
-    auto hidden_states = modules_[layer_nums_ + 1]->onForward({inputs_ids_})[0];
-    return hidden_states;
-#endif
+    if (!is_disk_embedding_) {
+        // using model forward
+        auto inputs_ids_ = _Const(input_ids.data(), {static_cast<int>(input_ids.size())}, NCHW, halide_type_of<int>());
+        auto hidden_states = modules_[layer_nums_ + 1]->onForward({inputs_ids_})[0];
+        return hidden_states;
+    }
     AUTOTIME;
     // disk embedding to save memory
     size_t seq_len = input_ids.size();
     auto embedding = _Input({static_cast<int>(seq_len), 1, hidden_size_}, NCHW);
     size_t size = hidden_size_ * sizeof(int16_t);
-    std::string file_path = model_dir_ + "/embeddings_bf16.bin";
-    FILE* file = fopen(file_path.c_str(), "rb");
+    FILE* file = fopen(disk_embedding_file_.c_str(), "rb");
     std::unique_ptr<int16_t[]> buffer(new int16_t[hidden_size_]);
     for (size_t i = 0; i < seq_len; i++) {
         fseek(file, input_ids[i] * size, SEEK_SET);

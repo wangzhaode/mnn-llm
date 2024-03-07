@@ -14,6 +14,7 @@
 #include <codecvt>
 #include <regex>
 #include <set>
+#include <climits>
 
 // base64
 static const std::string base64_chars =

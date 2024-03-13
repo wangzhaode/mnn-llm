@@ -240,18 +240,55 @@ private:
     virtual bool is_stop(int token_id) override;
 };
 
-class Qwen2_4b : public Llama2_7b {
+class Qwen2 : public Llama2_7b {
+public:
+    Qwen2() {
+        model_name_ = "Qwen2";
+        tokenizer_.reset(new HuggingfaceTokenizer);
+    }
+private:
+    virtual std::vector<int> tokenizer(const std::string& query) override;
+    virtual bool is_stop(int token_id) override;
+};
+
+class Qwen2_0_5b : public Qwen2 {
+public:
+    Qwen2_0_5b() {
+        model_name_ = "Qwen2_0.5b";
+        layer_nums_ = 24;
+        key_value_shape_ = {2, 1, 16, 0, 64};
+        hidden_size_ = 1024;
+    }
+};
+
+class Qwen2_1_8b : public Qwen2 {
+public:
+    Qwen2_1_8b() {
+        model_name_ = "Qwen2_1.8b";
+        layer_nums_ = 24;
+        key_value_shape_ = {2, 1, 16, 0, 128};
+        hidden_size_ = 2048;
+    }
+};
+
+class Qwen2_4b : public Qwen2 {
 public:
     Qwen2_4b() {
         model_name_ = "Qwen2_4b";
         layer_nums_ = 40;
         key_value_shape_ = {2, 1, 20, 0, 128};
         hidden_size_ = 2560;
-        tokenizer_.reset(new HuggingfaceTokenizer);
     }
-private:
-    virtual std::vector<int> tokenizer(const std::string& query) override;
-    virtual bool is_stop(int token_id) override;
+};
+
+class Qwen2_7b : public Qwen2 {
+public:
+    Qwen2_7b() {
+        model_name_ = "Qwen2_7b";
+        layer_nums_ = 32;
+        key_value_shape_ = {2, 1, 32, 0, 128};
+        hidden_size_ = 4096;
+    }
 };
 
 class TinyLlama : public Llama2_7b {

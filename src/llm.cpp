@@ -47,9 +47,16 @@ Llm* Llm::createLLM(const std::string& path, std::string model_type) {
     } else if (model_type.find("codegeex2") != std::string::npos) {
         llm = new Chatglm2_6b;
         llm->model_name_ = "Codegeex2_6b";
-    } else if (model_type.find("qwen2") != std::string::npos) {
-        if (model_type.find("4") != std::string::npos) {
+    } else if (model_type.find("qwen1.5") != std::string::npos ||
+               model_type.find("qwen2") != std::string::npos) {
+        if (model_type.find("0.5b") != std::string::npos) {
+            llm = new Qwen2_0_5b;
+        } else if (model_type.find("1.8b") != std::string::npos) {
+            llm = new Qwen2_1_8b;
+        } else if (model_type.find("4b") != std::string::npos) {
             llm = new Qwen2_4b;
+        } else if (model_type.find("7b") != std::string::npos) {
+            llm = new Qwen2_7b;
         }
     } else if (model_type.find("qwen") != std::string::npos) {
         if (model_type.find("1.8") != std::string::npos) {
@@ -734,7 +741,7 @@ bool Llama2_7b::is_stop(int token_id) {
     return token_id == 2;
 }
 
-std::vector<int> Qwen2_4b::tokenizer(const std::string& query) {
+std::vector<int> Qwen2::tokenizer(const std::string& query) {
     auto ids = tokenizer_encode(query);
     // auto prompt = "<|im_start|>user\n" + query + "<|im_end|>\n<|im_start|>assistant\n";
     ids.insert(ids.begin(), {151644, 872, 198});
@@ -742,7 +749,7 @@ std::vector<int> Qwen2_4b::tokenizer(const std::string& query) {
     return ids;
 }
 
-bool Qwen2_4b::is_stop(int token_id) {
+bool Qwen2::is_stop(int token_id) {
     return token_id == 151645 || token_id == 151643;
 }
 

@@ -40,6 +40,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 | Qwen1.5-0.5B-Chat | [![Download][download-qwen1.5-0.5b-onnx]][release-qwen1.5-0.5b-onnx] | [![Download][download-qwen1.5-0.5b-mnn]][release-qwen1.5-0.5b-mnn] |
 | Qwen1.5-1.8B-Chat | [![Download][download-qwen1.5-1.8b-onnx]][release-qwen1.5-1.8b-onnx] | [![Download][download-qwen1.5-1.8b-mnn]][release-qwen1.5-1.8b-mnn] |
 | Qwen1.5-4B-Chat | [![Download][download-qwen1.5-4b-onnx]][release-qwen1.5-4b-onnx] | [![Download][download-qwen1.5-4b-mnn]][release-qwen1.5-4b-mnn] |
+| Qwen1.5-7B-Chat | [![Download][download-qwen1.5-7b-onnx]][release-qwen1.5-7b-onnx] | [![Download][download-qwen1.5-7b-mnn]][release-qwen1.5-7b-mnn] |
 
 其他版本：
 - Qwen-1_8B-Chat-int8：[![Download][download-qwen-1.8b-mnn-int8]][release-qwen-1.8b-mnn-int8]
@@ -62,6 +63,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [download-qwen1.5-0.5b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen1.5-0.5b-chat-onnx/total
 [download-qwen1.5-1.8b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen1.5-1.8b-chat-onnx/total
 [download-qwen1.5-4b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen1.5-4b-chat-onnx/total
+[download-qwen1.5-7b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen1.5-7b-chat-onnx/total
 [release-chatglm-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm-6b-onnx
 [release-chatglm2-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm2-6b-onnx
 [release-chatglm3-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm3-6b-onnx
@@ -79,6 +81,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [release-qwen1.5-0.5b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen1.5-0.5b-chat-onnx
 [release-qwen1.5-1.8b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen1.5-1.8b-chat-onnx
 [release-qwen1.5-4b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen1.5-4b-chat-onnx
+[release-qwen1.5-7b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen1.5-7b-chat-onnx
 [download-chatglm-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm-6b-mnn/total
 [download-chatglm2-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm2-6b-mnn/total
 [download-chatglm3-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm3-6b-mnn/total
@@ -98,6 +101,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [download-qwen1.5-0.5b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen1.5-0.5b-chat-mnn/total
 [download-qwen1.5-1.8b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen1.5-1.8b-chat-mnn/total
 [download-qwen1.5-4b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen1.5-4b-chat-mnn/total
+[download-qwen1.5-7b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen1.5-7b-chat-mnn/total
 [release-chatglm-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm-6b-mnn
 [release-chatglm2-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm2-6b-mnn
 [release-chatglm3-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm3-6b-mnn
@@ -117,6 +121,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [release-qwen1.5-0.5b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen1.5-0.5b-chat-mnn
 [release-qwen1.5-1.8b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen1.5-1.8b-chat-mnn
 [release-qwen1.5-4b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen1.5-4b-chat-mnn
+[release-qwen1.5-7b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen1.5-7b-chat-mnn
 
 
 ### 速度

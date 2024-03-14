@@ -326,10 +326,66 @@ int Llm::forward(const std::vector<int>& input_ids) {
         if (is_disk_embedding_) {
             hidden_states = embedding(input_ids);
         }
+        auto dump_to_txt = [&](VARP var, std::string name){
+            std::ofstream _output("./tmp/" + name);
+            auto info = var->getInfo();
+            printf("dim = [");
+            for (auto d : info->dim) {
+                printf("%d, ", d);
+            }
+            printf("]\n");
+            return;
+            if (info->type == halide_type_of<float>()) {
+                auto ptr = var->readMap<float>();
+                for (int i = 0; i < info->size; i++) {
+                    _output << ptr[i] << "\n";
+                }
+            } else {
+                auto ptr = var->readMap<int>();
+                for (int i = 0; i < info->size; i++) {
+                    _output << ptr[i] << "\n";
+                }
+            }
+        };
         auto outputs = modules_.back()->onForward({hidden_states, attention_mask, position_ids, past_key_values_[0]});
+        if (!gen_seq_len_ && 0) {
+            dump_to_txt(hidden_states, "hidden_states.txt");
+            dump_to_txt(attention_mask, "attention_mask.txt");
+            dump_to_txt(position_ids, "position_ids.txt");
+            dump_to_txt(past_key_values_[0], "past_key_values.txt");
+            dump_to_txt(outputs[0], "token_id.txt");
+            dump_to_txt(outputs[1], "presents.txt");
+        }
         ExecutorScope::Current()->gc(Executor::FULL);
         id = outputs[0]->readMap<int>()[0];
         past_key_values_[0] = outputs[1];
+        if (!gen_seq_len_ && 0) {
+            constexpr int chunk_size = 4;
+            auto pastkv_dim = past_key_values_[0]->getInfo()->dim;
+            if (pastkv_dim[4] > chunk_size * 2) {
+                std::vector<int> startvals { 0, 0, 0, 0, 0, 0 };
+                auto start = _Const(static_cast<void*>(startvals.data()), {6}, NCHW, halide_type_of<int>());
+                std::vector<int> sizevals { -1, -1, -1, -1, chunk_size, -1 };
+                auto size = _Const(static_cast<void*>(sizevals.data()), {6}, NCHW, halide_type_of<int>());
+                auto head = _Slice(past_key_values_[0], start, size);
+                // printf("head dim = ["); for (auto d : head->getInfo()->dim) { printf("%d, ", d); } printf("]\n");
+                std::vector<int> startvals1 { 0, 0, 0, 0, pastkv_dim[4] - chunk_size, 0 };
+                start = _Const(static_cast<void*>(startvals1.data()), {6}, NCHW, halide_type_of<int>());
+                std::vector<int> sizevals1 { -1, -1, -1, -1, -1, -1 };
+                size = _Const(static_cast<void*>(sizevals1.data()), {6}, NCHW, halide_type_of<int>());
+                auto tail = _Slice(past_key_values_[0], start, size);
+                // printf("tail dim = ["); for (auto d : tail->getInfo()->dim) { printf("%d, ", d); } printf("]\n");
+                auto new_kv = Express::_Concat({head, tail}, 4);
+                // printf("new_kv dim = ["); for (auto d : new_kv->getInfo()->dim) { printf("%d, ", d); } printf("]\n");
+                past_key_values_[0] = new_kv;
+                // printf("## windows slice: %d -> %d\n", pastkv_dim[4], chunk_size*2);
+                if (seq_len > chunk_size * 2) {
+                    seq_len = chunk_size * 2;
+                } else {
+                    seq_len = 0;
+                }
+            }
+        }
     } else {
         // split block models
         auto hidden_states = embedding(input_ids);

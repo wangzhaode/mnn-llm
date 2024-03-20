@@ -13,6 +13,10 @@ if (DUMP_PROFILE_INFO)
     add_definitions(-DDUMP_PROFILE_INFO)
 endif()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif()
+
 # include dir
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include/)
 

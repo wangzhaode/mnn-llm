@@ -73,6 +73,9 @@ public:
         modules_.clear();
         visual_module_.reset();
         runtime_manager_.reset();
+        if (file_) {
+          fclose(file_);
+        }
     }
     static Llm* createLLM(const std::string& path, std::string model_type = "auto");
     void load(const std::string& model_dir);
@@ -112,6 +115,7 @@ protected:
     std::vector<int> key_value_shape_ = {};
     std::string model_name_ = "";
     std::string disk_embedding_file_ = "";
+    FILE *file_ = nullptr;
     // gen info
     float load_progress_ = 0.f;
     // tokenizer
@@ -326,7 +330,7 @@ public:
         runtime_manager_.reset();
     }
     static Embedding* createEmbedding(const std::string& path, std::string model_type = "auto");
-    static float dist(VARP var0, VARP var1);
+    static float dist(const VARP& var0, const VARP& var1);
     void load(const std::string& model_dir);
     VARP embedding(const std::string& txt);
     void print_speed();
@@ -444,7 +448,7 @@ public:
     static ChatMemory* load(const std::string& path);
     void save(const std::string& path) override;
     void build_vectors() override;
-    std::string get_latest(std::string key);
+    std::string get_latest(const std::string& key);
     void add(const std::vector<Prompt>& prompts);
     void summarize(std::shared_ptr<Llm> llm);
 private:

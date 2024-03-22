@@ -326,7 +326,7 @@ public:
         runtime_manager_.reset();
     }
     static Embedding* createEmbedding(const std::string& path, std::string model_type = "auto");
-    static float dist(VARP var0, VARP var1);
+    static float dist(const VARP& var0, const VARP& var1);
     void load(const std::string& model_dir);
     VARP embedding(const std::string& txt);
     void print_speed();
@@ -444,7 +444,7 @@ public:
     static ChatMemory* load(const std::string& path);
     void save(const std::string& path) override;
     void build_vectors() override;
-    std::string get_latest(std::string key);
+    std::string get_latest(const std::string& key);
     void add(const std::vector<Prompt>& prompts);
     void summarize(std::shared_ptr<Llm> llm);
 private:

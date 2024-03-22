@@ -169,7 +169,7 @@ std::string Llm::response(const std::string& query, std::ostream* os, const char
     // response
     auto input_ids = tokenizer(query);
     if (!history_.empty()) {
-        std::copy(input_ids.begin(), input_ids.end(), std::back_inserter(history_));
+        history_.insert(history_.end(), input_ids.begin(), input_ids.end());
         input_ids = history_;
     } else {
         history_ = input_ids;
@@ -267,7 +267,6 @@ void Llm::load(const std::string& model_dir) {
         // 2. load models
         modules_.resize(layer_nums_ + 2);
         float step = 90.0 / modules_.size();
-        char buffer[50];
         // load lm model
         std::string lm_model_path = model_dir + "/lm.mnn";
         MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, lm_model_path.c_str());
@@ -372,10 +371,10 @@ VARP Llm::txt_embedding(const std::vector<int>& input_ids) {
     auto embedding = _Input({static_cast<int>(seq_len), 1, hidden_size_}, NCHW);
     size_t size = hidden_size_ * sizeof(int16_t);
     FILE* file = fopen(disk_embedding_file_.c_str(), "rb");
-    std::unique_ptr<int16_t[]> buffer(new int16_t[hidden_size_]);
+    std::vector<int16_t> buffer(hidden_size_);
     for (size_t i = 0; i < seq_len; i++) {
         fseek(file, input_ids[i] * size, SEEK_SET);
-        fread(buffer.get(), 1, size, file);
+        fread(buffer.data(), 1, size, file);
         auto ptr = embedding->writeMap<int16_t>() + i * hidden_size_ * 2;
         for (int j = 0; j < hidden_size_; j++) {
             ptr[j * 2] = 0;
@@ -496,8 +495,7 @@ bool Chatglm2_6b::is_stop(int token_id) {
 
 // Phi_2
 std::vector<int> Phi_2::tokenizer(const std::string& query) {
-    auto prompt = query;
-    auto ids = tokenizer_encode(prompt);
+    auto ids = tokenizer_encode(query);
     return ids;
 }
 
@@ -781,15 +779,13 @@ bool Yi_6b::is_stop(int token_id) {
 // Llm end
 
 // Embedding start
-float Embedding::dist(VARP var0, VARP var1) {
+float Embedding::dist(const VARP& var0, const VARP& var1) {
     auto distVar = _Sqrt(_ReduceSum(_Square(var0 - var1)));
     auto dist = distVar->readMap<float>()[0];
     return dist;
 }
 
 Embedding* Embedding::createEmbedding(const std::string& path, std::string model_type) {
-    auto size = path.size();
-
     Embedding* embedding = nullptr;
     if (model_type == "auto") {
         model_type = path;
@@ -951,7 +947,6 @@ std::vector<std::string> TextVectorStore::search_similar_texts(const std::string
     auto vector = text2vector(text);
     auto dist = _Sqrt(_ReduceSum(_Square(vectors_ - vector), {-1}));
     auto indices = _Sort(dist, 0, true);
-    auto ptr = dist->readMap<float>();
     auto idx_ptr = indices->readMap<int>();
     std::vector<std::string> res;
     for (int i = 0; i < std::max(topk, 1); i++) {
@@ -975,8 +970,6 @@ void TextVectorStore::bench() {
     auto start = std::chrono::high_resolution_clock::now();
     auto dist = _Sqrt(_ReduceSum(_Square(vectors_ - vec), {-1}));
     auto indices = _Sort(dist, 0, true);
-    auto ptr = dist->readMap<float>();
-    auto iptr = indices->readMap<int>();
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "bench search time (ms): " << duration.count();
@@ -1003,7 +996,7 @@ std::vector<std::string> Document::split(int chunk_size) {
             {".html", DOCTYPE::HTML},
             {".pdf",  DOCTYPE::PDF}
         };
-        size_t dotIndex = path_.find_last_of(".");
+        size_t dotIndex = path_.find_last_of('.');
         if (dotIndex != std::string::npos) {
             auto extention = path_.substr(dotIndex);
             auto it = extensionMap.find(extention);
@@ -1188,7 +1181,7 @@ void ChatMemory::add(const std::vector<Prompt>& prompts) {
     }
 }
 
-std::string ChatMemory::get_latest(std::string key) {
+std::string ChatMemory::get_latest(const std::string& key) {
     if (memory_.contains(key)) {
         std::string latest_date = "";
         json latest_value;
@@ -1228,7 +1221,7 @@ void ChatMemory::summarize(std::shared_ptr<Llm> llm) {
 
 Knowledge* Knowledge::load(const std::string& path) {
     auto knowledge = new Knowledge;
-    knowledge->document_.reset(new Document(path));
+    knowledge->document_ = std::make_unique<Document>(path);
     knowledge->load_store(path);
     return knowledge;
 }
@@ -1299,12 +1292,9 @@ bool Pipeline::need_memory(const std::string& str) {
         "以前", "历史上", "之间讨论", "之间的对话", "那时候", "曾经", "你曾说", "你曾提到",
         "最近谈到", "最近说过", "你之前说过"
     };
-    for (const auto& keyword : contextKeywords) {
-        if (str.find(keyword) != std::string::npos) {
-            return true;
-        }
-    }
-    return false;
+    return std::any_of(contextKeywords.begin(), contextKeywords.end(), [&str](const std::string& keyword) {
+          return str.find(keyword) != std::string::npos;
+        });
 }
 
 bool Pipeline::need_knowledge(const std::string& str) {
@@ -1330,7 +1320,7 @@ std::string Pipeline::build_prompt(const std::string& str) {
         prompt += related_knowledge + "\n";
     }
     prompt += "\n";
-    for (auto p : prompts_) {
+    for (auto &p : prompts_) {
         if (p.type == PROMPT_TYPE::USER) {
             prompt += user_ + "：" + p.str + "\n";
         }

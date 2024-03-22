@@ -370,18 +370,20 @@ VARP Llm::txt_embedding(const std::vector<int>& input_ids) {
     size_t seq_len = input_ids.size();
     auto embedding = _Input({static_cast<int>(seq_len), 1, hidden_size_}, NCHW);
     size_t size = hidden_size_ * sizeof(int16_t);
-    FILE* file = fopen(disk_embedding_file_.c_str(), "rb");
+    if (!file_) {
+      file_ = fopen(disk_embedding_file_.c_str(), "rb");
+    }
+    fseek(file_, 0, SEEK_SET);
     std::vector<int16_t> buffer(hidden_size_);
     for (size_t i = 0; i < seq_len; i++) {
-        fseek(file, input_ids[i] * size, SEEK_SET);
-        fread(buffer.data(), 1, size, file);
+        fseek(file_, input_ids[i] * size, SEEK_SET);
+        fread(buffer.data(), 1, size, file_);
         auto ptr = embedding->writeMap<int16_t>() + i * hidden_size_ * 2;
         for (int j = 0; j < hidden_size_; j++) {
             ptr[j * 2] = 0;
             ptr[j * 2 + 1] = buffer[j];
         }
     }
-    fclose(file);
     return embedding;
 }
 

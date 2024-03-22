@@ -73,6 +73,9 @@ public:
         modules_.clear();
         visual_module_.reset();
         runtime_manager_.reset();
+        if (file_) {
+          fclose(file_);
+        }
     }
     static Llm* createLLM(const std::string& path, std::string model_type = "auto");
     void load(const std::string& model_dir);
@@ -112,6 +115,7 @@ protected:
     std::vector<int> key_value_shape_ = {};
     std::string model_name_ = "";
     std::string disk_embedding_file_ = "";
+    FILE *file_ = nullptr;
     // gen info
     float load_progress_ = 0.f;
     // tokenizer

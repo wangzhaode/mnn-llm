@@ -1,5 +1,6 @@
 from setuptools import setup, Extension, find_packages
 import platform
+import numpy as np
 
 IS_DARWIN = platform.system() == 'Darwin'
 IS_WINDOWS = (platform.system() == 'Windows')
@@ -25,7 +26,7 @@ lib_files = [('lib',
 
 module = Extension('cmnnllm',
                   sources=['./mnnllm.cpp'],
-                  include_dirs=['../include'],
+                  include_dirs=['../include', np.get_include()],
                   library_dirs=['../build', '../libs'],
                   extra_compile_args=['-std=c++17'],
                   extra_link_args=['-lllm'] + make_relative_rpath('lib'))
@@ -35,6 +36,7 @@ setup(name='mnnllm',
       description='mnn-llm python',
       ext_modules=[module],
       packages=packages,
+      install_requires=['numpy'],
       data_files=lib_files,
       author='wangzhaode',
       author_email='hi@zhaode.wang')

@@ -6,18 +6,105 @@
 //
 
 #include <Python.h>
+#include <numpy/ndarrayobject.h>
+#include <numpy/ndarraytypes.h>
+
 #include <iostream>
 #include "llm.hpp"
 
 using namespace std;
 
+// type functions
 inline PyObject* string2Object(const std::string& str) {
 #if PY_MAJOR_VERSION == 2
-  return PyString_FromString(str.c_str());
+    return PyString_FromString(str.c_str());
 #else
-  return PyUnicode_FromString(str.c_str());
+    return PyUnicode_FromString(str.c_str());
 #endif
 }
+
+inline int64_t unpackLong(PyObject* obj) {
+    int overflow;
+    long long value = PyLong_AsLongLongAndOverflow(obj, &overflow);
+    return (int64_t)value;
+}
+
+template <bool (*Func)(PyObject*)>
+static bool isVec(PyObject* obj) {
+    if (PyTuple_Check(obj)) {
+        if (PyTuple_Size(obj) > 0) {
+            return Func(PyTuple_GetItem(obj, 0));
+        } else return true;
+    } else if (PyList_Check(obj)) {
+        if (PyList_Size(obj) > 0) {
+            return Func(PyList_GetItem(obj, 0));
+        } else return true;
+    }
+    return false;
+}
+
+static inline bool isInt(PyObject* obj) {
+    return PyLong_Check(obj)
+#if PY_MAJOR_VERSION < 3
+    || PyInt_Check(obj)
+#endif
+    ;
+}
+
+static inline bool isInts(PyObject* obj) {
+    return isInt(obj) || isVec<isInt>(obj);
+}
+
+static inline int toInt(PyObject* obj) {
+    return static_cast<int>(unpackLong(obj));
+}
+
+template <typename T, T (*Func)(PyObject*)>
+static std::vector<T> toVec(PyObject* obj) {
+    std::vector<T> values;
+    if (PyTuple_Check(obj)) {
+        size_t size = PyTuple_Size(obj);
+        values.resize(size);
+        for (int i = 0; i < size; i++) {
+            values[i] = Func(PyTuple_GetItem(obj, i));
+        }
+        return values;
+    }
+    if (PyList_Check(obj)) {
+        size_t size = PyList_Size(obj);
+        values.resize(size);
+        for (int i = 0; i < size; i++) {
+            values[i] = Func(PyList_GetItem(obj, i));
+        }
+        return values;
+    }
+    values.push_back(Func(obj));
+    return values;
+}
+
+static inline std::vector<int> toInts(PyObject* obj) {
+    if (isInt(obj)) { return { toInt(obj) }; }
+    return toVec<int, toInt>(obj);
+}
+
+static inline PyObject* toPyObj(string val) {
+    return string2Object(val);
+}
+
+static inline PyObject* toPyArray(MNN::Express::VARP var) {
+    auto info = var->getInfo();
+    auto shape = info->dim;
+    int64_t total_length = info->size;
+    auto ptr = const_cast<void*>(var->readMap<void>());
+    std::vector<npy_intp> npy_dims;
+    for(const auto dim : shape) {
+        npy_dims.push_back(dim);
+    }
+    auto data = PyArray_SimpleNewFromData(npy_dims.size(), npy_dims.data(), NPY_FLOAT, ptr);
+    var->unMap();
+    return (PyObject*)data;
+}
+// end
 
 typedef struct {
     PyObject_HEAD
@@ -29,11 +116,20 @@ static PyObject* PyLLM_new(struct _typeobject *type, PyObject *args, PyObject *k
     return (PyObject*)self;
 }
 
+// LLM's functions
 static PyObject* Py_str(PyObject *self) {
-    char str[50];
     LLM* llm = (LLM*)self;
-    sprintf(str, "Llm object: %p", llm->llm);
-    return Py_BuildValue("s", str);
+    std::string str = "Llm: " + llm->llm->model_name_;
+    return toPyObj(str);
+}
+
+static PyObject* PyLLM_load(LLM *self, PyObject *args) {
+    const char* dir = NULL;
+    if (!PyArg_ParseTuple(args, "s", &dir)) {
+        return NULL;
+    }
+    self->llm->load(dir);
+    Py_RETURN_NONE;
 }
 
 static PyObject* PyLLM_response(LLM *self, PyObject *args) {
@@ -45,28 +141,87 @@ static PyObject* PyLLM_response(LLM *self, PyObject *args) {
     LlmStreamBuffer buffer(nullptr);
     std::ostream null_os(&buffer);
     auto res = self->llm->response_nohistory(query, stream ? &std::cout : &null_os);
-    return string2Object(res);
+    return toPyObj(res);
+}
+
+static PyObject* PyLLM_logits(LLM *self, PyObject *args) {
+    PyObject *input_ids = nullptr;
+    if (!PyArg_ParseTuple(args, "O", &input_ids) && isInts(input_ids)) {
+        return NULL;
+    }
+    auto logits = self->llm->logits(toInts(input_ids));
+    return toPyArray(logits);
 }
 
 static PyMethodDef PyLLM_methods[] = {
-    {"response", (PyCFunction)PyLLM_response, METH_VARARGS, "response without hsitory."},
+    {"load", (PyCFunction)PyLLM_load, METH_VARARGS, "load model from `dir`."},
+    {"logits", (PyCFunction)PyLLM_logits, METH_VARARGS, "get logits of `input_ids`."},
+    {"response", (PyCFunction)PyLLM_response, METH_VARARGS, "response `query` without hsitory."},
     {NULL}  /* Sentinel */
 };
 
-
-static PyObject* PyLLM_get_mgl(LLM *self, void *closure) {
-    return PyLong_FromLong(self->llm->max_seq_len_);
+// LLM's attributes
+static PyObject* PyLLM_get_backend_type(LLM *self, void *closure) {
+    return PyLong_FromLong(self->llm->backend_type_);
 }
 
-static int PyLLM_set_mgl(LLM *self, PyObject *value, void *closure) {
+static int PyLLM_set_backend_type(LLM *self, PyObject *value, void *closure) {
     if (self->llm) {
-        self->llm->max_seq_len_ = (int)PyLong_AsLong(value);
+        self->llm->backend_type_ = (int)PyLong_AsLong(value);
+    }
+    return 0;
+}
+
+static PyObject* PyLLM_get_thread_num(LLM *self, void *closure) {
+    return PyLong_FromLong(self->llm->thread_num_);
+}
+
+static int PyLLM_set_thread_num(LLM *self, PyObject *value, void *closure) {
+    if (self->llm) {
+        self->llm->thread_num_ = (int)PyLong_AsLong(value);
+    }
+    return 0;
+}
+
+static PyObject* PyLLM_get_low_precision(LLM *self, void *closure) {
+    return PyLong_FromLong(self->llm->low_precision_);
+}
+
+static int PyLLM_set_low_precision(LLM *self, PyObject *value, void *closure) {
+    if (self->llm) {
+        self->llm->low_precision_ = PyLong_AsLong(value);
+    }
+    return 0;
+}
+
+static PyObject* PyLLM_get_chatml(LLM *self, void *closure) {
+    return PyLong_FromLong(self->llm->chatml_);
+}
+
+static int PyLLM_set_chatml(LLM *self, PyObject *value, void *closure) {
+    if (self->llm) {
+        self->llm->chatml_ = PyLong_AsLong(value);
+    }
+    return 0;
+}
+
+static PyObject* PyLLM_get_max_new_tokens(LLM *self, void *closure) {
+    return PyLong_FromLong(self->llm->max_new_tokens_);
+}
+
+static int PyLLM_set_max_new_tokens(LLM *self, PyObject *value, void *closure) {
+    if (self->llm) {
+        self->llm->max_new_tokens_ = (int)PyLong_AsLong(value);
     }
     return 0;
 }
 
 static PyGetSetDef PyLLM_getsetters[] = {
-    {"max_gen_len", (getter)PyLLM_get_mgl, (setter)PyLLM_set_mgl, "___max_gen_len___", NULL},
+    {"backend_type", (getter)PyLLM_get_backend_type, (setter)PyLLM_set_backend_type, "___backend_type___", NULL},
+    {"thread_num", (getter)PyLLM_get_thread_num, (setter)PyLLM_set_thread_num, "___thread_num___", NULL},
+    {"low_precision", (getter)PyLLM_get_low_precision, (setter)PyLLM_set_low_precision, "___low_precision___", NULL},
+    {"chatml", (getter)PyLLM_get_chatml, (setter)PyLLM_set_chatml, "___chatml___", NULL},
+    {"max_new_tokens", (getter)PyLLM_get_max_new_tokens, (setter)PyLLM_set_max_new_tokens, "___max_new_tokens___", NULL},
     {NULL}  /* Sentinel */
 };
 
@@ -111,7 +266,7 @@ static PyTypeObject PyLLM = {
     PyLLM_new,                                /* tp_new */
 };
 
-static PyObject *py_load(PyObject *self, PyObject *args) {
+static PyObject *py_create(PyObject *self, PyObject *args) {
     if (!PyTuple_Size(args)) {
         return NULL;
     }
@@ -130,16 +285,16 @@ static PyObject *py_load(PyObject *self, PyObject *args) {
 }
 
 static PyMethodDef Methods[] = {
-        {"load", py_load, METH_VARARGS},
-        {NULL, NULL}
+    {"create", py_create, METH_VARARGS},
+    {NULL, NULL}
 };
 
 static struct PyModuleDef mnnllmModule = {
-        PyModuleDef_HEAD_INIT,
-        "cmnnllm", /*module name*/
-        "", /* module documentation, may be NULL */
-        -1, /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
-        Methods
+    PyModuleDef_HEAD_INIT,
+    "cmnnllm", /*module name*/
+    "", /* module documentation, may be NULL */
+    -1, /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+    Methods
 };
 
 static void def(PyObject* m, PyMethodDef* method) {

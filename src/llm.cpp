@@ -141,7 +141,7 @@ std::string Llm::response_impl(const std::vector<int>& input_ids, std::ostream* 
     std::string output_str = decode(token);
     prefill_us_ = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
     *os << output_str << std::flush;
-    while (gen_seq_len_ < max_seq_len_) {
+    while (gen_seq_len_ < max_new_tokens_) {
         st = std::chrono::system_clock::now();
         token = forward({token});
         et = std::chrono::system_clock::now();
@@ -214,11 +214,14 @@ void Llm::load(const std::string& model_dir) {
     // init
     ScheduleConfig config;
     BackendConfig cpuBackendConfig;
-    config.type          = MNN_FORWARD_CPU;
-    // config.type          = MNN_FORWARD_OPENCL;
-    config.numThread     = 4;
-    cpuBackendConfig.precision = BackendConfig::Precision_Low;
-    cpuBackendConfig.memory = BackendConfig::Memory_Low;
+    config.type          = static_cast<MNNForwardType>(backend_type_);
+    config.numThread     = thread_num_;
+    if (low_memory_) {
+        cpuBackendConfig.precision = BackendConfig::Precision_Low;
+    }
+    if (low_precision_) {
+        cpuBackendConfig.memory = BackendConfig::Memory_Low;
+    }
     config.backendConfig = &cpuBackendConfig;
     runtime_manager_.reset(Executor::RuntimeManager::createRuntimeManager(config));
     runtime_manager_->setHint(MNN::Interpreter::MEM_ALLOCATOR_TYPE, 0);
@@ -320,6 +323,41 @@ void Llm::warmup() {
     all_seq_len_ = 0;
     gen_seq_len_ = 0;
     printf("Done\n");
+}
+
+VARP Llm::logits(const std::vector<int>& input_ids) {
+    int seq_len = input_ids.size();
+    auto attention_mask = gen_attention_mask(seq_len);
+    auto position_ids = gen_position_ids(seq_len);
+    VARP logits;
+    if (is_single_) {
+        // single model
+        auto hidden_states = _Const(input_ids.data(), {seq_len}, NCHW, halide_type_of<int>());
+        if (is_disk_embedding_) {
+            hidden_states = embedding(input_ids);
+        }
+        auto outputs = modules_.back()->onForward({hidden_states, attention_mask, position_ids, past_key_values_[0]});
+        ExecutorScope::Current()->gc(Executor::FULL);
+        logits = outputs[0];
+        past_key_values_[0] = outputs[1];
+    } else {
+        // split block models
+        auto hidden_states = embedding(input_ids);
+        ExecutorScope::Current()->gc(Executor::FULL);
+        for (int i = 0; i < layer_nums_; i++) {
+            AUTOTIME;
+            auto outputs = modules_[i]->onForward({hidden_states, attention_mask, position_ids, past_key_values_[i]});
+            hidden_states = outputs[0];
+            past_key_values_[i] = outputs[1];
+        }
+        ExecutorScope::Current()->gc(Executor::FULL);
+        {
+            AUTOTIME;
+            auto outputs = modules_[layer_nums_]->onForward({hidden_states});
+            logits = outputs[0];
+        }
+    }
+    return logits;
 }
 
 int Llm::forward(const std::vector<int>& input_ids) {

@@ -1,0 +1,8 @@
+Hello
+你好，请问你是谁？
+请问今天的天气如何？
+Can you tell me a joke?
+Well, hahahaha, can you tell me another?
+explain the following code for me: while(1) malloc(100);
+write an C example to illustrate deadlock.
+Tell me more about how to avoid deadlock in Windows?

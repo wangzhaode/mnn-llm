@@ -32,7 +32,7 @@ void benchmark(Llm* llm, std::string prompt_file) {
         decode_len += llm->gen_seq_len_;
         prefill_time += llm->prefill_us_;
         decode_time += llm->decode_us_;
-        llm->reset();
+        // llm->reset(); // comment this line for multi-round QAs.
     }
     float prefill_s = prefill_time / 1e6;
     float decode_s = decode_time / 1e6;

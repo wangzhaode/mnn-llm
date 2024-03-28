@@ -118,24 +118,40 @@ void Llm::chat() {
 
 void Llm::response_init() {
     // init status
-    gen_seq_len_ = 0;
-    all_seq_len_ = 0;
-    prefill_us_ = 0;
-    decode_us_ = 0;
-    past_key_values_.clear();
-    if (is_single_) {
-        past_key_values_.push_back(_Input(key_value_shape_, NCHW));
-    } else {
-        for (int i = 0; i < layer_nums_; i++) {
+    // gen_seq_len_ = 0;
+    // all_seq_len_ = 0;
+    // prefill_us_ = 0;
+    // decode_us_ = 0;
+    // past_key_values_.clear();
+    // No history before!
+    if (past_key_values_.size()==0){
+        gen_seq_len_ = 0;
+        all_seq_len_ = 0;
+        prefill_us_ = 0;
+        decode_us_ = 0;
+        if (is_single_) {
             past_key_values_.push_back(_Input(key_value_shape_, NCHW));
+        } else {
+            for (int i = 0; i < layer_nums_; i++) {
+                past_key_values_.push_back(_Input(key_value_shape_, NCHW));
+            }
         }
     }
 }
 
 std::string Llm::response_impl(const std::vector<int>& input_ids, std::ostream* os, const char* end_with) {
     prompt_len_ = static_cast<int>(input_ids.size());
+    std::cout << all_seq_len_ << ' ' << prompt_len_ << std::endl;
     auto st = std::chrono::system_clock::now();
-    int token = forward(input_ids);
+    // int token = forward(input_ids);
+    int token;
+    if (all_seq_len_==0){
+        token = forward(input_ids);
+    }else{
+        for (auto input_id: input_ids){
+            token = forward({input_id});
+        }
+    }
     auto et = std::chrono::system_clock::now();
     history_.push_back(token);
     std::string output_str = decode(token);
@@ -167,13 +183,15 @@ std::string Llm::response(const std::string& query, std::ostream* os, const char
         end_with = "\n";
     }
     // response
+    std::cout << "Query: " << query << std::endl;
     auto input_ids = tokenizer(query);
     if (!history_.empty()) {
         std::copy(input_ids.begin(), input_ids.end(), std::back_inserter(history_));
-        input_ids = history_;
+        // input_ids = history_;
     } else {
         history_ = input_ids;
     }
+    std::cout << "Answer: ";
     return response_impl(input_ids, os, end_with);
 }
 
@@ -206,7 +224,10 @@ void Llm::print_speed() {
 }
 
 void Llm::reset() {
+    all_seq_len_ = 0;
+    gen_seq_len_ = 0;
     history_.clear();
+    past_key_values_.clear();
 }
 
 void Llm::load(const std::string& model_dir) {
@@ -317,8 +338,7 @@ void Llm::warmup() {
     }
     std::vector<int> tmp(1, 0);
     forward(tmp);
-    all_seq_len_ = 0;
-    gen_seq_len_ = 0;
+    reset();
     printf("Done\n");
 }
 

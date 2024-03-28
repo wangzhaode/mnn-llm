@@ -18,3 +18,9 @@ include/semaphore.h
 
 # ignore files
 .DS_Store
+
+# ignore tmp and models
+**/tmp
+resource/models
+debug
+!resource/models/*.ps1

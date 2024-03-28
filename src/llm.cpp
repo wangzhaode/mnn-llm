@@ -118,7 +118,7 @@ void Llm::chat() {
 
 void Llm::response_init() {
     // init status
-    // gen_seq_len_ = 0;
+    gen_seq_len_ = 0;
     // all_seq_len_ = 0;
     // prefill_us_ = 0;
     // decode_us_ = 0;
@@ -140,8 +140,8 @@ void Llm::response_init() {
 }
 
 std::string Llm::response_impl(const std::vector<int>& input_ids, std::ostream* os, const char* end_with) {
-    prompt_len_ = static_cast<int>(input_ids.size());
-    std::cout << all_seq_len_ << ' ' << prompt_len_ << std::endl;
+    prompt_len_ += static_cast<int>(input_ids.size());
+    // std::cout << all_seq_len_ << ' ' << prompt_len_ << std::endl;
     auto st = std::chrono::system_clock::now();
     // int token = forward(input_ids);
     int token;
@@ -155,7 +155,7 @@ std::string Llm::response_impl(const std::vector<int>& input_ids, std::ostream* 
     auto et = std::chrono::system_clock::now();
     history_.push_back(token);
     std::string output_str = decode(token);
-    prefill_us_ = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
+    prefill_us_ += std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
     *os << output_str << std::flush;
     while (gen_seq_len_ < max_seq_len_) {
         st = std::chrono::system_clock::now();
@@ -210,16 +210,16 @@ void Llm::print_speed() {
     auto decode_s = decode_us_ * 1e-6;
     auto total_s = prefill_s + decode_s;
     printf("\n#################################\n");
-    printf(" total tokens num  = %d\n", prompt_len_ + gen_seq_len_);
+    printf(" total tokens num  = %d\n", all_seq_len_);
     printf("prompt tokens num  = %d\n", prompt_len_);
-    printf("output tokens num  = %d\n", gen_seq_len_);
+    printf("output tokens num  = %d\n", all_seq_len_ - prompt_len_);
     printf("  total time = %.2f s\n", total_s);
     printf("prefill time = %.2f s\n", prefill_s);
     printf(" decode time = %.2f s\n", decode_s);
-    printf("  total speed = %.2f tok/s\n", (prompt_len_ + gen_seq_len_) / total_s);
+    printf("  total speed = %.2f tok/s\n", all_seq_len_ / total_s);
     printf("prefill speed = %.2f tok/s\n", prompt_len_ / prefill_s);
-    printf(" decode speed = %.2f tok/s\n", gen_seq_len_ / decode_s);
-    printf("   chat speed = %.2f tok/s\n", gen_seq_len_ / total_s);
+    printf(" decode speed = %.2f tok/s\n", (all_seq_len_ - prompt_len_) / decode_s);
+    printf("   chat speed = %.2f tok/s\n", (all_seq_len_ - prompt_len_) / total_s);
     printf("##################################\n");
 }
 

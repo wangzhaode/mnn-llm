@@ -28,22 +28,23 @@ void benchmark(Llm* llm, std::string prompt_file) {
     llm->warmup();
     for (int i = 0; i < prompts.size(); i++) {
         llm->response(prompts[i]);
-        prompt_len += llm->prompt_len_;
-        decode_len += llm->gen_seq_len_;
-        prefill_time += llm->prefill_us_;
-        decode_time += llm->decode_us_;
+        // prompt_len += llm->prompt_len_;
+        // decode_len += llm->gen_seq_len_;
+        // prefill_time += llm->prefill_us_;
+        // decode_time += llm->decode_us_;
         // llm->reset(); // comment this line for multi-round QAs.
     }
-    float prefill_s = prefill_time / 1e6;
-    float decode_s = decode_time / 1e6;
-    printf("\n#################################\n");
-    printf("prompt tokens num  = %d\n", prompt_len);
-    printf("decode tokens num  = %d\n", decode_len);
-    printf("prefill time = %.2f s\n", prefill_s);
-    printf(" decode time = %.2f s\n", decode_s);
-    printf("prefill speed = %.2f tok/s\n", prompt_len / prefill_s);
-    printf(" decode speed = %.2f tok/s\n", decode_len / decode_s);
-    printf("##################################\n");
+    llm->print_speed();
+    // float prefill_s = prefill_time / 1e6;
+    // float decode_s = decode_time / 1e6;
+    // printf("\n#################################\n");
+    // printf("prompt tokens num  = %d\n", prompt_len);
+    // printf("decode tokens num  = %d\n", decode_len);
+    // printf("prefill time = %.2f s\n", prefill_s);
+    // printf(" decode time = %.2f s\n", decode_s);
+    // printf("prefill speed = %.2f tok/s\n", prompt_len / prefill_s);
+    // printf(" decode speed = %.2f tok/s\n", decode_len / decode_s);
+    // printf("##################################\n");
 }
 
 int main(int argc, const char* argv[]) {

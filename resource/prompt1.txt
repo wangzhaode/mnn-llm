@@ -4,5 +4,6 @@ Hello
 Can you tell me a joke?
 Well, hahahaha, can you tell me another?
 explain the following code for me: while(1) malloc(100);
-write an C example to illustrate deadlock.
+Tell me what is a deadlock.
+write an C example to illustrate this concept.
 Tell me more about how to avoid deadlock in Windows?

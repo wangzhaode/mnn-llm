@@ -100,7 +100,9 @@ void Llm::chat() {
     while (true) {
         std::cout << "\nQ: ";
         std::string input_str;
-        std::cin >> input_str;
+        char buffer[200];
+        std::cin.getline(buffer, 199);
+        input_str = std::string(buffer);
         if (input_str == "/exit") {
             break;
         }
@@ -119,10 +121,6 @@ void Llm::chat() {
 void Llm::response_init() {
     // init status
     gen_seq_len_ = 0;
-    // all_seq_len_ = 0;
-    // prefill_us_ = 0;
-    // decode_us_ = 0;
-    // past_key_values_.clear();
     // No history before!
     if (past_key_values_.size()==0){
         gen_seq_len_ = 0;
@@ -183,7 +181,7 @@ std::string Llm::response(const std::string& query, std::ostream* os, const char
         end_with = "\n";
     }
     // response
-    std::cout << "Query: " << query << std::endl;
+    // std::cout << "Query: " << query << std::endl;
     auto input_ids = tokenizer(query);
     if (!history_.empty()) {
         std::copy(input_ids.begin(), input_ids.end(), std::back_inserter(history_));
@@ -191,7 +189,7 @@ std::string Llm::response(const std::string& query, std::ostream* os, const char
     } else {
         history_ = input_ids;
     }
-    std::cout << "Answer: ";
+    // std::cout << "Answer: ";
     return response_impl(input_ids, os, end_with);
 }
 
@@ -226,6 +224,8 @@ void Llm::print_speed() {
 void Llm::reset() {
     all_seq_len_ = 0;
     gen_seq_len_ = 0;
+    prefill_us_ = 0;
+    decode_us_ = 0;
     history_.clear();
     past_key_values_.clear();
 }

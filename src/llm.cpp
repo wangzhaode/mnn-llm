@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+#include <algorithm>
 
 #include <MNN/expr/ExecutorScope.hpp>
 #include <MNN/AutoTime.hpp>
@@ -143,12 +144,8 @@ std::string Llm::response_impl(const std::vector<int>& input_ids, std::ostream* 
     auto st = std::chrono::system_clock::now();
     // int token = forward(input_ids);
     int token;
-    if (all_seq_len_==0){
-        token = forward(input_ids);
-    }else{
-        for (auto input_id: input_ids){
-            token = forward({input_id});
-        }
+    for (auto input_id: input_ids){
+        token = forward({input_id});
     }
     auto et = std::chrono::system_clock::now();
     history_.push_back(token);
@@ -161,7 +158,6 @@ std::string Llm::response_impl(const std::vector<int>& input_ids, std::ostream* 
         et = std::chrono::system_clock::now();
         decode_us_ += std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
         if (is_stop(token)) {
-            *os << end_with << std::flush;
             break;
         }
         history_.push_back(token);
@@ -169,6 +165,7 @@ std::string Llm::response_impl(const std::vector<int>& input_ids, std::ostream* 
         *os << word << std::flush;
         output_str += word;
     }
+    *os << end_with << std::flush;
 #ifdef DUMP_PROFILE_INFO
     print_speed();
 #endif
@@ -353,6 +350,31 @@ int Llm::forward(const std::vector<int>& input_ids) {
         if (is_disk_embedding_) {
             hidden_states = embedding(input_ids);
         }
+
+#ifdef STREAM_LLM
+        int kv_seq_len_dim = seq_len_dim + 1;
+        auto pastkv_dim = past_key_values_[0]->getInfo()->dim;
+        if (pastkv_dim[kv_seq_len_dim] > front_chunk_size + tail_chunk_size) {
+            // head
+            std::vector<int> startvals { 0, 0, 0, 0, 0, 0 };
+            auto start = _Const(static_cast<void*>(startvals.data()), {6}, NCHW, halide_type_of<int>());
+            std::vector<int> sizevals { -1, -1, -1, -1, -1, -1 };
+            sizevals[kv_seq_len_dim] = front_chunk_size;
+            auto size = _Const(static_cast<void*>(sizevals.data()), {6}, NCHW, halide_type_of<int>());
+            auto head = _Slice(past_key_values_[0], start, size);
+            // tail
+            std::vector<int> startvals1 { 0, 0, 0, 0, 0, 0 };
+            startvals1[kv_seq_len_dim] = pastkv_dim[kv_seq_len_dim] - tail_chunk_size;
+            start = _Const(static_cast<void*>(startvals1.data()), {6}, NCHW, halide_type_of<int>());
+            std::vector<int> sizevals1 { -1, -1, -1, -1, -1, -1 };
+            size = _Const(static_cast<void*>(sizevals1.data()), {6}, NCHW, halide_type_of<int>());
+            auto tail = _Slice(past_key_values_[0], start, size);
+            // new_kv
+            auto new_kv = Express::_Concat({head, tail}, kv_seq_len_dim);
+            past_key_values_[0] = new_kv;
+        }
+#endif
+
         auto outputs = modules_.back()->onForward({hidden_states, attention_mask, position_ids, past_key_values_[0]});
         ExecutorScope::Current()->gc(Executor::FULL);
         id = outputs[0]->readMap<int>()[0];
@@ -363,6 +385,32 @@ int Llm::forward(const std::vector<int>& input_ids) {
         ExecutorScope::Current()->gc(Executor::FULL);
         for (int i = 0; i < layer_nums_; i++) {
             AUTOTIME;
+
+#ifdef STREAM_LLM
+            int kv_seq_len_dim = seq_len_dim;
+            auto pastkv_dim = past_key_values_[i]->getInfo()->dim;
+            if (pastkv_dim[kv_seq_len_dim] > front_chunk_size + tail_chunk_size) {
+                // head
+                std::vector<int> startvals { 0, 0, 0, 0, 0 };
+                auto start = _Const(static_cast<void*>(startvals.data()), {5}, NCHW, halide_type_of<int>());
+                std::vector<int> sizevals { -1, -1, -1, -1, -1, };
+                sizevals[kv_seq_len_dim] = front_chunk_size;
+                auto size = _Const(static_cast<void*>(sizevals.data()), {5}, NCHW, halide_type_of<int>());
+                auto head = _Slice(past_key_values_[i], start, size);
+                // tail
+                std::vector<int> startvals1 { 0, 0, 0, 0, 0 };
+                startvals1[kv_seq_len_dim] = pastkv_dim[kv_seq_len_dim] - tail_chunk_size;
+                start = _Const(static_cast<void*>(startvals1.data()), {5}, NCHW, halide_type_of<int>());
+                std::vector<int> sizevals1 { -1, -1, -1, -1, -1 };
+                size = _Const(static_cast<void*>(sizevals1.data()), {5}, NCHW, halide_type_of<int>());
+                auto tail = _Slice(past_key_values_[i], start, size);
+                // new_kv
+                auto new_kv = Express::_Concat({head, tail}, kv_seq_len_dim);
+                // printf("new_kv dim = ["); for (auto d : new_kv->getInfo()->dim) { printf("%d, ", d); } printf("]\n");
+                past_key_values_[i] = new_kv;
+            }
+#endif
+
             auto outputs = modules_[i]->onForward({hidden_states, attention_mask, position_ids, past_key_values_[i]});
             hidden_states = outputs[0];
             past_key_values_[i] = outputs[1];
@@ -671,11 +719,20 @@ std::vector<int> Qwen_vl::tokenizer(const std::string& query) {
 
 VARP Qwen_vl::gen_attention_mask(int seq_len) {
     if (seq_len == 1) {
+#ifdef STREAM_LLM
+        int current_seq_len = std::min(all_seq_len_,front_chunk_size + tail_chunk_size);
+        auto attention_mask = _Input({1, 1, 1, current_seq_len + 1}, NCHW, halide_type_of<float>());
+        auto ptr = attention_mask->writeMap<float>();
+        for (int i = 0; i < current_seq_len + 1; i++) {
+            ptr[i] = 0;
+        }
+#else
         auto attention_mask = _Input({1, 1, 1, all_seq_len_ + 1}, NCHW, halide_type_of<float>());
         auto ptr = attention_mask->writeMap<float>();
         for (int i = 0; i < all_seq_len_ + 1; i++) {
             ptr[i] = 0;
         }
+#endif
         return attention_mask;
     } else {
         auto attention_mask = _Input({1, 1, seq_len, seq_len}, NCHW, halide_type_of<float>());
@@ -719,11 +776,20 @@ std::vector<int> Llama2_7b::tokenizer(const std::string& query) {
 
 VARP Llama2_7b::gen_attention_mask(int seq_len) {
     if (seq_len == 1) {
+#ifdef STREAM_LLM
+        int current_seq_len = std::min(all_seq_len_,front_chunk_size + tail_chunk_size);
+        auto attention_mask = _Input({1, 1, 1, current_seq_len + 1}, NCHW, halide_type_of<float>());
+        auto ptr = attention_mask->writeMap<float>();
+        for (int i = 0; i < current_seq_len + 1; i++) {
+            ptr[i] = 0;
+        }
+#else
         auto attention_mask = _Input({1, 1, 1, all_seq_len_ + 1}, NCHW, halide_type_of<float>());
         auto ptr = attention_mask->writeMap<float>();
         for (int i = 0; i < all_seq_len_ + 1; i++) {
             ptr[i] = 0;
         }
+#endif
         return attention_mask;
     } else {
         auto attention_mask = _Input({1, 1, seq_len, seq_len}, NCHW, halide_type_of<float>());

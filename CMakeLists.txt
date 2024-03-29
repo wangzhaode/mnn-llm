@@ -13,6 +13,10 @@ if (DUMP_PROFILE_INFO)
     add_definitions(-DDUMP_PROFILE_INFO)
 endif()
 
+if (STREAM_LLM)
+    add_definitions(-DSTREAM_LLM)
+endif()
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()

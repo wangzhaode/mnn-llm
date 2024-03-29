@@ -87,13 +87,20 @@ public:
 public:
     std::vector<int> history_;
     // forward info
-    int max_seq_len_ = 1024;
+    int max_seq_len_ = 320;
     int prompt_len_ = 0;
     int gen_seq_len_ = 0;
     int all_seq_len_ = 0;
     // time
     int64_t prefill_us_ = 0;
     int64_t decode_us_ = 0;
+    // seq_len_dim
+    int seq_len_dim;
+    // stream_llm kv_chunk
+#ifdef STREAM_LLM
+    int front_chunk_size = 20;
+    int tail_chunk_size = 300;
+#endif
 protected:
     void response_init();
     std::string response_impl(const std::vector<int>& input_ids, std::ostream* os, const char* end_with);
@@ -139,6 +146,7 @@ public:
         model_name_ = "Chatglm_6b";
         layer_nums_ = 28;
         key_value_shape_ = {2, 0, 1, 32, 128};
+        seq_len_dim = 1;
     }
 private:
     virtual std::vector<int> tokenizer(const std::string& query) override;
@@ -154,6 +162,7 @@ public:
         model_name_ = "Chatglm2_6b";
         layer_nums_ = 28;
         key_value_shape_ = {2, 0, 1, 2, 128};
+        seq_len_dim = 1;
     }
 private:
     virtual std::vector<int> tokenizer(const std::string& query) override;
@@ -184,6 +193,7 @@ public:
         key_value_shape_ = {2, 1, 0, 32, 128};
         hidden_size_ = 4096;
         tokenizer_.reset(new Tiktoken);
+        seq_len_dim = 2;
     }
 private:
     virtual std::vector<int> tokenizer(const std::string& query) override;
@@ -232,6 +242,7 @@ public:
         model_name_ = "Llama2_7b";
         layer_nums_ = 32;
         key_value_shape_ = {2, 1, 32, 0, 128};
+        seq_len_dim = 3;
     }
 private:
     virtual std::vector<int> tokenizer(const std::string& query) override;

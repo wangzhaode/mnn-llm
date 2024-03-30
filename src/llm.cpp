@@ -359,6 +359,16 @@ int Llm::forward(const std::vector<int>& input_ids) {
     return id;
 }
 
+static inline bool needNewVar(VARP var, int axis, int seq_len) {
+    if (var == nullptr) {
+        return true;
+    }
+    if (var->getInfo()->dim[axis] != seq_len) {
+        return true;
+    }
+    return false;
+}
+
 VARP Llm::txt_embedding(const std::vector<int>& input_ids) {
     if (!is_disk_embedding_) {
         // using model forward
@@ -368,22 +378,24 @@ VARP Llm::txt_embedding(const std::vector<int>& input_ids) {
     }
     AUTOTIME;
     // disk embedding to save memory
-    size_t seq_len = input_ids.size();
-    auto embedding = _Input({static_cast<int>(seq_len), 1, hidden_size_}, NCHW);
+    int seq_len = static_cast<int>(input_ids.size());
+    if (needNewVar(inputs_embeds_, 0, seq_len)) {
+        inputs_embeds_ = _Input({seq_len, 1, hidden_size_}, NCHW);
+    }
     size_t size = hidden_size_ * sizeof(int16_t);
     FILE* file = fopen(disk_embedding_file_.c_str(), "rb");
     std::unique_ptr<int16_t[]> buffer(new int16_t[hidden_size_]);
     for (size_t i = 0; i < seq_len; i++) {
         fseek(file, input_ids[i] * size, SEEK_SET);
         fread(buffer.get(), 1, size, file);
-        auto ptr = embedding->writeMap<int16_t>() + i * hidden_size_ * 2;
+        auto ptr = inputs_embeds_->writeMap<int16_t>() + i * hidden_size_ * 2;
         for (int j = 0; j < hidden_size_; j++) {
             ptr[j * 2] = 0;
             ptr[j * 2 + 1] = buffer[j];
         }
     }
     fclose(file);
-    return embedding;
+    return inputs_embeds_;
 }
 
 VARP Llm::embedding(const std::vector<int>& input_ids) {
@@ -515,19 +527,25 @@ std::vector<int> Qwen_7b::tokenizer(const std::string& query) {
 }
 
 VARP Qwen_7b::gen_attention_mask(int seq_len) {
-    auto attention_mask = _Input({1, 1, seq_len, seq_len}, NCHW, halide_type_of<int>());
-    auto ptr = attention_mask->writeMap<int>();
+    if (needNewVar(attention_mask_, 2, seq_len)) {
+        attention_mask_ = _Input({1, 1, seq_len, seq_len}, NCHW, halide_type_of<int>());
+    } else {
+        return attention_mask_;
+    }
+    auto ptr = attention_mask_->writeMap<int>();
     for (int i = 0; i < seq_len; i++) {
         for (int j = 0; j < seq_len; j++) {
             ptr[seq_len * i + j] = j <= i;
         }
     }
-    return attention_mask;
+    return attention_mask_;
 }
 
 VARP Qwen_7b::gen_position_ids(int seq_len) {
-    auto position_ids = _Input({seq_len}, NCHW, halide_type_of<int>());
-    auto ptr = position_ids->writeMap<int>();
+    if (needNewVar(position_ids_, 0, seq_len) || 0) {
+        position_ids_ = _Input({seq_len}, NCHW, halide_type_of<int>());
+    }
+    auto ptr = position_ids_->writeMap<int>();
     if (seq_len == 1) {
         ptr[0] = all_seq_len_;
     } else {
@@ -535,7 +553,7 @@ VARP Qwen_7b::gen_position_ids(int seq_len) {
             ptr[i] = i;
         }
     }
-    return position_ids;
+    return position_ids_;
 }
 
 bool Qwen_7b::is_stop(int token_id) {

@@ -103,6 +103,7 @@ protected:
     std::vector<int> tokenizer_encode(const std::string& input_str);
     std::string decode(int id);
 protected:
+    VARP inputs_embeds_, attention_mask_, position_ids_;
     // model configs
     bool is_single_ = false;
     bool is_disk_embedding_ = false;

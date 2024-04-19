@@ -30,6 +30,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 | Qwen-7B-Chat | [![Download][download-qwen-7b-chat-onnx]][release-qwen-7b-chat-onnx] | [![Download][download-qwen-7b-chat-mnn]][release-qwen-7b-chat-mnn] |
 | Baichuan2-7B-Chat | [![Download][download-baichuan2-7b-chat-onnx]][release-baichuan2-7b-chat-onnx] | [![Download][download-baichuan2-7b-chat-mnn]][release-baichuan2-7b-chat-mnn] |
 | Llama-2-7b-chat | [![Download][download-llama2-7b-chat-onnx]][release-llama2-7b-chat-onnx] | [![Download][download-llama2-7b-chat-mnn]][release-llama2-7b-chat-mnn] |
+| Llama-3-8B-Instruct | [![Download][download-llama3-8b-instruct-onnx]][release-llama3-8b-instruct-onnx] | [![Download][download-llama3-8b-instruct-mnn]][release-llama3-8b-instruct-mnn] |
 | internlm-chat-7b | [![Download][download-internlm-7b-onnx]][release-internlm-7b-onnx] | [![Download][download-internlm-chat-7b-mnn]][release-internlm-chat-7b-mnn] |
 | Yi-6B-Chat | [![Download][download-yi-6b-chat-onnx]][release-yi-6b-chat-onnx] | [![Download][download-yi-6b-chat-mnn]][release-yi-6b-chat-mnn] |
 | deepseek-llm-7b-chat | [![Download][download-deepseek-7b-chat-onnx]][release-deepseek-7b-chat-onnx] | [![Download][download-deepseek-7b-chat-mnn]][release-deepseek-7b-chat-mnn] |
@@ -52,6 +53,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [download-qwen-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen-7b-chat-onnx/total
 [download-baichuan2-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/baichuan2-7b-chat-onnx/total
 [download-llama2-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/llama2-7b-chat-onnx/total
+[download-llama3-8b-instruct-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/llama3-8b-instruct-onnx/total
 [download-internlm-7b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/internlm-7b-onnx/total
 [download-yi-6b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/yi-6b-chat-onnx/total
 [download-deepseek-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/deepseek-7b-chat-onnx/total
@@ -71,6 +73,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [release-qwen-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen-7b-chat-onnx
 [release-baichuan2-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/baichuan2-7b-chat-onnx
 [release-llama2-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/llama2-7b-chat-onnx
+[release-llama3-8b-instruct-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/llama3-8b-instruct-onnx
 [release-internlm-7b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/internlm-7b-onnx
 [release-yi-6b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/yi-6b-chat-onnx
 [release-deepseek-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/deepseek-7b-chat-onnx
@@ -89,6 +92,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [download-qwen-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-7b-chat-mnn/total
 [download-baichuan2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/baichuan2-7b-chat-mnn/total
 [download-llama2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/llama2-7b-chat-mnn/total
+[download-llama3-8b-instruct-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/llama3-8b-instruct-mnn/total
 [download-internlm-chat-7b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/internlm-chat-7b-mnn/total
 [download-yi-6b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/yi-6b-chat-mnn/total
 [download-deepseek-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/deepseek-7b-chat-mnn/total
@@ -109,6 +113,7 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [release-qwen-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-7b-chat-mnn
 [release-baichuan2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/baichuan2-7b-chat-mnn
 [release-llama2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/llama2-7b-chat-mnn
+[release-llama3-8b-instruct-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/llama3-8b-instruct-mnn
 [release-internlm-chat-7b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/internlm-chat-7b-mnn
 [release-yi-6b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/yi-6b-chat-mnn
 [release-deepseek-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/deepseek-7b-chat-mnn

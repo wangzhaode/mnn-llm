@@ -119,7 +119,7 @@ void Llm::chat() {
     reset();
 }
 
-void Llm::response_init() {
+void Llm::generate_init() {
     // init status
     gen_seq_len_ = 0;
     all_seq_len_ = 0;
@@ -135,7 +135,25 @@ void Llm::response_init() {
     }
 }
 
-std::string Llm::response_impl(const std::vector<int>& input_ids, std::ostream* os, const char* end_with) {
+std::vector<int> Llm::generate(const std::vector<int>& input_ids) {
+    generate_init();
+    std::vector<int> output_ids;
+    prompt_len_ = static_cast<int>(input_ids.size());
+    // prefill
+    int token = forward(input_ids);
+    output_ids.push_back(token);
+    // decode
+    while (gen_seq_len_ < max_new_tokens_) {
+        token = forward({token});
+        if (is_stop(token)) {
+            break;
+        }
+        output_ids.push_back(token);
+    }
+    return output_ids;
+}
+
+std::string Llm::generate(const std::vector<int>& input_ids, std::ostream* os, const char* end_with) {
     prompt_len_ = static_cast<int>(input_ids.size());
     auto st = std::chrono::system_clock::now();
     int token = forward(input_ids);
@@ -144,7 +162,7 @@ std::string Llm::response_impl(const std::vector<int>& input_ids, std::ostream* 
     std::string output_str = decode(token);
     prefill_us_ = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
     *os << output_str << std::flush;
-    while (gen_seq_len_ < max_seq_len_) {
+    while (gen_seq_len_ < max_new_tokens_) {
         st = std::chrono::system_clock::now();
         token = forward({token});
         et = std::chrono::system_clock::now();
@@ -165,29 +183,30 @@ std::string Llm::response_impl(const std::vector<int>& input_ids, std::ostream* 
 }
 
 std::string Llm::response(const std::string& query, std::ostream* os, const char* end_with) {
-    response_init();
+    generate_init();
     if (!end_with) {
         end_with = "\n";
     }
     // response
-    auto input_ids = tokenizer(query);
+    auto input_ids = chatml_ ? tokenizer(query) : tokenizer_encode(query);
+    // printf("ids = "); for (int id : input_ids) printf("%d, ", id); printf("\n");
     if (!history_.empty()) {
         std::copy(input_ids.begin(), input_ids.end(), std::back_inserter(history_));
         input_ids = history_;
     } else {
         history_ = input_ids;
     }
-    return response_impl(input_ids, os, end_with);
+    return generate(input_ids, os, end_with);
 }
 
 std::string Llm::response_nohistory(const std::string& query, std::ostream* os, const char* end_with) {
-    response_init();
+    generate_init();
     if (!end_with) {
         end_with = "\n";
     }
     // response
-    auto input_ids = tokenizer(query);
-    return response_impl(input_ids, os, end_with);
+    auto input_ids = chatml_ ? tokenizer(query) : tokenizer_encode(query);
+    return generate(input_ids, os, end_with);
 }
 
 void Llm::print_speed() {
@@ -217,10 +236,11 @@ void Llm::load(const std::string& model_dir) {
     // init
     ScheduleConfig config;
     BackendConfig cpuBackendConfig;
-    config.type          = MNN_FORWARD_CPU;
-    // config.type          = MNN_FORWARD_OPENCL;
-    config.numThread     = 4;
-    cpuBackendConfig.precision = BackendConfig::Precision_Low;
+    config.type          = static_cast<MNNForwardType>(backend_type_);;
+    config.numThread     = thread_num_;
+    if (low_precision_) {
+        cpuBackendConfig.precision = BackendConfig::Precision_Low;
+    }
     cpuBackendConfig.memory = BackendConfig::Memory_Low;
     config.backendConfig = &cpuBackendConfig;
     runtime_manager_.reset(Executor::RuntimeManager::createRuntimeManager(config));
@@ -385,6 +405,7 @@ VARP Llm::txt_embedding(const std::vector<int>& input_ids) {
     if (needNewVar(inputs_embeds_, 0, seq_len)) {
         inputs_embeds_ = _Input({seq_len, 1, hidden_size_}, NCHW);
     }
+
     size_t size = hidden_size_ * sizeof(int16_t);
     FILE* file = fopen(disk_embedding_file_.c_str(), "rb");
     std::unique_ptr<int16_t[]> buffer(new int16_t[hidden_size_]);

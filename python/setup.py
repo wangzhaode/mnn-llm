@@ -32,6 +32,7 @@ module = Extension('cmnnllm',
 
 setup(name='mnnllm',
       version='0.1',
+      language='c++',
       description='mnn-llm python',
       ext_modules=[module],
       packages=packages,

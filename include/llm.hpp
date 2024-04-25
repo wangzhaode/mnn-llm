@@ -80,14 +80,24 @@ public:
     void warmup();
     std::string response(const std::string& input_str, std::ostream* os = &std::cout, const char* end_with = nullptr);
     std::string response_nohistory(const std::string& input_str, std::ostream* os = &std::cout, const char* end_with = nullptr);
+    void generate_init();
+    std::string generate(const std::vector<int>& input_ids, std::ostream* os, const char* end_with);
+    std::vector<int> generate(const std::vector<int>& input_ids);
+    int forward(const std::vector<int>& input_ids);
     float load_progress() { return load_progress_; }
     void reset();
     void print_speed();
     friend class Pipeline;
 public:
     std::vector<int> history_;
+    std::string model_name_ = "";
+    // config
+    int max_new_tokens_ = 1024;
+    int backend_type_ = 0;
+    int thread_num_ = 4;
+    bool low_precision_ = true;
+    bool chatml_ = true;
     // forward info
-    int max_seq_len_ = 1024;
     int prompt_len_ = 0;
     int gen_seq_len_ = 0;
     int all_seq_len_ = 0;
@@ -95,11 +105,8 @@ public:
     int64_t prefill_us_ = 0;
     int64_t decode_us_ = 0;
 protected:
-    void response_init();
-    std::string response_impl(const std::vector<int>& input_ids, std::ostream* os, const char* end_with);
     VARP embedding(const std::vector<int>& input_ids);
     VARP txt_embedding(const std::vector<int>& input_ids);
-    int forward(const std::vector<int>& input_ids);
     std::vector<int> tokenizer_encode(const std::string& input_str);
     std::string decode(int id);
 protected:
@@ -111,7 +118,6 @@ protected:
     int layer_nums_ = 0;
     int hidden_size_ = 4096;
     std::vector<int> key_value_shape_ = {};
-    std::string model_name_ = "";
     std::string disk_embedding_file_ = "";
     // gen info
     float load_progress_ = 0.f;

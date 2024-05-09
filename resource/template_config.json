@@ -1,0 +1,17 @@
+{
+    "model_type": "qwen-1.8b-chat",
+    "tokenizer_type": "tiktoken",
+    "llm_model": "qwen-1.8b-int4.mnn",
+    "llm_weight": "qwen-1.8b-int4.mnn.weight",
+    "embedding_file": "embeddings_bf16.bin",
+    "tokenizer_file": "tokenizer.txt",
+    "hidden_size": 2048,
+    "key_value_shape": [2, 1, 0, 16, 128],
+    "stop_ids": [151643, 151645],
+    "prompt_template": "\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n",
+
+    "backend_type": "cpu",
+    "thread_num": 4,
+    "precision": "low",
+    "memory": "low"
+}

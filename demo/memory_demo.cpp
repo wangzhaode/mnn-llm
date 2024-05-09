@@ -22,7 +22,7 @@ int main(int argc, const char* argv[]) {
     if (argc == 4) {
         auto llm_dir = argv[3];
         std::shared_ptr<Llm> llm(Llm::createLLM(llm_dir));
-        llm->load(llm_dir);
+        llm->load();
         chat_memory->summarize(llm);
         chat_memory->save(memory_dir);
     }

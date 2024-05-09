@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <streambuf>
 #include <functional>
 #include <unordered_map>
@@ -63,6 +64,79 @@ struct Prompt {
     std::vector<int> tokens;
 };
 
+class LlmConfig {
+public:
+    LlmConfig() {}
+    LlmConfig(const std::string& dir) {
+        base_dir_ = dir + "/";
+        std::ifstream config_file(dir + "/config.json");
+        if (config_file.is_open()) {
+            config_ = json::parse(config_file);
+        } else {
+            std::cerr << "Unable to open config file: " << dir << std::endl;
+        }
+    }
+
+    std::string model_type() const {
+        return config_.value("model_type", "unknow");
+    }
+
+    std::string tokenizer_type() const {
+        return config_.value("tokenizer_type", "tiktoken");
+    }
+
+    std::string llm_model() const {
+        return base_dir_ + config_.value("llm_model", "llm.mnn");
+    }
+
+    std::string llm_weight() const {
+        return base_dir_ + config_.value("llm_weight", "llm.mnn.weight");
+    }
+
+    std::string embedding_file() const {
+        return base_dir_ + config_.value("embedding_file", "embeddings_bf16.bin");
+    }
+
+    std::string tokenizer_file() const {
+        return base_dir_ + config_.value("tokenizer_file", "tokenizer.txt");
+    }
+
+    int hidden_size() const {
+        return config_.value("hidden_size", 4096);
+    }
+
+    std::vector<int> key_value_shape() const {
+        return config_.value("key_value_shape", std::vector<int>{});
+    }
+
+    std::vector<int> stop_ids() const {
+        return config_.value("stop_ids", std::vector<int>{});
+    }
+
+    std::string prompt_template() const {
+        return config_.value("prompt_template", "");
+    }
+
+    std::string backend_type() const {
+        return config_.value("backend_type", "cpu");
+    }
+
+    int thread_num() const {
+        return config_.value("thread_num", 4);
+    }
+
+    std::string precision() const {
+        return config_.value("precision", "low");
+    }
+
+    std::string memory() const {
+        return config_.value("memory", "low");
+    }
+private:
+    std::string base_dir_;
+    json config_;
+};
+
 class Llm {
 public:
     Llm() {
@@ -75,7 +149,7 @@ public:
         runtime_manager_.reset();
     }
     static Llm* createLLM(const std::string& path, std::string model_type = "auto");
-    void load(const std::string& model_dir);
+    void load();
     void chat();
     void warmup();
     std::string response(const std::string& input_str, std::ostream* os = &std::cout, const char* end_with = nullptr);
@@ -104,6 +178,7 @@ public:
     // time
     int64_t prefill_us_ = 0;
     int64_t decode_us_ = 0;
+    LlmConfig config_;
 protected:
     VARP embedding(const std::vector<int>& input_ids);
     VARP txt_embedding(const std::vector<int>& input_ids);
@@ -112,13 +187,12 @@ protected:
 protected:
     VARP inputs_embeds_, attention_mask_, position_ids_;
     // model configs
-    bool is_single_ = false;
-    bool is_disk_embedding_ = false;
+    bool is_single_ = true;
+    bool is_disk_embedding_ = true;
     bool is_visual_ = false;
     int layer_nums_ = 0;
     int hidden_size_ = 4096;
     std::vector<int> key_value_shape_ = {};
-    std::string disk_embedding_file_ = "";
     // gen info
     float load_progress_ = 0.f;
     // tokenizer
@@ -126,10 +200,10 @@ protected:
     std::shared_ptr<Module> visual_module_;
 private:
     virtual VARP visual_embedding(const std::vector<int>& input_ids) { return nullptr; }
-    virtual std::vector<int> tokenizer(const std::string& query) = 0;
-    virtual VARP gen_attention_mask(int seq_len) = 0;
-    virtual VARP gen_position_ids(int seq_len) = 0;
-    virtual bool is_stop(int token_id) = 0;
+    virtual std::vector<int> tokenizer(const std::string& query);
+    virtual VARP gen_attention_mask(int seq_len);
+    virtual VARP gen_position_ids(int seq_len);
+    virtual bool is_stop(int token_id);
 private:
     // MNN Modules
     std::shared_ptr<Executor::RuntimeManager> runtime_manager_;

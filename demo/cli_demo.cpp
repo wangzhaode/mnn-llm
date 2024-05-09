@@ -54,7 +54,7 @@ int main(int argc, const char* argv[]) {
     std::string model_dir = argv[1];
     std::cout << "model path is " << model_dir << std::endl;
     std::unique_ptr<Llm> llm(Llm::createLLM(model_dir));
-    llm->load(model_dir);
+    llm->load();
     if (argc < 3) {
         llm->chat();
     }

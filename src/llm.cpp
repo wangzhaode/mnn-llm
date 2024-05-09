@@ -22,81 +22,54 @@
 #endif
 
 // Llm start
-Llm* Llm::createLLM(const std::string& path, std::string model_type) {
-    auto size = path.size();
-
-    // end with '.mnn' is single model file, otherwise split block models
-    bool is_single = (size > 4 &&
-                      path[size - 4] == '.' &&
-                      path[size - 3] == 'm' &&
-                      path[size - 2] == 'n' &&
-                      path[size - 1] == 'n');
-    Llm* llm = nullptr;
-    if (model_type == "auto") {
-        model_type = path;
-    }
-    if (model_type.find("chatglm") != std::string::npos) {
-        if (model_type.find("chatglm2") != std::string::npos) {
-            llm = new Chatglm2_6b;
-        } else if (model_type.find("chatglm3") != std::string::npos) {
-            llm = new Chatglm2_6b;
-            llm->model_name_ = "Chatglm3_6b";
-        } else {
-            llm = new Chatglm_6b;
-        }
-    } else if (model_type.find("codegeex2") != std::string::npos) {
-        llm = new Chatglm2_6b;
-        llm->model_name_ = "Codegeex2_6b";
-    } else if (model_type.find("qwen1.5") != std::string::npos ||
-               model_type.find("qwen2") != std::string::npos) {
-        if (model_type.find("0.5b") != std::string::npos) {
-            llm = new Qwen2_0_5b;
-        } else if (model_type.find("1.8b") != std::string::npos) {
-            llm = new Qwen2_1_8b;
-        } else if (model_type.find("4b") != std::string::npos) {
-            llm = new Qwen2_4b;
-        } else if (model_type.find("7b") != std::string::npos) {
-            llm = new Qwen2_7b;
-        }
-    } else if (model_type.find("qwen") != std::string::npos) {
-        if (model_type.find("1.8") != std::string::npos) {
-            llm = new Qwen_1_8b;
-        } else if (model_type.find("vl") != std::string::npos) {
-            llm = new Qwen_vl;
-        } else {
-            llm = new Qwen_7b;
-        }
-    } else if (model_type.find("llama2") != std::string::npos) {
-        llm = new Llama2_7b;
-    } else if (model_type.find("baichuan") != std::string::npos) {
-        llm = new Llama2_7b;
-        llm->model_name_ = "Baichuan2_7b";
-    } else if (model_type.find("phi2") != std::string::npos) {
-        llm = new Phi_2;
-    } else if (model_type.find("internlm") != std::string::npos) {
-        llm = new Llama2_7b;
-        llm->model_name_ = "Internlm_7b";
-    } else if (model_type.find("deepseek") != std::string::npos) {
-        llm = new Llama2_7b;
-        llm->model_name_ = "deepseek_7b";
-        llm->layer_nums_ = 30;
-    } else if (model_type.find("tinyllama") != std::string::npos) {
-        llm = new TinyLlama;
-        llm->model_name_ = "TinyLlama";
-    } else if (model_type.find("yi") != std::string::npos) {
-        llm = new Yi_6b;
-        llm->model_name_ = "Yi_6b";
-    } else if (model_type.find("llama3") != std::string::npos) {
-        llm = new Llama3_8b;
-        llm->model_name_ = "Llama3_8b";
-    }
-    if (!llm) {
-        std::cerr << "model type can't judge!" << std::endl;
-        return llm;
-    }
-    llm->is_single_ = is_single;
-    std::cout << "### model name : "<< llm->model_name_ << std::endl;
+Llm* Llm::createLLM(const std::string& model_dir, std::string model_type) {
+    Llm* llm = new Llm;
+    llm->config_ = LlmConfig(model_dir);
+    llm->tokenizer_.reset(Tokenizer::createTokenizer(llm->config_.tokenizer_type()));
+    // llm->load();
+    llm->key_value_shape_ = llm->config_.key_value_shape();
+    llm->layer_nums_ = 24;
     return llm;
+}
+
+void Llm::load() {
+    // init runtime
+    ScheduleConfig config;
+    BackendConfig cpuBackendConfig;
+    config.type          = static_cast<MNNForwardType>(backend_type_);;
+    config.numThread     = config_.thread_num();
+    cpuBackendConfig.precision = BackendConfig::Precision_Low;
+    cpuBackendConfig.memory = BackendConfig::Memory_Low;
+    config.backendConfig = &cpuBackendConfig;
+    runtime_manager_.reset(Executor::RuntimeManager::createRuntimeManager(config));
+    runtime_manager_->setHint(MNN::Interpreter::MEM_ALLOCATOR_TYPE, 0);
+    load_progress_ = 0.f;
+    printf("load tokenizer\n");
+    // 1. load vocab
+    tokenizer_->load(config_.tokenizer_file());
+    printf("load tokenizer Done\n");
+    {
+        std::ifstream embedding_bin(config_.embedding_file());
+        is_disk_embedding_ = embedding_bin.good();
+        MNN_PRINT("### disk embedding is %d\n", is_disk_embedding_);
+        embedding_bin.close();
+    }
+    // 2. load model
+    Module::Config module_config;
+    module_config.shapeMutable = true;
+    module_config.rearrange = true;
+
+    key_value_shape_.insert(key_value_shape_.begin(), layer_nums_);
+    modules_.resize(1);
+    std::string model_path = config_.llm_model();
+    std::string external_path = config_.llm_weight();
+    MNN_PRINT("load %s ... ", model_path.c_str());
+    runtime_manager_->setExternalFile(external_path);
+    modules_[0].reset(Module::load(
+            {"input_ids", "attention_mask", "position_ids", "past_key_values"},
+            {"token_id", "presents"}, model_path.c_str(), runtime_manager_, &module_config));
+    MNN_PRINT("Done!\n");
+    load_progress_ += 90.f;
 }
 
 void Llm::chat() {
@@ -231,103 +204,6 @@ void Llm::reset() {
     history_.clear();
 }
 
-void Llm::load(const std::string& model_dir) {
-    model_dir_ = model_dir;
-    // init
-    ScheduleConfig config;
-    BackendConfig cpuBackendConfig;
-    config.type          = static_cast<MNNForwardType>(backend_type_);;
-    config.numThread     = thread_num_;
-    if (low_precision_) {
-        cpuBackendConfig.precision = BackendConfig::Precision_Low;
-    }
-    cpuBackendConfig.memory = BackendConfig::Memory_Low;
-    config.backendConfig = &cpuBackendConfig;
-    runtime_manager_.reset(Executor::RuntimeManager::createRuntimeManager(config));
-    runtime_manager_->setHint(MNN::Interpreter::MEM_ALLOCATOR_TYPE, 0);
-    if (config.type == MNN_FORWARD_OPENCL) {
-        const char* cacheFileName = ".tempcache";
-        // runtime_manager_->setCache(cacheFileName);
-    }
-    load_progress_ = 0.f;
-    printf("load tokenizer\n");
-    // 1. load vocab
-    std::string tokenizer_path = model_dir + "/tokenizer.txt";
-    if (is_single_) {
-        size_t pos = model_dir.find_last_of("/\\");
-        std::string dir_path = (pos != std::string::npos) ? model_dir.substr(0, pos + 1) : "";
-        model_dir_ = dir_path;
-        tokenizer_path = dir_path + "/tokenizer.txt";
-    }
-    load_progress_ += 5.f;
-    tokenizer_->load(tokenizer_path);
-    load_progress_ += 5.f;
-    printf("load tokenizer Done\n");
-    {
-        disk_embedding_file_ = model_dir_ + "/embeddings_bf16.bin";
-        std::ifstream embedding_bin(disk_embedding_file_);
-        is_disk_embedding_ = embedding_bin.good();
-        MNN_PRINT("### disk embedding is %d\n", is_disk_embedding_);
-        embedding_bin.close();
-    }
-    // 2. load model
-    Module::Config module_config;
-    module_config.shapeMutable = true;
-    module_config.rearrange = true;
-    if (is_single_) {
-        key_value_shape_.insert(key_value_shape_.begin(), layer_nums_);
-        modules_.resize(1);
-        std::string model_path = model_dir;
-        std::string external_path = model_dir + ".weight";
-        MNN_PRINT("load %s ... ", model_path.c_str());
-        runtime_manager_->setExternalFile(external_path);
-        modules_[0].reset(Module::load(
-                {"input_ids", "attention_mask", "position_ids", "past_key_values"},
-                {"token_id", "presents"}, model_path.c_str(), runtime_manager_, &module_config));
-        MNN_PRINT("Done!\n");
-        load_progress_ += 90.f;
-    } else {
-        // 2. load models
-        modules_.resize(layer_nums_ + 2);
-        float step = 90.0 / modules_.size();
-        char buffer[50];
-        // load lm model
-        std::string lm_model_path = model_dir + "/lm.mnn";
-        MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, lm_model_path.c_str());
-        modules_[layer_nums_].reset(Module::load({}, {}, lm_model_path.c_str(), runtime_manager_, &module_config));
-        MNN_PRINT("Done!\n");
-        load_progress_ += step;
-        if (!is_disk_embedding_) {
-            std::string embedding_model_path = model_dir + "/embedding.mnn";
-            MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, embedding_model_path.c_str());fflush(stdout);
-            modules_[layer_nums_ + 1].reset(Module::load({}, {}, embedding_model_path.c_str(), runtime_manager_, &module_config));
-            MNN_PRINT("Done!\n");
-            load_progress_ += step;
-        }
-        if (is_visual_) {
-            std::string visual_model_path = model_dir + "/visual.mnn";
-            MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, visual_model_path.c_str());fflush(stdout);
-            module_config.rearrange = false;
-            visual_module_.reset(Module::load({}, {}, visual_model_path.c_str(), runtime_manager_, &module_config));
-            MNN_PRINT("Done!\n");
-            module_config.rearrange = true;
-        }
-        // load glm_block models
-        for (int i = 0; i < layer_nums_; i++) {
-            load_progress_ += step;
-            std::string model_path = model_dir + "/block_" + std::to_string(i) + ".mnn";
-            MNN_PRINT("[%3.0f%% ] load %s model ... ", load_progress_, model_path.c_str());
-            modules_[i].reset(Module::load(
-                {"inputs_embeds", "attention_mask", "position_ids", "past_key_values"},
-                {"hidden_states", "presents"}, model_path.c_str(), runtime_manager_, &module_config));
-            MNN_PRINT("Done!\n");
-        }
-    }
-    if (config.type == MNN_FORWARD_OPENCL) {
-        // warmup();
-    }
-}
-
 void Llm::warmup() {
     // warmup
     MNN_PRINT("### warmup ... ");
@@ -401,19 +277,20 @@ VARP Llm::txt_embedding(const std::vector<int>& input_ids) {
     }
     AUTOTIME;
     // disk embedding to save memory
+    int hidden_size = config_.hidden_size();
     int seq_len = static_cast<int>(input_ids.size());
     if (needNewVar(inputs_embeds_, 0, seq_len)) {
-        inputs_embeds_ = _Input({seq_len, 1, hidden_size_}, NCHW);
+        inputs_embeds_ = _Input({seq_len, 1, hidden_size}, NCHW);
     }
 
-    size_t size = hidden_size_ * sizeof(int16_t);
-    FILE* file = fopen(disk_embedding_file_.c_str(), "rb");
-    std::unique_ptr<int16_t[]> buffer(new int16_t[hidden_size_]);
+    size_t size = hidden_size * sizeof(int16_t);
+    FILE* file = fopen(config_.embedding_file().c_str(), "rb");
+    std::unique_ptr<int16_t[]> buffer(new int16_t[hidden_size]);
     for (size_t i = 0; i < seq_len; i++) {
         fseek(file, input_ids[i] * size, SEEK_SET);
         fread(buffer.get(), 1, size, file);
-        auto ptr = inputs_embeds_->writeMap<int16_t>() + i * hidden_size_ * 2;
-        for (int j = 0; j < hidden_size_; j++) {
+        auto ptr = inputs_embeds_->writeMap<int16_t>() + i * hidden_size * 2;
+        for (int j = 0; j < hidden_size; j++) {
             ptr[j * 2] = 0;
             ptr[j * 2 + 1] = buffer[j];
         }
@@ -444,6 +321,51 @@ std::string Llm::decode(int id) {
     return word;
 }
 
+// Llm
+std::vector<int> Llm::tokenizer(const std::string& query) {
+    auto ids = tokenizer_encode(query);
+    // auto prompt = "\n<|im_start|>user\n" + query + "<|im_end|>\n<|im_start|>assistant\n";
+    ids.insert(ids.begin(), {198, 151644, 872, 198});
+    ids.insert(ids.end(), {151645, 198, 151644, 77091, 198});
+    return ids;
+}
+
+VARP Llm::gen_attention_mask(int seq_len) {
+    if (needNewVar(attention_mask_, 2, seq_len)) {
+        attention_mask_ = _Input({1, 1, seq_len, seq_len}, NCHW, halide_type_of<int>());
+    } else {
+        return attention_mask_;
+    }
+    auto ptr = attention_mask_->writeMap<int>();
+    for (int i = 0; i < seq_len; i++) {
+        for (int j = 0; j < seq_len; j++) {
+            ptr[seq_len * i + j] = j <= i;
+        }
+    }
+    return attention_mask_;
+}
+
+VARP Llm::gen_position_ids(int seq_len) {
+    if (needNewVar(position_ids_, 0, seq_len) || 0) {
+        position_ids_ = _Input({seq_len}, NCHW, halide_type_of<int>());
+    }
+    auto ptr = position_ids_->writeMap<int>();
+    if (seq_len == 1) {
+        ptr[0] = all_seq_len_;
+    } else {
+        for (int i = 0; i < seq_len; i++) {
+            ptr[i] = i;
+        }
+    }
+    return position_ids_;
+}
+
+bool Llm::is_stop(int token_id) {
+    // <|endoftext|>  <|im_end|>
+    return token_id == 151643 || token_id == 151645;
+}
+
+#if 0
 // Chatglm_6b
 std::vector<int> Chatglm_6b::tokenizer(const std::string& query) {
     auto ids = tokenizer_encode(query);
@@ -832,6 +754,7 @@ std::vector<int> Llama3_8b::tokenizer(const std::string& query) {
 bool Llama3_8b::is_stop(int token_id) {
     return token_id == 128001 || token_id == 128009;
 }
+#endif
 // Llm end
 
 // Embedding start
@@ -1316,7 +1239,7 @@ Pipeline* Pipeline::load(const std::string& path) {
     }
     if (config.contains("llm")) {
         pipeline->llm_.reset(Llm::createLLM(config["llm"]));
-        pipeline->llm_->load(config["llm"]);
+        pipeline->llm_->load();
     }
     if (config.contains("embedding")) {
         pipeline->embedding_.reset(Embedding::createEmbedding(config["embedding"]));

@@ -78,6 +78,22 @@ static inline void to_lower_case(std::string& str) {
     }
 }
 
+Tokenizer* Tokenizer::createTokenizer(const std::string& type) {
+    if (type == "sentencepiece") {
+        return new Sentencepiece();
+    }
+    if (type == "tiktoken") {
+        return new Tiktoken();
+    }
+    if (type == "bert") {
+        return new BertTokenizer();
+    }
+    if (type == "huggingface") {
+        return new HuggingfaceTokenizer();
+    }
+    return nullptr;
+}
+
 bool Sentencepiece::load(const std::string& filename) {
     std::ifstream tok_file(filename);
     std::string line, token;

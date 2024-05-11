@@ -25,14 +25,12 @@ void benchmark(Llm* llm, std::string prompt_file) {
     int decode_len = 0;
     int64_t prefill_time = 0;
     int64_t decode_time = 0;
-    llm->warmup();
     for (int i = 0; i < prompts.size(); i++) {
         llm->response(prompts[i]);
         prompt_len += llm->prompt_len_;
         decode_len += llm->gen_seq_len_;
         prefill_time += llm->prefill_us_;
         decode_time += llm->decode_us_;
-        llm->reset();
     }
     float prefill_s = prefill_time / 1e6;
     float decode_s = decode_time / 1e6;

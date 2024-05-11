@@ -67,22 +67,24 @@ struct Prompt {
 class LlmConfig {
 public:
     LlmConfig() {}
-    LlmConfig(const std::string& dir) {
-        base_dir_ = dir + "/";
-        std::ifstream config_file(dir + "/config.json");
+    LlmConfig(const std::string& path) {
+        std::ifstream config_file(path);
         if (config_file.is_open()) {
             config_ = json::parse(config_file);
         } else {
-            std::cerr << "Unable to open config file: " << dir << std::endl;
+            std::cerr << "Unable to open config file: " << path << std::endl;
+        }
+        // get config base dir
+        size_t pos = path.find_last_of("/\\");
+        if (pos == std::string::npos) {
+            base_dir_ = "./";
+        } else {
+            base_dir_ = path.substr(0, pos + 1);
         }
     }
 
     std::string model_type() const {
         return config_.value("model_type", "unknow");
-    }
-
-    std::string tokenizer_type() const {
-        return config_.value("tokenizer_type", "tiktoken");
     }
 
     std::string llm_model() const {
@@ -93,6 +95,18 @@ public:
         return base_dir_ + config_.value("llm_weight", "llm.mnn.weight");
     }
 
+    std::string block_model(int index) const {
+        return base_dir_ + config_.value("block_model", "block_") + std::to_string(index) + ".mnn";
+    }
+
+    std::string lm_model() const {
+        return base_dir_ + config_.value("lm_model", "lm.mnn");
+    }
+
+    std::string embedding_model() const {
+        return base_dir_ + config_.value("embedding_model", "embedding.mnn");
+    }
+
     std::string embedding_file() const {
         return base_dir_ + config_.value("embedding_file", "embeddings_bf16.bin");
     }
@@ -101,16 +115,28 @@ public:
         return base_dir_ + config_.value("tokenizer_file", "tokenizer.txt");
     }
 
+    bool is_single() const {
+        return config_.value("is_single", true);
+    }
+
+    int max_new_tokens() const {
+        return config_.value("max_new_tokens", 512);
+    }
+
     int hidden_size() const {
         return config_.value("hidden_size", 4096);
+    }
+
+    int layer_nums() const {
+        return config_.value("layer_nums", 32);
     }
 
     std::vector<int> key_value_shape() const {
         return config_.value("key_value_shape", std::vector<int>{});
     }
 
-    std::vector<int> stop_ids() const {
-        return config_.value("stop_ids", std::vector<int>{});
+    std::string attention_mask() const {
+        return config_.value("attention_mask", "int");
     }
 
     std::string prompt_template() const {
@@ -139,38 +165,35 @@ private:
 
 class Llm {
 public:
-    Llm() {
-        // default tokenier is senrencepiece
-        tokenizer_.reset(new Sentencepiece);
-    }
+    Llm(std::shared_ptr<LlmConfig> config) : config_(config) {}
     virtual ~Llm() {
         modules_.clear();
         visual_module_.reset();
         runtime_manager_.reset();
     }
-    static Llm* createLLM(const std::string& path, std::string model_type = "auto");
+    static Llm* createLLM(const std::string& config_path);
     void load();
     void chat();
-    void warmup();
+    VARP forward(const std::vector<int>& input_ids);
+    int sample(VARP logits, const std::vector<int>& pre_ids);
+    std::string apply_chat_template(const std::string& input_str) const;
     std::string response(const std::string& input_str, std::ostream* os = &std::cout, const char* end_with = nullptr);
-    std::string response_nohistory(const std::string& input_str, std::ostream* os = &std::cout, const char* end_with = nullptr);
     void generate_init();
     std::string generate(const std::vector<int>& input_ids, std::ostream* os, const char* end_with);
-    std::vector<int> generate(const std::vector<int>& input_ids);
-    int forward(const std::vector<int>& input_ids);
-    float load_progress() { return load_progress_; }
-    void reset();
+    std::vector<int> generate(const std::vector<int>& input_ids, int max_new_tokens = -1);
     void print_speed();
     friend class Pipeline;
 public:
-    std::vector<int> history_;
+    // TODO
     std::string model_name_ = "";
+    bool is_single_ = true;
+    bool is_disk_embedding_ = true;
+    bool is_visual_ = false;
+    int layer_nums_ = 0;
+    int hidden_size_ = 4096;
     // config
     int max_new_tokens_ = 1024;
     int backend_type_ = 0;
-    int thread_num_ = 4;
-    bool low_precision_ = true;
-    bool chatml_ = true;
     // forward info
     int prompt_len_ = 0;
     int gen_seq_len_ = 0;
@@ -178,41 +201,27 @@ public:
     // time
     int64_t prefill_us_ = 0;
     int64_t decode_us_ = 0;
-    LlmConfig config_;
+    std::shared_ptr<LlmConfig> config_;
+    std::unique_ptr<Tokenizer> tokenizer_;
 protected:
     VARP embedding(const std::vector<int>& input_ids);
     VARP txt_embedding(const std::vector<int>& input_ids);
-    std::vector<int> tokenizer_encode(const std::string& input_str);
     std::string decode(int id);
 protected:
-    VARP inputs_embeds_, attention_mask_, position_ids_;
-    // model configs
-    bool is_single_ = true;
-    bool is_disk_embedding_ = true;
-    bool is_visual_ = false;
-    int layer_nums_ = 0;
-    int hidden_size_ = 4096;
     std::vector<int> key_value_shape_ = {};
-    // gen info
-    float load_progress_ = 0.f;
-    // tokenizer
-    std::unique_ptr<Tokenizer> tokenizer_;
+    VARP inputs_embeds_, attention_mask_, position_ids_;
     std::shared_ptr<Module> visual_module_;
-private:
-    virtual VARP visual_embedding(const std::vector<int>& input_ids) { return nullptr; }
-    virtual std::vector<int> tokenizer(const std::string& query);
-    virtual VARP gen_attention_mask(int seq_len);
-    virtual VARP gen_position_ids(int seq_len);
-    virtual bool is_stop(int token_id);
-private:
-    // MNN Modules
     std::shared_ptr<Executor::RuntimeManager> runtime_manager_;
     std::vector<std::shared_ptr<Module>> modules_;
     std::vector<VARP> past_key_values_;
-    // model dir
-    std::string model_dir_;
+private:
+    virtual VARP visual_embedding(const std::vector<int>& input_ids) { return nullptr; }
+    virtual VARP gen_attention_mask(int seq_len);
+    virtual VARP gen_position_ids(int seq_len);
+    virtual bool is_stop(int token_id);
 };
 
+#if 0
 // some llm models
 class Chatglm_6b : public Llm {
 public:
@@ -222,27 +231,12 @@ public:
         key_value_shape_ = {2, 0, 1, 32, 128};
     }
 private:
-    virtual std::vector<int> tokenizer(const std::string& query) override;
     virtual VARP gen_attention_mask(int seq_len) override;
     virtual VARP gen_position_ids(int seq_len) override;
     virtual bool is_stop(int token_id) override;
     int context_len_ = 0;
 };
-
-class Chatglm2_6b : public Llm {
-public:
-    Chatglm2_6b() {
-        model_name_ = "Chatglm2_6b";
-        layer_nums_ = 28;
-        key_value_shape_ = {2, 0, 1, 2, 128};
-    }
-private:
-    virtual std::vector<int> tokenizer(const std::string& query) override;
-    virtual VARP gen_attention_mask(int seq_len) override;
-    virtual VARP gen_position_ids(int seq_len) override;
-    virtual bool is_stop(int token_id) override;
-};
-
+/*
 class Phi_2 : public Chatglm2_6b {
 public:
     Phi_2() {
@@ -256,24 +250,9 @@ private:
     virtual std::vector<int> tokenizer(const std::string& query) override;
     virtual bool is_stop(int token_id) override;
 };
+*/
 
-class Qwen_7b : public Llm {
-public:
-    Qwen_7b() {
-        model_name_ = "Qwen_7b";
-        layer_nums_ = 32;
-        key_value_shape_ = {2, 1, 0, 32, 128};
-        hidden_size_ = 4096;
-        tokenizer_.reset(new Tiktoken);
-    }
-private:
-    virtual std::vector<int> tokenizer(const std::string& query) override;
-    virtual VARP gen_attention_mask(int seq_len) override;
-    virtual VARP gen_position_ids(int seq_len) override;
-    virtual bool is_stop(int token_id) override;
-};
-
-class Qwen_vl : public Qwen_7b {
+class Qwen_vl : public Llm {
 public:
     Qwen_vl() {
         model_name_ = "Qwen_vl";
@@ -292,19 +271,7 @@ private:
 private:
     std::vector<int> url_encode(const std::string& url);
     virtual VARP visual_embedding(const std::vector<int>& input_ids) override;
-    virtual std::vector<int> tokenizer(const std::string& query) override;
     virtual VARP gen_attention_mask(int seq_len) override;
-};
-
-class Qwen_1_8b : public Qwen_7b {
-public:
-    Qwen_1_8b() {
-        model_name_ = "Qwen_1.8b";
-        layer_nums_ = 24;
-        key_value_shape_ = {2, 1, 0, 16, 128};
-        hidden_size_ = 2048;
-        tokenizer_.reset(new Tiktoken);
-    }
 };
 
 class Llama2_7b : public Llm {
@@ -315,72 +282,9 @@ public:
         key_value_shape_ = {2, 1, 32, 0, 128};
     }
 private:
-    virtual std::vector<int> tokenizer(const std::string& query) override;
     virtual VARP gen_attention_mask(int seq_len) override;
     virtual VARP gen_position_ids(int seq_len) override;
     virtual bool is_stop(int token_id) override;
-};
-
-class Qwen2 : public Llama2_7b {
-public:
-    Qwen2() {
-        model_name_ = "Qwen2";
-        tokenizer_.reset(new HuggingfaceTokenizer);
-    }
-private:
-    virtual std::vector<int> tokenizer(const std::string& query) override;
-    virtual bool is_stop(int token_id) override;
-};
-
-class Qwen2_0_5b : public Qwen2 {
-public:
-    Qwen2_0_5b() {
-        model_name_ = "Qwen2_0.5b";
-        layer_nums_ = 24;
-        key_value_shape_ = {2, 1, 16, 0, 64};
-        hidden_size_ = 1024;
-    }
-};
-
-class Qwen2_1_8b : public Qwen2 {
-public:
-    Qwen2_1_8b() {
-        model_name_ = "Qwen2_1.8b";
-        layer_nums_ = 24;
-        key_value_shape_ = {2, 1, 16, 0, 128};
-        hidden_size_ = 2048;
-    }
-};
-
-class Qwen2_4b : public Qwen2 {
-public:
-    Qwen2_4b() {
-        model_name_ = "Qwen2_4b";
-        layer_nums_ = 40;
-        key_value_shape_ = {2, 1, 20, 0, 128};
-        hidden_size_ = 2560;
-    }
-};
-
-class Qwen2_7b : public Qwen2 {
-public:
-    Qwen2_7b() {
-        model_name_ = "Qwen2_7b";
-        layer_nums_ = 32;
-        key_value_shape_ = {2, 1, 32, 0, 128};
-        hidden_size_ = 4096;
-    }
-};
-
-class TinyLlama : public Llama2_7b {
-public:
-    TinyLlama() {
-        model_name_ = "TinyLlama";
-        layer_nums_ = 22;
-        key_value_shape_ = {2, 1, 4, 0, 64};
-    }
-private:
-    virtual std::vector<int> tokenizer(const std::string& query) override;
 };
 
 class Yi_6b : public Llama2_7b {
@@ -390,22 +294,9 @@ public:
         key_value_shape_ = {2, 1, 4, 0, 128};
     }
 private:
-    virtual std::vector<int> tokenizer(const std::string& query) override;
     virtual bool is_stop(int token_id) override;
 };
-
-class Llama3_8b : public Llama2_7b {
-public:
-    Llama3_8b() {
-        model_name_ = "Llama3_8b";
-        layer_nums_ = 32;
-        key_value_shape_ = {2, 1, 8, 0, 128};
-        hidden_size_ = 4096;
-    }
-private:
-    virtual std::vector<int> tokenizer(const std::string& query) override;
-    virtual bool is_stop(int token_id) override;
-};
+#endif
 // Llm end
 
 // Embedding start
@@ -429,8 +320,6 @@ public:
     // time
     int64_t embedding_us_ = 0;
     int prompt_len_ = 0;
-protected:
-    std::vector<int> tokenizer_encode(const std::string& input_str);
 protected:
     // model configs
     int layer_nums_ = 0;

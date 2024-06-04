@@ -20,7 +20,7 @@ int main(int argc, const char* argv[]) {
     std::string web_dir = argv[2];
     std::cout << "model path is " << model_dir << std::endl;
     std::unique_ptr<Llm> llm(Llm::createLLM(model_dir));
-    llm->load(model_dir);
+    llm->load();
     
     std::stringstream ss;
     httplib::Server svr;

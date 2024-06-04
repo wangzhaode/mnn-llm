@@ -19,20 +19,23 @@ void benchmark(Llm* llm, std::string prompt_file) {
         if (prompt.substr(0, 1) == "#") {
             continue;
         }
+        std::string::size_type pos = 0;
+        while ((pos = prompt.find("\\n", pos)) != std::string::npos) {
+            prompt.replace(pos, 2, "\n");
+            pos += 1;
+        }
         prompts.push_back(prompt);
     }
     int prompt_len = 0;
     int decode_len = 0;
     int64_t prefill_time = 0;
     int64_t decode_time = 0;
-    llm->warmup();
     for (int i = 0; i < prompts.size(); i++) {
         llm->response(prompts[i]);
         prompt_len += llm->prompt_len_;
         decode_len += llm->gen_seq_len_;
         prefill_time += llm->prefill_us_;
         decode_time += llm->decode_us_;
-        llm->reset();
     }
     float prefill_s = prefill_time / 1e6;
     float decode_s = decode_time / 1e6;
@@ -54,7 +57,7 @@ int main(int argc, const char* argv[]) {
     std::string model_dir = argv[1];
     std::cout << "model path is " << model_dir << std::endl;
     std::unique_ptr<Llm> llm(Llm::createLLM(model_dir));
-    llm->load(model_dir);
+    llm->load();
     if (argc < 3) {
         llm->chat();
     }

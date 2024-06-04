@@ -6,27 +6,41 @@
 //
 
 #include "tokenizer.hpp"
+#include <fstream>
 
 int main(int argc, const char* argv[]) {
     if (argc < 2) {
-        std::cout << "Usage: " << argv[0] << " tokenizer.txt" << std::endl;
+        std::cout << "Usage: " << argv[0] << " tokenizer.txt prompt.txt" << std::endl;
         return 0;
     }
     std::string tokenizer_path = argv[1];
-    std::unique_ptr<Tokenizer> tokenizer_(new Tiktoken);
-    tokenizer_->load(tokenizer_path);
-    const std::string system_str = "Youare a helpful assistant.";
-    const std::string user_str = "<|endoftext|>";
-    // const std::string query = "\n<|im_start|>system\n" + system_str + "<|im_end|>\n<|im_start|>\n" + user_str + "<|im_end|>\n<|im_start|>assistant\n";
-    const std::string query = system_str + "\n" + user_str;
-    auto tokens = tokenizer_->encode(query);
+    std::string prompt_file = argv[2];
+    std::unique_ptr<Tokenizer> tokenizer(Tokenizer::createTokenizer(tokenizer_path));
 
-    std::string decode_str;
-    printf("encode tokens = [ ");
-    for (auto token : tokens) {
-        decode_str += tokenizer_->decode(token);
+    std::ifstream prompt_fs(prompt_file);
+    std::vector<std::string> prompts;
+    std::string prompt;
+    while (std::getline(prompt_fs, prompt)) {
+        // prompt start with '#' will be ignored
+        if (prompt.substr(0, 1) == "#") {
+            continue;
+        }
+        std::string::size_type pos = 0;
+        while ((pos = prompt.find("\\n", pos)) != std::string::npos) {
+            prompt.replace(pos, 2, "\n");
+            pos += 1;
+        }
+        const std::string query = "\n<|im_start|>user\n" + prompt + "<|im_end|>\n<|im_start|>assistant\n";
+        std::cout << query;
+        auto tokens = tokenizer->encode(query);
+        std::string decode_str;
+        printf("encode tokens = [ ");
+        for (auto token : tokens) {
+            printf("%d, ", token);
+            decode_str += tokenizer->decode(token);
+        }
+        printf("]\n");
+        printf("decode str = %s\n", decode_str.c_str());
     }
-    printf("]\n");
-    printf("decode str = %s\n", decode_str.c_str());
     return 0;
 }

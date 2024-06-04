@@ -19,6 +19,11 @@ void benchmark(Llm* llm, std::string prompt_file) {
         if (prompt.substr(0, 1) == "#") {
             continue;
         }
+        std::string::size_type pos = 0;
+        while ((pos = prompt.find("\\n", pos)) != std::string::npos) {
+            prompt.replace(pos, 2, "\n");
+            pos += 1;
+        }
         prompts.push_back(prompt);
     }
     int prompt_len = 0;

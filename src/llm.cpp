@@ -24,7 +24,12 @@
 // Llm start
 Llm* Llm::createLLM(const std::string& config_path) {
     std::shared_ptr<LlmConfig> config(new LlmConfig(config_path));
-    Llm* llm = new Llm(config);
+    Llm* llm = nullptr;
+    if (config->is_visual()) {
+        llm = new Lvlm(config);
+    } else {
+        llm = new Llm(config);
+    }
     return llm;
 }
 
@@ -99,25 +104,25 @@ VARP Llm::forward(const std::vector<int>& input_ids) {
         if (is_disk_embedding_) {
             hidden_states = embedding(input_ids);
         }
-        auto dump_fp = [](VARP var) {
+        auto dump_fp = [](VARP var, const char* name) {
             auto ptr = var->readMap<float>();
             auto size = var->getInfo()->size;
-            printf("data = [");
+            printf("%s = [", name);
             for (int i = 0; i < 5; i++) printf("%f, ", ptr[i]);
             printf(" ..., ");
             for (int i = size - 5; i < size; i++) printf("%f, ", ptr[i]);
             printf("]\n");
         };
-        auto dump_int = [](VARP var) {
+        auto dump_int = [](VARP var, const char* name) {
             auto ptr = var->readMap<int>();
             auto size = var->getInfo()->size;
-            printf("data = [");
+            printf("%s = [", name);
             for (int i = 0; i < size; i++) printf("%d, ", ptr[i]);
             printf("]\n");
         };
-        // dump_fp(hidden_states);
-        // dump_int(attention_mask);
-        // dump_int(position_ids);
+        // dump_fp(hidden_states, "hidden_states");
+        // dump_fp(attention_mask, "attention_mask");
+        // dump_int(position_ids, "position_ids");
         auto outputs = modules_.back()->onForward({hidden_states, attention_mask, position_ids, past_key_values_[0]});
         ExecutorScope::Current()->gc(Executor::FULL);
         logits = outputs[0];
@@ -264,11 +269,16 @@ std::string Llm::generate(const std::vector<int>& input_ids, std::ostream* os, c
     return output_str;
 }
 
+std::vector<int> Llm::tokenizer(const std::string& query) {
+    auto prompt = apply_chat_template(query);
+    auto input_ids = tokenizer_->encode(prompt);
+    return input_ids;
+}
+
 std::string Llm::response(const std::string& query, std::ostream* os, const char* end_with) {
     generate_init();
     if (!end_with) { end_with = "\n"; }
-    auto prompt = apply_chat_template(query);
-    auto input_ids = tokenizer_->encode(prompt);
+    auto input_ids = tokenizer(query);
     return generate(input_ids, os, end_with);
 }
 
@@ -300,7 +310,7 @@ static inline bool needNewVar(VARP var, int axis, int seq_len) {
     return false;
 }
 
-VARP Llm::txt_embedding(const std::vector<int>& input_ids) {
+VARP Llm::embedding(const std::vector<int>& input_ids) {
     if (!is_disk_embedding_) {
         // using model forward
         auto inputs_ids_ = _Const(input_ids.data(), {static_cast<int>(input_ids.size())}, NCHW, halide_type_of<int>());
@@ -329,13 +339,6 @@ VARP Llm::txt_embedding(const std::vector<int>& input_ids) {
     }
     fclose(file);
     return inputs_embeds_;
-}
-
-VARP Llm::embedding(const std::vector<int>& input_ids) {
-    if (is_visual_ && !gen_seq_len_) {
-        return visual_embedding(input_ids);
-    }
-    return txt_embedding(input_ids);
 }
 
 std::string Llm::decode(int id) {
@@ -431,20 +434,48 @@ bool Llm::is_stop(int token_id) {
     return tokenizer_->is_stop(token_id);
 }
 
-#if 0
+void Lvlm::load() {
+    Llm::load();
+    Module::Config module_config;
+    module_config.shapeMutable = true;
+    module_config.rearrange = false;
+    visual_module_.reset(Module::load({}, {}, config_->visual_model().c_str(), runtime_manager_, &module_config));
+}
 
-// Qwen_vl
-std::vector<int> Qwen_vl::url_encode(const std::string& url) {
-    std::vector<int> ascii_values(imgpad_len_, img_pad_);
+std::vector<int> Lvlm::url_encode(const std::string& url) {
+    std::vector<int> ascii_values(imgpad_len_ + 2, img_pad_);
     ascii_values[0] = img_start_;
-    ascii_values[imgpad_len_ - 1] = img_end_;
+    ascii_values[imgpad_len_ + 1] = img_end_;
     for (int i = 0; i < url.size(); i++) {
         ascii_values[i + 1] = static_cast<int>(url[i]);
     }
     return ascii_values;
 }
 
-VARP Qwen_vl::visual_embedding(const std::vector<int>& input_ids) {
+std::vector<int> Lvlm::tokenizer(const std::string& query) {
+    auto prompt = apply_chat_template(query);
+    // split query
+    std::regex img_regex("<img>(.*?)</img>");
+    std::string::const_iterator searchStart(prompt.cbegin());
+    std::smatch match;
+    std::vector<std::string> img_info, txt_info;
+    std::vector<int> ids {};
+    while (std::regex_search(searchStart, prompt.cend(), match, img_regex)) {
+        std::cout << match[1].str() << std::endl;
+        auto txt_ids = tokenizer_->encode(match.prefix().str());
+        ids.insert(ids.end(), txt_ids.begin(), txt_ids.end());
+        auto img_ids = url_encode(match[1].str());
+        ids.insert(ids.end(), img_ids.begin(), img_ids.end());
+        searchStart = match.suffix().first;
+    }
+    if (searchStart != prompt.cend()) {
+        auto txt_ids = tokenizer_->encode(std::string(searchStart, prompt.cend()));
+        ids.insert(ids.end(), txt_ids.begin(), txt_ids.end());
+    }
+    return ids;
+}
+
+VARP Lvlm::embedding(const std::vector<int>& input_ids) {
 #ifdef USING_VISUAL_MODEL
     int start_pos = 0, pad_pos = 0, end_pos = 0;
     for (int i = 0; i < input_ids.size(); i++) {
@@ -460,11 +491,11 @@ VARP Qwen_vl::visual_embedding(const std::vector<int>& input_ids) {
         }
     }
     if (!start_pos) {
-        return txt_embedding(input_ids);
+        return Llm::embedding(input_ids);
     }
-    std::vector<int> prefix(input_ids.begin(), input_ids.begin() + start_pos);
+    std::vector<int> prefix(input_ids.begin(), input_ids.begin() + start_pos + 1);
     std::vector<int> img_ascii(input_ids.begin() + start_pos + 1, input_ids.begin() + pad_pos);
-    std::vector<int> suffix(input_ids.begin() + end_pos + 1, input_ids.end());
+    std::vector<int> suffix(input_ids.begin() + end_pos, input_ids.end());
     std::string img_path;
     for (auto ascii_val : img_ascii) {
         img_path += static_cast<char>(ascii_val);
@@ -506,59 +537,14 @@ VARP Qwen_vl::visual_embedding(const std::vector<int>& input_ids) {
     image = MNN::Express::_Convert(image, NC4HW4);
     auto image_embedding = visual_module_->forward(image);
     image_embedding = MNN::Express::_Permute(image_embedding, {1, 0, 2});
-    auto prefix_embedding = txt_embedding(prefix);
-    auto suffix_embedding = txt_embedding(suffix);
+    auto prefix_embedding = Llm::embedding(prefix);
+    auto suffix_embedding = Llm::embedding(suffix);
     auto embeddings = MNN::Express::_Concat({prefix_embedding, image_embedding, suffix_embedding}, 0);
 #else
-    auto embeddings = txt_embedding(input_ids);
+    auto embeddings = Llm::embedding(input_ids);
 #endif
     return embeddings;
 }
-
-std::vector<int> Qwen_vl::tokenizer(const std::string& query) {
-    // split query
-    std::regex img_regex("<img>(.*?)</img>");
-    std::string::const_iterator searchStart(query.cbegin());
-    std::smatch match;
-    std::vector<std::string> img_info, txt_info;
-    std::vector<int> ids {};
-    while (std::regex_search(searchStart, query.cend(), match, img_regex)) {
-        auto txt_ids = tokenizer_encode(match.prefix().str());
-        ids.insert(ids.end(), txt_ids.begin(), txt_ids.end());
-        auto img_ids = url_encode(match[1].str());
-        ids.insert(ids.end(), img_ids.begin(), img_ids.end());
-        searchStart = match.suffix().first;
-    }
-    if (searchStart != query.cend()) {
-        auto txt_ids = tokenizer_encode(std::string(searchStart, query.cend()));
-        ids.insert(ids.end(), txt_ids.begin(), txt_ids.end());
-    }
-    // auto prompt = "\n<|im_start|>user\n" + query + "<|im_end|>\n<|im_start|>assistant\n";
-    ids.insert(ids.begin(), {198, 151644, 872, 198});
-    ids.insert(ids.end(), {151645, 198, 151644, 77091, 198});
-    return ids;
-}
-
-VARP Qwen_vl::gen_attention_mask(int seq_len) {
-    if (seq_len == 1) {
-        auto attention_mask = _Input({1, 1, 1, all_seq_len_ + 1}, NCHW, halide_type_of<float>());
-        auto ptr = attention_mask->writeMap<float>();
-        for (int i = 0; i < all_seq_len_ + 1; i++) {
-            ptr[i] = 0;
-        }
-        return attention_mask;
-    } else {
-        auto attention_mask = _Input({1, 1, seq_len, seq_len}, NCHW, halide_type_of<float>());
-        auto ptr = attention_mask->writeMap<float>();
-        for (int i = 0; i < seq_len; i++) {
-            for (int j = 0; j < seq_len; j++) {
-                ptr[seq_len * i + j] = (j > i) * std::numeric_limits<float>::lowest();
-            }
-        }
-        return attention_mask;
-    }
-}
-#endif
 // Llm end
 
 // Embedding start

@@ -177,9 +177,9 @@ public:
         modules_.clear();
         runtime_manager_.reset();
     }
+    void chat();
     static Llm* createLLM(const std::string& config_path);
     virtual void load();
-    void chat();
     VARP forward(const std::vector<int>& input_ids);
     int sample(VARP logits, const std::vector<int>& pre_ids);
     std::string apply_chat_template(const std::string& input_str) const;
@@ -190,16 +190,6 @@ public:
     void print_speed();
     friend class Pipeline;
 public:
-    // TODO
-    std::string model_name_ = "";
-    bool is_single_ = true;
-    bool is_disk_embedding_ = true;
-    bool is_visual_ = false;
-    int layer_nums_ = 0;
-    int hidden_size_ = 4096;
-    // config
-    int max_new_tokens_ = 1024;
-    int backend_type_ = 0;
     // forward info
     int prompt_len_ = 0;
     int gen_seq_len_ = 0;
@@ -207,18 +197,19 @@ public:
     // time
     int64_t prefill_us_ = 0;
     int64_t decode_us_ = 0;
+    bool is_single_ = true;
+    bool is_disk_embedding_ = true;
     std::shared_ptr<LlmConfig> config_;
     std::unique_ptr<Tokenizer> tokenizer_;
 protected:
-    std::string decode(int id);
-    bool is_stop(int token_id);
-protected:
     std::vector<int> key_value_shape_ = {};
+    std::vector<VARP> past_key_values_;
     VARP inputs_embeds_, attention_mask_, position_ids_;
     std::shared_ptr<Executor::RuntimeManager> runtime_manager_;
     std::vector<std::shared_ptr<Module>> modules_;
-    std::vector<VARP> past_key_values_;
-protected:
+    void init_runtime();
+    std::string decode(int id);
+    bool is_stop(int token_id);
     virtual std::vector<int> tokenizer(const std::string& query);
     virtual VARP embedding(const std::vector<int>& input_ids);
     virtual VARP gen_attention_mask(int seq_len);
@@ -247,53 +238,14 @@ private:
 // Llm end
 
 // Embedding start
-class Embedding {
+class Embedding : public Llm {
 public:
-    Embedding() {
-        // default tokenier is Bert
-        tokenizer_.reset(new BertTokenizer);
-    }
-    virtual ~Embedding() {
-        module_.reset();
-        runtime_manager_.reset();
-    }
-    static Embedding* createEmbedding(const std::string& path, std::string model_type = "auto");
+    Embedding(std::shared_ptr<LlmConfig> config) : Llm(config) {}
+    static Embedding* createEmbedding(const std::string& config_path);
     static float dist(VARP var0, VARP var1);
-    void load(const std::string& model_dir);
+    virtual void load() override;
     VARP embedding(const std::string& txt);
-    void print_speed();
-    int dim() { return hidden_size_; }
-public:
-    // time
-    int64_t embedding_us_ = 0;
-    int prompt_len_ = 0;
-protected:
-    // model configs
-    int layer_nums_ = 0;
-    int hidden_size_ = 1024;
-    std::string model_name_ = "";
-    // tokenizer
-    std::unique_ptr<Tokenizer> tokenizer_;
-private:
-    virtual std::vector<int> tokenizer(const std::string& query) = 0;
-    virtual VARP gen_attention_mask(int seq_len) = 0;
-    virtual VARP gen_position_ids(int seq_len) = 0;
-private:
-    // MNN Modules
-    std::shared_ptr<Executor::RuntimeManager> runtime_manager_;
-    std::shared_ptr<Module> module_;
-    // model dir
-    std::string model_dir_;
-};
-
-// some embedding models
-class Bge : public Embedding {
-public:
-    Bge() {
-        model_name_ = "Bge";
-        layer_nums_ = 24;
-        hidden_size_ = 1024;
-    }
+    int dim() { return config_->hidden_size(); }
 private:
     virtual std::vector<int> tokenizer(const std::string& query) override;
     virtual VARP gen_attention_mask(int seq_len) override;

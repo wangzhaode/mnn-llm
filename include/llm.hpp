@@ -64,29 +64,71 @@ struct Prompt {
     std::vector<int> tokens;
 };
 
+static inline bool has_suffix(const std::string& str, const std::string& suffix) {
+    return str.size() >= suffix.size() &&
+           str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+static inline std::string base_dir(const std::string& path) {
+    size_t pos = path.find_last_of("/\\");
+    if (pos == std::string::npos) {
+        return "./";
+    } else {
+        return path.substr(0, pos + 1);
+    }
+}
+
+static inline std::string file_name(const std::string& path) {
+    size_t pos = path.find_last_of("/\\");
+    if (pos == std::string::npos) {
+        return path;
+    } else {
+        return path.substr(pos + 1);
+    }
+}
+
 class LlmConfig {
 public:
     std::string base_dir_;
-    json config_;
+    json config_, llm_config_;
     LlmConfig() {}
     LlmConfig(const std::string& path) {
-        std::ifstream config_file(path);
-        if (config_file.is_open()) {
-            config_ = json::parse(config_file);
+        // load config
+        if (has_suffix(path, ".json")) {
+            printf("### .json : %s\n", path.c_str());
+            std::ifstream config_file(path);
+            if (config_file.is_open()) {
+                config_ = json::parse(config_file);
+            } else {
+                std::cerr << "Unable to open config file: " << path << std::endl;
+            }
+            base_dir_ = base_dir(path);
         } else {
-            std::cerr << "Unable to open config file: " << path << std::endl;
+            // compatibility with the original usage
+            if (has_suffix(path, ".mnn")) {
+                auto model_name = file_name(path);
+                config_ = {
+                    {"llm_model", model_name},
+                    {"llm_weight", model_name + ".weight"}
+                };
+                base_dir_ = base_dir(path);
+            } else {
+                config_ = {};
+                base_dir_ = path;
+            }
         }
-        // get config base dir
-        size_t pos = path.find_last_of("/\\");
-        if (pos == std::string::npos) {
-            base_dir_ = "./";
+        // load llm_config for model info
+        std::ifstream llm_config_file(llm_config());
+        if (llm_config_file.is_open()) {
+            llm_config_ = json::parse(llm_config_file);
         } else {
-            base_dir_ = path.substr(0, pos + 1);
+            std::cerr << "Unable to open llm_config file: " << llm_config() << std::endl;
         }
     }
 
-    std::string model_type() const {
-        return config_.value("model_type", "unknow");
+    // < model file config start
+    std::string llm_config() const {
+        return base_dir_ + config_.value("llm_config", "llm_config.json");
     }
 
     std::string llm_model() const {
@@ -120,39 +162,15 @@ public:
     std::string visual_model() const {
         return base_dir_ + config_.value("visual_model", "visual.mnn");
     }
+    // model file config end >
 
-    bool is_single() const {
-        return config_.value("is_single", true);
-    }
-
-    bool is_visual() const {
-        return config_.value("is_visual", false);
-    }
-
+    // < generate config start
     int max_new_tokens() const {
         return config_.value("max_new_tokens", 512);
     }
+    // generate config end >
 
-    int hidden_size() const {
-        return config_.value("hidden_size", 4096);
-    }
-
-    int layer_nums() const {
-        return config_.value("layer_nums", 32);
-    }
-
-    std::vector<int> key_value_shape() const {
-        return config_.value("key_value_shape", std::vector<int>{});
-    }
-
-    std::string attention_mask() const {
-        return config_.value("attention_mask", "int");
-    }
-
-    std::string prompt_template() const {
-        return config_.value("prompt_template", "");
-    }
-
+    // < backend config start
     std::string backend_type() const {
         return config_.value("backend_type", "cpu");
     }
@@ -168,6 +186,37 @@ public:
     std::string memory() const {
         return config_.value("memory", "low");
     }
+    // backend config end >
+
+    // < llm model config start
+    bool is_single() const {
+        return llm_config_.value("is_single", true);
+    }
+
+    bool is_visual() const {
+        return llm_config_.value("is_visual", false);
+    }
+
+    int hidden_size() const {
+        return llm_config_.value("hidden_size", 4096);
+    }
+
+    int layer_nums() const {
+        return llm_config_.value("layer_nums", 32);
+    }
+
+    std::vector<int> key_value_shape() const {
+        return llm_config_.value("key_value_shape", std::vector<int>{});
+    }
+
+    std::string attention_mask() const {
+        return llm_config_.value("attention_mask", "int");
+    }
+
+    std::string prompt_template() const {
+        return llm_config_.value("prompt_template", "");
+    }
+    // llm model config end >
 };
 
 class Llm {
@@ -251,7 +300,6 @@ private:
     virtual VARP gen_attention_mask(int seq_len) override;
     virtual VARP gen_position_ids(int seq_len) override;
 };
-
 // Embedding end
 
 // TextVectorStore strat

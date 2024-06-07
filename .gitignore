@@ -1,15 +1,9 @@
 # ignore dirs
 build/
-MNN/
 .vscode/
 .cached/
 .cache/
 libs/
-include/MNN
-resource/models/fp16/
-resource/models/int8/
-resource/models/int4/
-src/chat
 Debug/
 Release
 include/pthread.h

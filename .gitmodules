@@ -1,0 +1,5 @@
+[submodule "MNN"]
+	path = MNN
+	url = https://github.com/alibaba/MNN.git
+        shallow = true
+

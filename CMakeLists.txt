@@ -17,19 +17,33 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
 
-# include dir
-include_directories(${CMAKE_CURRENT_LIST_DIR}/include/)
+# compile MNN first
+set(MNN_LOW_MEMORY ON CACHE BOOL "Open MNN_LOW_MEMORY" FORCE)
+set(MNN_SUPPORT_TRANSFORMER_FUSE ON CACHE BOOL "Open MNN_SUPPORT_TRANSFORMER_FUSE" FORCE)
+if (BUILD_FOR_ANDROID)
+    set(MNN_ARM82 ON CACHE BOOL "Open MNN_ARM82" FORCE)
+endif()
+if (USING_VISUAL_MODEL)
+    set(MNN_BUILD_OPENCV ON CACHE BOOL "Open MNN_BUILD_OPENCV" FORCE)
+    set(MNN_IMGCODECS ON CACHE BOOL "Open MNN_IMGCODECS" FORCE)
+endif()
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/MNN)
 
-# libs dir
-link_directories(${CMAKE_CURRENT_LIST_DIR}/libs)
+# include dir
+include_directories(${CMAKE_CURRENT_LIST_DIR}/include/
+                    ${CMAKE_CURRENT_LIST_DIR}/MNN/include/
+                    ${CMAKE_CURRENT_LIST_DIR}/MNN/tools/cv/include/cv/
+                    )
 
 # source files
 FILE(GLOB SRCS ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
 if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+    add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
     # compile static lib, surrpot Winwows
     add_library(llm STATIC ${SRCS})
+    link_directories(${CMAKE_BINARY_DIR}/MNN/Release)
     target_link_libraries(llm MNN.lib)
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
@@ -53,8 +67,8 @@ add_executable(knowledge_demo ${CMAKE_CURRENT_LIST_DIR}/demo/knowledge_demo.cpp)
 add_executable(pipeline_demo ${CMAKE_CURRENT_LIST_DIR}/demo/pipeline_demo.cpp)
 
 if (BUILD_FOR_ANDROID)
-    add_library(MNN SHARED IMPORTED)
-    add_library(MNN_Express SHARED IMPORTED)
+    # add_library(MNN SHARED IMPORTED)
+    # add_library(MNN_Express SHARED IMPORTED)
     set_target_properties(
         MNN
         PROPERTIES IMPORTED_LOCATION
@@ -86,8 +100,12 @@ else()
     add_executable(web_demo ${CMAKE_CURRENT_LIST_DIR}/demo/web_demo.cpp)
     if (MSVC)
         target_link_libraries(web_demo llm pthreadVC2)
-        # copy all lib to target dir
-        file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/libs/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Debug/)
+        add_custom_command(
+            TARGET cli_demo POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${CMAKE_SOURCE_DIR}/build/MNN/Release/MNN.dll
+                $<TARGET_FILE_DIR:cli_demo>
+        )
     else()
         target_link_libraries(web_demo llm pthread)
     endif()

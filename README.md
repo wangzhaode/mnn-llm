@@ -15,154 +15,88 @@
 - [python](./python): 基于`pymnn`实现的纯python推理代码；
 - [other](./demo): 新增文本embedding，向量查询，文本解析，记忆库与知识库能力🔥；
 
-## 模型支持
+## 模型导出与下载
 
 llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wangzhaode/llm-export)
 
-当前支持以下模型：
+`modelscope`模型下载：
 
-| model | onnx-fp32 | mnn-quant |
-|-------|-----------|-----------|
-| chatglm-6b | [![Download][download-chatglm-6b-onnx]][release-chatglm-6b-onnx] | [![Download][download-chatglm-6b-mnn]][release-chatglm-6b-mnn] |
-| chatglm2-6b | [![Download][download-chatglm2-6b-onnx]][release-chatglm2-6b-onnx] | [![Download][download-chatglm2-6b-mnn]][release-chatglm2-6b-mnn] |
-| chatglm3-6b | [![Download][download-chatglm3-6b-onnx]][release-chatglm3-6b-onnx] | [![Download][download-chatglm3-6b-mnn]][release-chatglm3-6b-mnn] |
-| codegeex2-6b | [![Download][download-codegeex2-6b-onnx]][release-codegeex2-6b-onnx] | [![Download][download-codegeex2-6b-mnn]][release-codegeex2-6b-mnn] |
-| Qwen-7B-Chat | [![Download][download-qwen-7b-chat-onnx]][release-qwen-7b-chat-onnx] | [![Download][download-qwen-7b-chat-mnn]][release-qwen-7b-chat-mnn] |
-| Baichuan2-7B-Chat | [![Download][download-baichuan2-7b-chat-onnx]][release-baichuan2-7b-chat-onnx] | [![Download][download-baichuan2-7b-chat-mnn]][release-baichuan2-7b-chat-mnn] |
-| Llama-2-7b-chat | [![Download][download-llama2-7b-chat-onnx]][release-llama2-7b-chat-onnx] | [![Download][download-llama2-7b-chat-mnn]][release-llama2-7b-chat-mnn] |
-| Llama-3-8B-Instruct | [![Download][download-llama3-8b-instruct-onnx]][release-llama3-8b-instruct-onnx] | [![Download][download-llama3-8b-instruct-mnn]][release-llama3-8b-instruct-mnn] |
-| internlm-chat-7b | [![Download][download-internlm-7b-onnx]][release-internlm-7b-onnx] | [![Download][download-internlm-chat-7b-mnn]][release-internlm-chat-7b-mnn] |
-| Yi-6B-Chat | [![Download][download-yi-6b-chat-onnx]][release-yi-6b-chat-onnx] | [![Download][download-yi-6b-chat-mnn]][release-yi-6b-chat-mnn] |
-| deepseek-llm-7b-chat | [![Download][download-deepseek-7b-chat-onnx]][release-deepseek-7b-chat-onnx] | [![Download][download-deepseek-7b-chat-mnn]][release-deepseek-7b-chat-mnn] |
-| Qwen-1.8B-Chat | [![Download][download-qwen-1.8b-onnx]][release-qwen-1.8b-onnx] | [![Download][download-qwen-1.8b-mnn]][release-qwen-1.8b-mnn] |
-| phi-2 | [![Download][download-phi-2-onnx]][release-phi-2-onnx] | [![Download][download-phi2-mnn-int4]][release-phi2-mnn-int4] |
-| bge-large-zh | [![Download][download-bge-large-zh-onnx]][release-bge-large-zh-onnx] | [![Download][download-bge-large-zh-mnn]][release-bge-large-zh-mnn] |
-| TinyLlama-1.1B-Chat | [![Download][download-tinyllama-1.1b-chat-onnx]][release-tinyllama-1.1b-chat-onnx] | [![Download][download-tinyllama-1.1b-chat-mnn-int8]][release-tinyllama-1.1b-chat-mnn-int8] |
-| Qwen1.5-0.5B-Chat | [![Download][download-qwen1.5-0.5b-onnx]][release-qwen1.5-0.5b-onnx] | [![Download][download-qwen1.5-0.5b-mnn]][release-qwen1.5-0.5b-mnn] |
-| Qwen1.5-1.8B-Chat | [![Download][download-qwen1.5-1.8b-onnx]][release-qwen1.5-1.8b-onnx] | [![Download][download-qwen1.5-1.8b-mnn]][release-qwen1.5-1.8b-mnn] |
-| Qwen1.5-4B-Chat | [![Download][download-qwen1.5-4b-onnx]][release-qwen1.5-4b-onnx] | [![Download][download-qwen1.5-4b-mnn]][release-qwen1.5-4b-mnn] |
-| Qwen1.5-7B-Chat | [![Download][download-qwen1.5-7b-onnx]][release-qwen1.5-7b-onnx] | [![Download][download-qwen1.5-7b-mnn]][release-qwen1.5-7b-mnn] |
+<details>
+  <summary>qwen系列</summary>
 
-其他版本：
-- Qwen-1_8B-Chat-int8：[![Download][download-qwen-1.8b-mnn-int8]][release-qwen-1.8b-mnn-int8]
+- [modelscope-qwen-1.8b-chat]
+- [modelscope-qwen-7b-chat]
+- [modelscope-qwen-vl-chat]
+- [modelscope-qwen1.5-0.5b-chat]
+- [modelscope-qwen1.5-1.8b-chat]
+- [modelscope-qwen1.5-4b-chat]
+- [modelscope-qwen1.5-7b-chat]
+- [modelscope-qwen2-0.5b-chat]
+- [modelscope-qwen2-1.5b-chat]
+- [modelscope-qwen2-7b-chat]
 
-[download-chatglm-6b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/chatglm-6b-onnx/total
-[download-chatglm2-6b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/chatglm2-6b-onnx/total
-[download-chatglm3-6b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/chatglm3-6b-onnx/total
-[download-codegeex2-6b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/codegeex2-6b-onnx/total
-[download-qwen-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen-7b-chat-onnx/total
-[download-baichuan2-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/baichuan2-7b-chat-onnx/total
-[download-llama2-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/llama2-7b-chat-onnx/total
-[download-llama3-8b-instruct-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/llama3-8b-instruct-onnx/total
-[download-internlm-7b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/internlm-7b-onnx/total
-[download-yi-6b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/yi-6b-chat-onnx/total
-[download-deepseek-7b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/deepseek-7b-chat-onnx/total
-[download-qwen-1.8b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen-1.8b-onnx/total
-[download-phi-2-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/phi-2-onnx/total
-[download-bge-large-zh-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/bge-large-zh-onnx/total
-[download-tinyllama-1.1b-chat-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/tinyllama-1.1b-chat-onnx/total
-[download-phi-2-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/phi-2-onnx/total
-[download-qwen1.5-0.5b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen1.5-0.5b-chat-onnx/total
-[download-qwen1.5-1.8b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen1.5-1.8b-chat-onnx/total
-[download-qwen1.5-4b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen1.5-4b-chat-onnx/total
-[download-qwen1.5-7b-onnx]: https://img.shields.io/github/downloads/wangzhaode/llm-export/qwen1.5-7b-chat-onnx/total
-[release-chatglm-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm-6b-onnx
-[release-chatglm2-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm2-6b-onnx
-[release-chatglm3-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/chatglm3-6b-onnx
-[release-codegeex2-6b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/codegeex2-6b-onnx
-[release-qwen-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen-7b-chat-onnx
-[release-baichuan2-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/baichuan2-7b-chat-onnx
-[release-llama2-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/llama2-7b-chat-onnx
-[release-llama3-8b-instruct-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/llama3-8b-instruct-onnx
-[release-internlm-7b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/internlm-7b-onnx
-[release-yi-6b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/yi-6b-chat-onnx
-[release-deepseek-7b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/deepseek-7b-chat-onnx
-[release-qwen-1.8b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen-1.8b-onnx
-[release-phi-2-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/phi-2-onnx
-[release-bge-large-zh-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/bge-large-zh-onnx
-[release-tinyllama-1.1b-chat-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/tinyllama-1.1b-chat-onnx
-[release-qwen1.5-0.5b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen1.5-0.5b-chat-onnx
-[release-qwen1.5-1.8b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen1.5-1.8b-chat-onnx
-[release-qwen1.5-4b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen1.5-4b-chat-onnx
-[release-qwen1.5-7b-onnx]: https://github.com/wangzhaode/llm-export/releases/tag/qwen1.5-7b-chat-onnx
-[download-chatglm-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm-6b-mnn/total
-[download-chatglm2-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm2-6b-mnn/total
-[download-chatglm3-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/chatglm3-6b-mnn/total
-[download-codegeex2-6b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/codegeex2-6b-mnn/total
-[download-qwen-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-7b-chat-mnn/total
-[download-baichuan2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/baichuan2-7b-chat-mnn/total
-[download-llama2-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/llama2-7b-chat-mnn/total
-[download-llama3-8b-instruct-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/llama3-8b-instruct-mnn/total
-[download-internlm-chat-7b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/internlm-chat-7b-mnn/total
-[download-yi-6b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/yi-6b-chat-mnn/total
-[download-deepseek-7b-chat-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/deepseek-7b-chat-mnn/total
-[download-qwen-1.8b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-mnn/total
-[download-phi2-mnn-int4]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/phi2-mnn-int4/total
-[download-bge-large-zh-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/bge-large-zh-mnn/total
-[download-qwen-1.8b-mnn-int8]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-mnn-int8/total
-[download-tinyllama-1.1b-chat-mnn-int8]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/tinyllama-1.1b-chat-mnn-int8/total
-[download-qwen-1.8b-apk]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen-1.8b-apk/total
-[download-qwen1.5-0.5b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen1.5-0.5b-chat-mnn/total
-[download-qwen1.5-1.8b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen1.5-1.8b-chat-mnn/total
-[download-qwen1.5-4b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen1.5-4b-chat-mnn/total
-[download-qwen1.5-7b-mnn]: https://img.shields.io/github/downloads/wangzhaode/mnn-llm/qwen1.5-7b-chat-mnn/total
-[release-chatglm-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm-6b-mnn
-[release-chatglm2-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm2-6b-mnn
-[release-chatglm3-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/chatglm3-6b-mnn
-[release-codegeex2-6b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/codegeex2-6b-mnn
-[release-qwen-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-7b-chat-mnn
-[release-baichuan2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/baichuan2-7b-chat-mnn
-[release-llama2-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/llama2-7b-chat-mnn
-[release-llama3-8b-instruct-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/llama3-8b-instruct-mnn
-[release-internlm-chat-7b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/internlm-chat-7b-mnn
-[release-yi-6b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/yi-6b-chat-mnn
-[release-deepseek-7b-chat-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/deepseek-7b-chat-mnn
-[release-qwen-1.8b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn
-[release-phi2-mnn-int4]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-phi2-mnn-int4
-[release-bge-large-zh-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/bge-large-zh-mnn
-[release-qwen-1.8b-mnn-int8]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-mnn-int8
-[release-tinyllama-1.1b-chat-mnn-int8]: https://github.com/wangzhaode/mnn-llm/releases/tag/tinyllama-1.1b-chat-mnn-int8
-[release-qwen-1.8b-apk]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen-1.8b-apk
-[release-qwen1.5-0.5b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen1.5-0.5b-chat-mnn
-[release-qwen1.5-1.8b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen1.5-1.8b-chat-mnn
-[release-qwen1.5-4b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen1.5-4b-chat-mnn
-[release-qwen1.5-7b-mnn]: https://github.com/wangzhaode/mnn-llm/releases/tag/qwen1.5-7b-chat-mnn
+</details>
+
+<details>
+  <summary>glm系列</summary>
+
+- [modelscope-chatglm-6b]
+- [modelscope-chatglm2-6b]
+- [modelscope-codegeex2-6b]
+- [modelscope-chatglm3-6b]
+- [modelscope-glm4-9b-chat]
+
+</details>
+
+<details>
+  <summary>llama系列</summary>
+
+- [modelscope-llama2-7b-chat]
+- [modelscope-llama3-8b-instruct]
+- [modelscope-baichuan2-7b-chat]
+- [modelscope-internlm-chat-7b]
+- [modelscope-yi-6b-chat]
+- [modelscope-deepseek-7b-chat]
+- [modelscope-tinyllama-1.1b-chat]
+
+</details>
+
+<details>
+  <summary>其他</summary>
+
+- [modelscope-phi-2]
+- [modelscope-bge-large-zh]
+
+</details>
 
 
-### 速度
+[modelscope-qwen-1.8b-chat]: https://modelscope.cn/models/zhaode/Qwen-1_8B-Chat-MNN/files
+[modelscope-qwen-7b-chat]: https://modelscope.cn/models/zhaode/Qwen-7B-Chat-MNN/files
+[modelscope-qwen-vl-chat]: https://modelscope.cn/models/zhaode/Qwen-VL-Chat-MNN/files
+[modelscope-qwen1.5-0.5b-chat]: https://modelscope.cn/models/zhaode/Qwen1.5-0.5B-Chat-MNN/files
+[modelscope-qwen1.5-1.8b-chat]: https://modelscope.cn/models/zhaode/Qwen1.5-1.8B-Chat-MNN/files
+[modelscope-qwen1.5-4b-chat]: https://modelscope.cn/models/zhaode/Qwen1.5-4B-Chat-MNN/files
+[modelscope-qwen1.5-7b-chat]: https://modelscope.cn/models/zhaode/Qwen1.5-7B-Chat-MNN/files
+[modelscope-qwen2-0.5b-chat]: https://modelscope.cn/models/zhaode/Qwen2-0.5B-Instruct-MNN/files
+[modelscope-qwen2-1.5b-chat]: https://modelscope.cn/models/zhaode/Qwen2-1.5B-Instruct-MNN/files
+[modelscope-qwen2-7b-chat]: https://modelscope.cn/models/zhaode/Qwen2-7B-Instruct-MNN/files
 
-#### CPU 4线程速度: `prefill / decode` `tok/s`
+[modelscope-chatglm-6b]: https://modelscope.cn/models/zhaode/chatglm-6b-MNN/files
+[modelscope-chatglm2-6b]: https://modelscope.cn/models/zhaode/chatglm2-6b-MNN/files
+[modelscope-codegeex2-6b]: https://modelscope.cn/models/zhaode/codegeex2-6b-MNN/files
+[modelscope-chatglm3-6b]: https://modelscope.cn/models/zhaode/chatglm3-6b-MNN/files
+[modelscope-glm4-9b-chat]: https://modelscope.cn/models/zhaode/glm-4-9b-chat-MNN/files
 
-| model             | android(f16/32)| macos (f32)   | linux (f32)    | windows (f32)  |
-|:-----------------:|:--------------:|:-------------:|:--------------:|:--------------:|
-| qwen-1.8b-int4    | 100.21 / 22.22 | 84.85 / 19.93 | 151.00 / 35.89 | 117.30 / 33.40 |
-| qwen-1.8b-int8    |  99.95 / 16.94 | 67.70 / 13.45 | 118.51 / 24.90 |  97.19 / 22.76 |
-| chatglm-6b-int4   |  17.37 /  6.69 | 19.79 /  6.10 |  34.05 / 10.82 |  30.73 / 10.63 |
-| chatglm2-6b-int4  |  26.41 /  8.21 | 20.78 /  6.70 |  36.99 / 11.50 |  33.25 / 11.47 |
-| chatglm3-6b-int4  |  26.24 /  7.94 | 19.67 /  6.67 |  37.33 / 11.92 |  33.61 / 11.21 |
-| qwen-7b-int4      |  14.60 /  6.96 | 19.79 /  6.06 |  33.55 / 10.20 |  29.05 / 9.62  |
-| baichuan2-7b-int4 |  13.87 /  6.08 | 17.21 /  6.10 |  30.11 / 10.87 |  26.31 / 9.84  |
-| llama-2-7b-int4   |  17.98 /  5.17 | 19.72 /  5.06 |  34.47 /  9.29 |  28.66 / 8.90  |
+[modelscope-llama2-7b-chat]: https://modelscope.cn/models/zhaode/Llama-2-7b-chat-MNN/files
+[modelscope-llama3-8b-instruct]: https://modelscope.cn/models/zhaode/Llama-3-8B-Instruct-MNN/files
+[modelscope-baichuan2-7b-chat]: https://modelscope.cn/models/zhaode/Baichuan2-7B-Chat-MNN/files
+[modelscope-internlm-chat-7b]: https://modelscope.cn/models/zhaode/internlm-chat-7b-MNN/files
+[modelscope-yi-6b-chat]: https://modelscope.cn/models/zhaode/Yi-6B-Chat-MNN/files
+[modelscope-deepseek-7b-chat]: https://modelscope.cn/models/zhaode/deepseek-llm-7b-chat-MNN/files
+[modelscope-tinyllama-1.1b-chat]: https://modelscope.cn/models/zhaode/TinyLlama-1.1B-Chat-MNN/files
+[modelscope-phi-2]: https://modelscope.cn/models/zhaode/phi-2-MNN/files
+[modelscope-bge-large-zh]: https://modelscope.cn/models/zhaode/bge-large-zh-MNN/files
 
-测试的系统和设备信息如下，
-
-| os | device | CPU | Memory |
-|:--:|:-------:|:----:|:--------:|
-| android | XiaoMi12 | Snapdragon 8gen1 | 8 GB |
-| macos | MacBook Pro 2019 | Intel(R) Core(TM) i7-9750H | 16 GB |
-| linux | PC | Intel(R) Core(TM) i7-13700K | 32GB |
-| windows | PC | Intel(R) Core(TM) i7-13700K | 32GB |
-
-
-### 下载int4模型
-```
-# <model> like `chatglm-6b`
-# linux/macos
-./script/download_model.sh <model>
-
-# windows
-./script/download_model.ps1 <model>
-```
 
 ## 构建
 

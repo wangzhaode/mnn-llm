@@ -117,6 +117,8 @@ public:
                 base_dir_ = path;
             }
         }
+        // using config's base_dir
+        base_dir_ = config_.value("base_dir", base_dir_);
         // load llm_config for model info
         std::ifstream llm_config_file(llm_config());
         if (llm_config_file.is_open()) {
@@ -268,11 +270,11 @@ protected:
 class Lvlm : public Llm {
 public:
     Lvlm(std::shared_ptr<LlmConfig> config) : Llm(config) {
-        img_size_ = config->config_.value("img_size", img_size_);
-        imgpad_len_ = config->config_.value("imgpad_len", imgpad_len_);
-        img_start_ = config->config_.value("img_start", img_start_);
-        img_end_ = config->config_.value("img_end", img_end_);
-        img_pad_ = config->config_.value("img_pad", img_pad_);
+        img_size_ = config->llm_config_.value("img_size", img_size_);
+        imgpad_len_ = config->llm_config_.value("imgpad_len", imgpad_len_);
+        img_start_ = config->llm_config_.value("img_start", img_start_);
+        img_end_ = config->llm_config_.value("img_end", img_end_);
+        img_pad_ = config->llm_config_.value("img_pad", img_pad_);
     }
     ~Lvlm() { visual_module_.reset(); }
     virtual void load();

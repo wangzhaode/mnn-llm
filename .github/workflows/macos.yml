@@ -17,37 +17,21 @@ jobs:
   build:
     name: macos-build
     runs-on: macos-latest
-  
+
     steps:
       - uses: actions/checkout@v3
-      # build
-      - name: build-pack
-        run: |
-            ./script/build.sh
-            ./script/package.sh package
-            zip -r package.zip package
-      # upload
-      - name: upload-zip
-        uses: actions/upload-artifact@v3
         with:
-          path: ./*.zip
+          submodules: 'recursive'
 
-  test:
-    needs: build
-    name: ${{ matrix.model }}-macos-test
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        model: [qwen-1.8b, chatglm-6b, chatglm2-6b, chatglm3-6b, codegeex2-6b, qwen-7b-chat, baichuan2-7b-chat, llama2-7b-chat]
+      - name: build
+        run: ./script/build.sh
 
-    steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: artifact
-          path: workspace
-      - name: model-test
+      - name: download_mode
         run: |
-            cd workspace
-            unzip package.zip
-            cd package
-            ./script/model_test.sh ${{ matrix.model }} prompt.txt
+            wget -c -nv https://github.com/wangzhaode/mnn-llm/releases/download/qwen1.5-0.5b-chat-mnn/Qwen1.5-0.5B-Chat-MNN.zip
+            unzip Qwen1.5-0.5B-Chat-MNN.zip
+
+      - name: test_model
+        run: |
+            cd build
+            ./cli_demo ../Qwen1.5-0.5B-Chat-MNN/config.json ../resource/prompt.txt

@@ -98,30 +98,6 @@ Download models from `modelscope`：
 [modelscope-phi-2]: https://modelscope.cn/models/zhaode/phi-2-MNN/files
 [modelscope-bge-large-zh]: https://modelscope.cn/models/zhaode/bge-large-zh-MNN/files
 
-### Performance
-
-#### CPU 4-thread speed: `prefill / decode` `tok/s`
-
-| model             | android(f16/32)| macos (f32)   | linux (f32)    | windows (f32)  |
-|:-----------------:|:--------------:|:-------------:|:--------------:|:--------------:|
-| qwen-1.8b-int4    | 100.21 / 22.22 | 84.85 / 19.93 | 151.00 / 35.89 | 117.30 / 33.40 |
-| qwen-1.8b-int8    |  99.95 / 16.94 | 67.70 / 13.45 | 118.51 / 24.90 |  97.19 / 22.76 |
-| chatglm-6b-int4   |  17.37 /  6.69 | 19.79 /  6.10 |  34.05 / 10.82 |  30.73 / 10.63 |
-| chatglm2-6b-int4  |  26.41 /  8.21 | 20.78 /  6.70 |  36.99 / 11.50 |  33.25 / 11.47 |
-| chatglm3-6b-int4  |  26.24 /  7.94 | 19.67 /  6.67 |  37.33 / 11.92 |  33.61 / 11.21 |
-| qwen-7b-int4      |  14.60 /  6.96 | 19.79 /  6.06 |  33.55 / 10.20 |  29.05 / 9.62  |
-| baichuan2-7b-int4 |  13.87 /  6.08 | 17.21 /  6.10 |  30.11 / 10.87 |  26.31 / 9.84  |
-| llama-2-7b-int4   |  17.98 /  5.17 | 19.72 /  5.06 |  34.47 /  9.29 |  28.66 / 8.90  |
-
-Tested system and device information is as follows
-
-| os | device | CPU | Memory |
-|:--:|:-------:|:----:|:--------:|
-| android | XiaoMi12 | Snapdragon 8gen1 | 8 GB |
-| macos | MacBook Pro 2019 | Intel(R) Core(TM) i7-9750H | 16 GB |
-| linux | PC | Intel(R) Core(TM) i7-13700K | 32GB |
-| windows | PC | Intel(R) Core(TM) i7-13700K | 32GB |
-
 ## Building
 
 Current build status:
@@ -166,21 +142,24 @@ The default backend used is `CPU`. If you want to use a different backend, you c
 
 ```bash
 # linux/macos
-./cli_demo qwen-1.8b-int4 # cli demo
-./web_demo qwen-1.8b-int4 ../web # web ui demo
+./cli_demo ./Qwen2-1.5B-Instruct-MNN/config.json # cli demo
+./web_demo ./Qwen2-1.5B-Instruct-MNN/config.json ../web # web ui demo
 
 # windows
-.\Debug\cli_demo.exe qwen-1.8b-int4
-.\Debug\web_demo.exe qwen-1.8b-int4 ../web
+.\Debug\cli_demo.exe ./Qwen2-1.5B-Instruct-MNN/config.json
+.\Debug\web_demo.exe ./Qwen2-1.5B-Instruct-MNN/config.json ../web
 
 # android
 adb push libs/*.so build/libllm.so build/cli_demo /data/local/tmp
 adb push model_dir /data/local/tmp
-adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo qwen-1.8b-int4"
+adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo ./Qwen2-1.5B-Instruct-MNN/config.json"
 ```
 
 
 ## Reference
+<details>
+  <summary>reference</summary>
+
 - [chatglm-6b](https://modelscope.cn/models/ZhipuAI/chatglm-6b/summary)
 - [chatglm2-6b](https://modelscope.cn/models/ZhipuAI/chatglm2-6b/summary)
 - [chatglm3-6b](https://modelscope.cn/models/ZhipuAI/chatglm3-6b/summary)
@@ -203,3 +182,5 @@ adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo qwen-1.8
 - [chatgpt-web](https://github.com/xqdoo00o/chatgpt-web)
 - [ChatViewDemo](https://github.com/BrettFX/ChatViewDemo)
 - [nlohmann/json](https://github.com/nlohmann/json)
+
+</details>

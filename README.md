@@ -97,7 +97,6 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 [modelscope-phi-2]: https://modelscope.cn/models/zhaode/phi-2-MNN/files
 [modelscope-bge-large-zh]: https://modelscope.cn/models/zhaode/bge-large-zh-MNN/files
 
-
 ## 构建
 
 当前构建状态：
@@ -147,21 +146,24 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 
 ```bash
 # linux/macos
-./cli_demo qwen-1.8b-int4 # cli demo
-./web_demo qwen-1.8b-int4 ../web # web ui demo
+./cli_demo ./Qwen2-1.5B-Instruct-MNN/config.json # cli demo
+./web_demo ./Qwen2-1.5B-Instruct-MNN/config.json ../web # web ui demo
 
 # windows
-.\Debug\cli_demo.exe qwen-1.8b-int4
-.\Debug\web_demo.exe qwen-1.8b-int4 ../web
+.\Debug\cli_demo.exe ./Qwen2-1.5B-Instruct-MNN/config.json
+.\Debug\web_demo.exe ./Qwen2-1.5B-Instruct-MNN/config.json ../web
 
 # android
 adb push libs/*.so build/libllm.so build/cli_demo /data/local/tmp
 adb push model_dir /data/local/tmp
-adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo qwen-1.8b-int4"
+adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo ./Qwen2-1.5B-Instruct-MNN/config.json"
 ```
 
 
 ## Reference
+<details>
+  <summary>reference</summary>
+
 - [chatglm-6b](https://modelscope.cn/models/ZhipuAI/chatglm-6b/summary)
 - [chatglm2-6b](https://modelscope.cn/models/ZhipuAI/chatglm2-6b/summary)
 - [chatglm3-6b](https://modelscope.cn/models/ZhipuAI/chatglm3-6b/summary)
@@ -184,3 +186,5 @@ adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo qwen-1.8
 - [chatgpt-web](https://github.com/xqdoo00o/chatgpt-web)
 - [ChatViewDemo](https://github.com/BrettFX/ChatViewDemo)
 - [nlohmann/json](https://github.com/nlohmann/json)
+
+</details>

@@ -11,22 +11,6 @@
 
 using namespace std;
 
-// macros
-#define def_attr(NAME) \
-static PyObject* PyLLM_get_##NAME(LLM *self, void *closure) {\
-    return PyLong_FromLong(self->llm->NAME##_);\
-}\
-static int PyLLM_set_##NAME(LLM *self, PyObject *value, void *closure) {\
-    if (self->llm) {\
-        self->llm->NAME##_ = PyLong_AsLong(value);\
-    }\
-    return 0;\
-}
-
-#define register_attr(NAME) \
-    {#NAME, (getter)PyLLM_get_##NAME, (setter)PyLLM_set_##NAME, "___"#NAME"__", NULL},
-// end
-
 // type convert start
 inline PyObject* string2Object(const std::string& str) {
 #if PY_MAJOR_VERSION == 2
@@ -159,15 +143,11 @@ static PyObject* Py_str(PyObject *self) {
     if (!llm) {
         Py_RETURN_NONE;
     }
-    return toPyObj(llm->llm->model_name_);
+    return toPyObj("llm");
 }
 
 static PyObject* PyLLM_load(LLM *self, PyObject *args) {
-    const char* model_dir = NULL;
-    if (!PyArg_ParseTuple(args, "s", &model_dir)) {
-        Py_RETURN_NONE;
-    }
-    self->llm->load(model_dir);
+    self->llm->load();
     Py_RETURN_NONE;
 }
 
@@ -188,29 +168,14 @@ static PyObject* PyLLM_response(LLM *self, PyObject *args) {
     }
     LlmStreamBuffer buffer(nullptr);
     std::ostream null_os(&buffer);
-    auto res = self->llm->response_nohistory(query, stream ? &std::cout : &null_os);
+    auto res = self->llm->response(query, stream ? &std::cout : &null_os);
     return string2Object(res);
 }
 
 static PyMethodDef PyLLM_methods[] = {
-    {"load", (PyCFunction)PyLLM_load, METH_VARARGS, "load model from `dir`."},
+    {"load", (PyCFunction)PyLLM_load, METH_VARARGS, "load model."},
     {"generate", (PyCFunction)PyLLM_generate, METH_VARARGS, "generate `output_ids` by `input_ids`."},
     {"response", (PyCFunction)PyLLM_response, METH_VARARGS, "response `query` without hsitory."},
-    {NULL}  /* Sentinel */
-};
-
-def_attr(backend_type)
-def_attr(thread_num)
-def_attr(low_precision)
-def_attr(chatml)
-def_attr(max_new_tokens)
-
-static PyGetSetDef PyLLM_getsetters[] = {
-    register_attr(backend_type)
-    register_attr(thread_num)
-    register_attr(low_precision)
-    register_attr(chatml)
-    register_attr(max_new_tokens)
     {NULL}  /* Sentinel */
 };
 
@@ -244,7 +209,7 @@ static PyTypeObject PyLLM = {
     0,                                        /* tp_iternext */
     PyLLM_methods,                            /* tp_methods */
     0,                                        /* tp_members */
-    PyLLM_getsetters,                         /* tp_getset */
+    0,                                        /* tp_getset */
     0,                                        /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
@@ -259,17 +224,15 @@ static PyObject* py_create(PyObject *self, PyObject *args) {
     if (!PyTuple_Size(args)) {
         return NULL;
     }
-    const char* model_dir = NULL;
-    const char* model_type = "auto";
-    if (!PyArg_ParseTuple(args, "s|s", &model_dir, &model_type)) {
+    const char* path = NULL;
+    if (!PyArg_ParseTuple(args, "s", &path)) {
         return NULL;
     }
     LLM *llm = (LLM *)PyObject_Call((PyObject*)&PyLLM, PyTuple_New(0), NULL);
     if (!llm) {
         return NULL;
     }
-    llm->llm = Llm::createLLM(model_dir, model_type);
-    // llm->llm->load(model_dir);
+    llm->llm = Llm::createLLM(path);
     return (PyObject*)llm;
 }
 

@@ -15,7 +15,7 @@ class LLM(__cmnnllm.LLM):
 
         Example:
         -------
-        >>> llm.load('../qwen-1.8b-int4')
+        >>> llm.load('../qwen-1.8b-in4/conig.json')
         '''
         super.load(model_dir)
 
@@ -57,14 +57,13 @@ class LLM(__cmnnllm.LLM):
         '''
         return super.response(prompt, stream)
 
-def create(model_dir: str, model_type: str = 'auto'):
+def create(config_path: str):
     '''
-    create LLM instance, type decide by `model_dir` or `model_type`
+    create LLM instance by `config.json`
 
     Parameters
     ----------
-    model_dir : model path or model name contain model type
-    model_type : model type, defult is `auto`
+    config_path : config path or model path
 
     Returns
     -------
@@ -72,6 +71,6 @@ def create(model_dir: str, model_type: str = 'auto'):
 
     Example:
     -------
-    >>> qwen = mnnllm.create('../qwen-1.8b-int4.mnn')
+    >>> qwen = mnnllm.create('./qwen-1.8b-int4/config.json')
     '''
-    return __cmnnllm.create(model_dir, model_type)
+    return __cmnnllm.create(config_path)

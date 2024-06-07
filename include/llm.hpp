@@ -95,7 +95,6 @@ public:
     LlmConfig(const std::string& path) {
         // load config
         if (has_suffix(path, ".json")) {
-            printf("### .json : %s\n", path.c_str());
             std::ifstream config_file(path);
             if (config_file.is_open()) {
                 config_ = json::parse(config_file);

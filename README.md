@@ -99,23 +99,24 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 
 ## 构建
 
-当前构建状态：
+CI构建状态：
 
-| System | Build Statud |
-|:------:|:------------:|
-| Linux | [![Build Status][pass-linux]][ci-linux] |
-| Macos | [![Build Status][pass-macos]][ci-macos] |
-| Windows | [![Build Status][pass-windows]][ci-windows] |
-| Android | [![Build Status][pass-android]][ci-android] |
+[![Build Status][pass-linux]][ci-linux]
+[![Build Status][pass-macos]][ci-macos]
+[![Build Status][pass-windows]][ci-windows]
+[![Build Status][pass-android]][ci-android]
+[![Build Status][pass-python]][ci-python]
 
 [pass-linux]: https://github.com/wangzhaode/mnn-llm/actions/workflows/linux.yml/badge.svg
 [pass-macos]: https://github.com/wangzhaode/mnn-llm/actions/workflows/macos.yml/badge.svg
 [pass-windows]: https://github.com/wangzhaode/mnn-llm/actions/workflows/windows.yml/badge.svg
 [pass-android]: https://github.com/wangzhaode/mnn-llm/actions/workflows/android.yml/badge.svg
+[pass-python]: https://github.com/wangzhaode/mnn-llm/actions/workflows/python.yml/badge.svg
 [ci-linux]: https://github.com/wangzhaode/mnn-llm/actions/workflows/linux.yml
 [ci-macos]: https://github.com/wangzhaode/mnn-llm/actions/workflows/macos.yml
 [ci-windows]: https://github.com/wangzhaode/mnn-llm/actions/workflows/windows.yml
 [ci-android]: https://github.com/wangzhaode/mnn-llm/actions/workflows/android.yml
+[ci-python]: https://github.com/wangzhaode/mnn-llm/actions/workflows/python.yml
 
 ### 本地编译
 ```
@@ -128,8 +129,14 @@ llm模型导出`onnx`和`mnn`模型请使用[llm-export](https://github.com/wang
 # windows msvc
 ./script/build.ps1
 
+# python wheel
+./script/py_build.sh
+
 # android
 ./script/android_build.sh
+
+# android apk
+script/android_app_build.sh
 ```
 
 一些编译宏：

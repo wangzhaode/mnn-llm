@@ -15,7 +15,7 @@ class ChatViewModel: ObservableObject {
     private var llm: LLMInferenceEngineWrapper?
 
     init() {
-        self.messages.append(Message(id: UUID(), text: "Qwen-1.8b-int4 模型加载中, 请稍等 ...", isUser: false))
+        self.messages.append(Message(id: UUID(), text: "qwen1.5-0.5b-chat 模型加载中, 请稍等 ...", isUser: false))
         llm = LLMInferenceEngineWrapper { [weak self] success in
             DispatchQueue.main.async {
                 self?.isModelLoaded = success

@@ -1,0 +1,43 @@
+name: python
+on:
+  push:
+    branches:
+     - master
+     - 'feature/**'
+    paths:
+      - 'src/**'
+      - 'python/**'
+      - '.github/workflows/python.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'src/**'
+      - 'python/**'
+      - '.github/workflows/python.yml'
+
+jobs:
+  build:
+    name: linux-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - uses: s-weigand/setup-conda@v1
+
+      - name: build
+        run: ./script/py_build.sh
+
+      - name: download_mode
+        run: |
+            wget -c -nv https://github.com/wangzhaode/mnn-llm/releases/download/qwen1.5-0.5b-chat-mnn/Qwen1.5-0.5B-Chat-MNN.zip
+            unzip Qwen1.5-0.5B-Chat-MNN.zip
+
+      - name: test_model
+        run: |
+            conda install -c conda-forge gcc=12.1.0
+            cd python
+            pip install dist/*.whl
+            python test.py ../Qwen1.5-0.5B-Chat-MNN/config.json

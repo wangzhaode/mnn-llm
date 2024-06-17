@@ -11,7 +11,7 @@ def make_relative_rpath(path):
     elif IS_WINDOWS:
         return []
     else:
-        return ['-Wl,-rpath,$ORIGIN/' + path]
+        return [f'-Wl,-rpath,@loader_path/../../../{path},-rpath,$ORIGIN/{path}' ]
 
 lib_suffix = 'so'
 if IS_DARWIN:
@@ -19,14 +19,14 @@ if IS_DARWIN:
 
 packages = find_packages()
 lib_files = [('lib',
-            [f'../libs/libMNN.{lib_suffix}',
-             f'../libs/libMNN_Express.{lib_suffix}',
+            [f'../build/MNN/libMNN.{lib_suffix}',
+             f'../build/MNN/express/libMNN_Express.{lib_suffix}',
              f'../build/libllm.{lib_suffix}'])]
 
 module = Extension('cmnnllm',
                   sources=['./mnnllm.cpp'],
-                  include_dirs=['../include'],
-                  library_dirs=['../build', '../libs'],
+                  include_dirs=['../include', '../MNN/include'],
+                  library_dirs=['../build'],
                   extra_compile_args=['-std=c++17'],
                   extra_link_args=['-lllm'] + make_relative_rpath('lib'))
 

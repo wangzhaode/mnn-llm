@@ -25,7 +25,8 @@ public class DownloadModel extends BaseActivity {
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mDownloadAll = (Button)findViewById(R.id.download_all);
         // init Data
-        String[] modelArray = this.getResources().getStringArray(R.array.model_list);
+        // String[] modelArray = this.getResources().getStringArray(R.array.model_list);
+        String[] modelArray = {"config.json"};
         mAdapter = new DownloadRecyclerView(this, modelArray);
         mRecyclerView.setAdapter(mAdapter);
     }

@@ -109,6 +109,7 @@ void Llm::load() {
             MNN_PRINT("Done!\n");
         }
     }
+    load_progress_ = 100.f;
 }
 
 VARP Llm::forward(const std::vector<int>& input_ids) {

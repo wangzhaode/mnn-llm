@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
                     mModelName = (String) parent.getItemAtPosition(position);
                     mModelInfo.setText("选择模型：" + mModelName);
                     mModelInfo.setVisibility(View.VISIBLE);
-                    mModelDir = mSearchPath + mModelName;
+                    mModelDir = mSearchPath + mModelName + "/config.json";
                 }
             }
             @Override
@@ -119,13 +119,6 @@ public class MainActivity extends AppCompatActivity {
         File dir = new File(mModelDir);
         if (!dir.exists()) {
             return false;
-        }
-        String[] modelArray = this.getResources().getStringArray(R.array.model_list);
-        for (int i = 0; i < modelArray.length; i++) {
-            File model = new File(mModelDir, modelArray[i]);
-            if (!model.exists()) {
-                return false;
-            }
         }
         return true;
     }

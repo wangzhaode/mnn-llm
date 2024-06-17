@@ -26,6 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+            submodules: 'recursive'
       - name: build
         run: ./script/android_build.sh
 
@@ -33,6 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+            submodules: 'recursive'
       - name: build
         run: ./script/android_app_build.sh
 

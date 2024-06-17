@@ -28,13 +28,13 @@ JNIEXPORT jboolean JNICALL Java_com_mnn_llm_Chat_Init(JNIEnv* env, jobject thiz,
     const char* model_dir = env->GetStringUTFChars(modelDir, 0);
     if (!llm.get()) {
         llm.reset(Llm::createLLM(model_dir));
-        llm->load(model_dir);
+        llm->load();
     }
     return JNI_TRUE;
 }
 
 JNIEXPORT jboolean JNICALL Java_com_mnn_llm_Chat_Ready(JNIEnv* env, jobject thiz) {
-    if (llm.get() && llm->load_progress() >= 100) {
+    if (llm.get()) {
         return JNI_TRUE;
     }
     return JNI_FALSE;
@@ -42,7 +42,7 @@ JNIEXPORT jboolean JNICALL Java_com_mnn_llm_Chat_Ready(JNIEnv* env, jobject thiz
 
 JNIEXPORT jfloat JNICALL Java_com_mnn_llm_Chat_Progress(JNIEnv* env, jobject thiz) {
     if (!llm.get()) return jfloat(0);
-    return jfloat(llm->load_progress());
+    return jfloat(llm->load_progress_);
 }
 
 JNIEXPORT jstring JNICALL Java_com_mnn_llm_Chat_Submit(JNIEnv* env, jobject thiz, jstring inputStr) {
@@ -59,13 +59,6 @@ JNIEXPORT jstring JNICALL Java_com_mnn_llm_Chat_Submit(JNIEnv* env, jobject thiz
     return result;
 }
 
-/*
-JNIEXPORT jstring JNICALL Java_com_mnn_chatglm_Chat_Response(JNIEnv* env, jobject thiz) {
-    jstring result = env->NewStringUTF(response_buffer.str().c_str());
-    return result;
-}
-*/
-
 JNIEXPORT jbyteArray JNICALL Java_com_mnn_llm_Chat_Response(JNIEnv* env, jobject thiz) {
     auto len = response_buffer.str().size();
     jbyteArray res = env->NewByteArray(len);
@@ -78,7 +71,7 @@ JNIEXPORT void JNICALL Java_com_mnn_llm_Chat_Done(JNIEnv* env, jobject thiz) {
 }
 
 JNIEXPORT void JNICALL Java_com_mnn_llm_Chat_Reset(JNIEnv* env, jobject thiz) {
-    llm->reset();
+    // llm->reset();
 }
 
 } // extern "C"

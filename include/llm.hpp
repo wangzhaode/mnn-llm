@@ -247,6 +247,7 @@ public:
     // time
     int64_t prefill_us_ = 0;
     int64_t decode_us_ = 0;
+    float load_progress_ = 0.f;
     bool is_single_ = true;
     bool is_disk_embedding_ = true;
     std::shared_ptr<LlmConfig> config_;
@@ -276,7 +277,7 @@ public:
         img_pad_ = config->llm_config_.value("img_pad", img_pad_);
     }
     ~Lvlm() { visual_module_.reset(); }
-    virtual void load();
+    virtual void load() override;
 private:
     int img_size_ = 448, imgpad_len_ = 256, img_start_ = 151857, img_end_ = 151858, img_pad_ = 151859;
     std::shared_ptr<Module> visual_module_;

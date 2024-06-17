@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(mnn-llm)
 
 option(BUILD_FOR_ANDROID "Build for android whith mini memory mode." OFF)
 option(USING_VISUAL_MODEL "Using visual model will need dpes: MNNOpenCV and httplib." OFF)
 option(DUMP_PROFILE_INFO "Dump profile info when chat." OFF)
+option(BUILD_JNI "Build JNI for android app." OFF)
 
 if (USING_VISUAL_MODEL)
     add_definitions(-DUSING_VISUAL_MODEL)
@@ -38,6 +39,11 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/include/
 # source files
 FILE(GLOB SRCS ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
+# jni file
+if (BUILD_JNI)
+    list(APPEND SRCS "${CMAKE_CURRENT_LIST_DIR}/android/app/src/main/jni/llm_mnn_jni.cpp")
+endif()
+
 if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
     add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
@@ -56,6 +62,8 @@ else()
         target_link_libraries(llm MNNOpenCV)
     endif()
 endif()
+
+if (NOT (BUILD_JNI))
 
 add_executable(cli_demo ${CMAKE_CURRENT_LIST_DIR}/demo/cli_demo.cpp)
 add_executable(tokenizer_demo ${CMAKE_CURRENT_LIST_DIR}/demo/tokenizer_demo.cpp)
@@ -109,4 +117,6 @@ else()
     else()
         target_link_libraries(web_demo llm pthread)
     endif()
+endif()
+
 endif()

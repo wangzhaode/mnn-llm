@@ -13,12 +13,10 @@
 - iPhone 14 Pro: pefill 105.41 tok/s, decode 25.45 tok/s
 
 ## 编译
-1. 首先下载MNN预编译的ios包: [mnn_2.8.0_ios_llm.zip](https://github.com/alibaba/MNN/releases/download/2.8.0/mnn_2.8.0_ios_llm.zip)
-2. 解压该文件，得到`MNN.framework`目录；
-3. 在xcode项目属性中`Build Phases` > `Link Binary With Libraries` > `+` > `Add Other` > `Add Files`选择上述解压的文件夹；
-4. 在xcode中右键项目`mnn-llm` > `Add Files to` > 选择模型文件`qwen-1.8b-int4/8`；
-5. 在xcode项目属性中`Signing & Capabilities` > `Team`输入自己的账号；`Bundle Identifier`可以重新命名；
-6. 连接iPhone并编译执行，需要在手机端打开开发者模式，并在安装完成后在：`设置` > `通用` > `VPN与设备管理`中选择信任该账号；
+1. 首先下载模型文件: [Qwen1.5-0.5B-Chat-MNN](https://modelscope.cn/models/zhaode/Qwen1.5-0.5B-Chat-MNN/files)
+2. 将模型文件拷贝到`ios/mnn-llm/model/qwen1.5-0.5b-chat`目录下
+3. 在xcode项目属性中`Signing & Capabilities` > `Team`输入自己的账号；`Bundle Identifier`可以重新命名；
+4. 连接iPhone并编译执行，需要在手机端打开开发者模式，并在安装完成后在：`设置` > `通用` > `VPN与设备管理`中选择信任该账号；
 
 ## 测试
 等待模型加载完成后即可发送信息，如下图所示：

@@ -1,4 +1,4 @@
-name: python
+name: ios
 on:
   push:
     branches:
@@ -6,38 +6,31 @@ on:
      - 'feature/**'
     paths:
       - 'src/**'
-      - 'python/**'
-      - '.github/workflows/python.yml'
+      - 'ios/**'
+      - '.github/workflows/ios.yml'
   pull_request:
     branches: [master]
     paths:
       - 'src/**'
-      - 'python/**'
-      - '.github/workflows/python.yml'
+      - 'ios/**'
+      - '.github/workflows/ios.yml'
 
 jobs:
   build:
-    name: python-build
-    runs-on: ubuntu-latest
+    name: ios-build
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
-      - uses: s-weigand/setup-conda@v1
-
-      - name: build
-        run: ./script/py_build.sh
-
       - name: download_mode
         run: |
             wget -c -nv https://github.com/wangzhaode/mnn-llm/releases/download/qwen1.5-0.5b-chat-mnn/Qwen1.5-0.5B-Chat-MNN.zip
             unzip Qwen1.5-0.5B-Chat-MNN.zip
+            mv Qwen1.5-0.5B-Chat-MNN/* ios/mnn-llm/model/qwen1.5-0.5b-chat/
 
-      - name: test_model
+      - name: build
         run: |
-            conda install -c conda-forge gcc=12.1.0
-            cd python
-            pip install dist/*.whl
-            python test.py ../Qwen1.5-0.5B-Chat-MNN/config.json
+          ./script/ios_build.sh

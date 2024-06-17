@@ -105,17 +105,20 @@ CI构建状态：
 [![Build Status][pass-macos]][ci-macos]
 [![Build Status][pass-windows]][ci-windows]
 [![Build Status][pass-android]][ci-android]
+[![Build Status][pass-ios]][ci-ios]
 [![Build Status][pass-python]][ci-python]
 
 [pass-linux]: https://github.com/wangzhaode/mnn-llm/actions/workflows/linux.yml/badge.svg
 [pass-macos]: https://github.com/wangzhaode/mnn-llm/actions/workflows/macos.yml/badge.svg
 [pass-windows]: https://github.com/wangzhaode/mnn-llm/actions/workflows/windows.yml/badge.svg
 [pass-android]: https://github.com/wangzhaode/mnn-llm/actions/workflows/android.yml/badge.svg
+[pass-ios]: https://github.com/wangzhaode/mnn-llm/actions/workflows/ios.yml/badge.svg
 [pass-python]: https://github.com/wangzhaode/mnn-llm/actions/workflows/python.yml/badge.svg
 [ci-linux]: https://github.com/wangzhaode/mnn-llm/actions/workflows/linux.yml
 [ci-macos]: https://github.com/wangzhaode/mnn-llm/actions/workflows/macos.yml
 [ci-windows]: https://github.com/wangzhaode/mnn-llm/actions/workflows/windows.yml
 [ci-android]: https://github.com/wangzhaode/mnn-llm/actions/workflows/android.yml
+[ci-ios]: https://github.com/wangzhaode/mnn-llm/actions/workflows/ios.yml
 [ci-python]: https://github.com/wangzhaode/mnn-llm/actions/workflows/python.yml
 
 ### 本地编译

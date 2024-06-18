@@ -124,6 +124,10 @@ Current CI build status:
 
 ### Local Compilation
 ```
+# clone
+git clone --recurse-submodules https://github.com/wangzhaode/mnn-llm.git
+cd mnn-llm
+
 # linux
 ./script/build.sh
 

@@ -123,6 +123,10 @@ CI构建状态：
 
 ### 本地编译
 ```
+# clone
+git clone --recurse-submodules https://github.com/wangzhaode/mnn-llm.git
+cd mnn-llm
+
 # linux
 ./script/build.sh
 

@@ -18,6 +18,8 @@
 3. 在xcode项目属性中`Signing & Capabilities` > `Team`输入自己的账号；`Bundle Identifier`可以重新命名；
 4. 连接iPhone并编译执行，需要在手机端打开开发者模式，并在安装完成后在：`设置` > `通用` > `VPN与设备管理`中选择信任该账号；
 
+备注：如测试其他模型，可以将`ios/mnn-llm/model/qwen1.5-0.5b-chat`替换为其他模型的文件夹；同时修改`LLMInferenceEngineWrapper.m +38`的模型路径；
+
 ## 测试
 等待模型加载完成后即可发送信息，如下图所示：
 ![ios-app](./ios_app.jpg)

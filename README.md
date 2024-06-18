@@ -139,7 +139,10 @@ CI构建状态：
 ./script/android_build.sh
 
 # android apk
-script/android_app_build.sh
+./script/android_app_build.sh
+
+# ios
+./script/ios_build.sh
 ```
 
 一些编译宏：

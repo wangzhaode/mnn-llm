@@ -127,9 +127,6 @@ Current CI build status:
 # linux
 ./script/build.sh
 
-# macos
-./script/build.sh
-
 # windows msvc
 ./script/build.ps1
 
@@ -140,7 +137,10 @@ Current CI build status:
 ./script/android_build.sh
 
 # android apk
-script/android_app_build.sh
+./script/android_app_build.sh
+
+# ios
+./script/ios_build.sh
 ```
 
 The default backend used is `CPU`. If you want to use a different backend, you can add a MNN compilation macro within the script:

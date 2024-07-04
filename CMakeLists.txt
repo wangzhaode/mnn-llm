@@ -45,14 +45,14 @@ if (BUILD_JNI)
 endif()
 
 if (MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++11")
     add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
     # compile static lib, surrpot Winwows
     add_library(llm STATIC ${SRCS})
     link_directories(${CMAKE_BINARY_DIR}/MNN/Release)
     target_link_libraries(llm MNN.lib)
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     # compile dynamic so, support Linux/Mac
     add_library(llm SHARED ${SRCS})
     set_target_properties(llm PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)

@@ -27,7 +27,7 @@ module = Extension('cmnnllm',
                   sources=['./mnnllm.cpp'],
                   include_dirs=['../include', '../MNN/include'],
                   library_dirs=['../build'],
-                  extra_compile_args=['-std=c++17'],
+                  extra_compile_args=['-std=c++11'],
                   extra_link_args=['-lllm'] + make_relative_rpath('lib'))
 
 setup(name='mnnllm',

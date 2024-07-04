@@ -214,6 +214,10 @@ public:
         return llm_config_.value("attention_mask", "int");
     }
 
+    std::string chat_template() const {
+        return llm_config_.value("chat_template", "");
+    }
+
     std::string prompt_template() const {
         return llm_config_.value("prompt_template", "");
     }
@@ -222,6 +226,7 @@ public:
 
 class Llm {
 public:
+    using PromptItem = std::pair<std::string, std::string>; // <role, content>
     Llm(std::shared_ptr<LlmConfig> config) : config_(config) {}
     virtual ~Llm() {
         modules_.clear();
@@ -232,8 +237,10 @@ public:
     virtual void load();
     VARP forward(const std::vector<int>& input_ids);
     int sample(VARP logits, const std::vector<int>& pre_ids);
-    std::string apply_chat_template(const std::string& input_str) const;
-    std::string response(const std::string& input_str, std::ostream* os = &std::cout, const char* end_with = nullptr);
+    std::string apply_prompt_template(const std::string& user_content) const;
+    std::string apply_chat_template(const std::vector<PromptItem>& chat_prompts) const;
+    std::string response(const std::string& user_content, std::ostream* os = &std::cout, const char* end_with = nullptr);
+    std::string response(const std::vector<PromptItem>& chat_prompts, std::ostream* os = &std::cout, const char* end_with = nullptr);
     void generate_init();
     std::string generate(const std::vector<int>& input_ids, std::ostream* os, const char* end_with);
     std::vector<int> generate(const std::vector<int>& input_ids, int max_new_tokens = -1);

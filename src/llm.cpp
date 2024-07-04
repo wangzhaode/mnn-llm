@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <unordered_set>
 #include <regex>
 
 #include <MNN/expr/ExecutorScope.hpp>
@@ -170,17 +171,18 @@ VARP Llm::forward(const std::vector<int>& input_ids) {
 }
 
 int Llm::sample(VARP logits, const std::vector<int>& pre_ids) {
-    auto scores = logits->writeMap<float>();
+    std::unordered_set<int> ids_set(pre_ids.begin(), pre_ids.end());
+    auto scores = (float*)(logits->readMap<float>());
     auto size = logits->getInfo()->size;
-    float max_score = 0;
-    int token_id = 0;
     // repetition penalty
     const float repetition_penalty = 1.1;
-    for (auto id : pre_ids) {
+    for (auto id : ids_set) {
         float score = scores[id];
         scores[id] = score < 0 ? score * repetition_penalty : score / repetition_penalty;
     }
     // argmax
+    float max_score = 0;
+    int token_id = 0;
     for (int i = 0; i < size; i++) {
         float score = scores[i];
         if (score > max_score) {

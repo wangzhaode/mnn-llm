@@ -4,13 +4,23 @@
 
 ## 速度
 
-模型: Qwen-1.8b-int4
-- iPhone 11    : pefill  52.00 tok/s, decode 16.23 tok/s
-- iPhone 14 Pro: pefill 102.63 tok/s, decode 33.53 tok/s
+[旧版测试prompt](../resource/prompt.txt)
+- Qwen-1.8b-chat 4bit
+  - iPhone 11    : pefill  52.00 tok/s, decode 16.23 tok/s
+  - iPhone 14 Pro: pefill 102.63 tok/s, decode 33.53 tok/s
+- Qwen-1.8b-chat 8bit
+  - iPhone 11    : pefill  61.90 tok/s, decode 14.75 tok/s
+  - iPhone 14 Pro: pefill 105.41 tok/s, decode 25.45 tok/s
 
-模型: Qwen-1.8b-int8
-- iPhone 11    : pefill  61.90 tok/s, decode 14.75 tok/s
-- iPhone 14 Pro: pefill 105.41 tok/s, decode 25.45 tok/s
+---
+
+[新版测试prompt](../resource/bench.txt)
+- Qwen1.5-0.5b-chat 4bit
+  - iPhone 15 Pro: pefill 282.73 tok/s, decode 51.68 tok/s
+- Qwen2-0.5b-instruct 4bit
+  - iPhone 15 Pro: pefill 234.51 tok/s, decode 51.36 tok/s
+- Qwen2-1.5b-instruct 4bit
+  - iPhone 15 Pro: pefill 107.64 tok/s, decode 25.57 tok/s
 
 ## 编译
 1. 首先下载模型文件: [Qwen1.5-0.5B-Chat-MNN](https://modelscope.cn/models/zhaode/Qwen1.5-0.5B-Chat-MNN/files)
@@ -20,6 +30,10 @@
 
 备注：如测试其他模型，可以将`ios/mnn-llm/model/qwen1.5-0.5b-chat`替换为其他模型的文件夹；同时修改`LLMInferenceEngineWrapper.m +38`的模型路径；
 
+## 性能
+等待模型加载完成后，发送：`benchmark`，即可进行benchmark测试；
+
 ## 测试
 等待模型加载完成后即可发送信息，如下图所示：
+
 ![ios-app](./ios_app.jpg)

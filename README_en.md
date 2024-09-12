@@ -32,9 +32,11 @@ Download models from `modelscope`：
 - [modelscope-qwen1.5-1.8b-chat]
 - [modelscope-qwen1.5-4b-chat]
 - [modelscope-qwen1.5-7b-chat]
-- [modelscope-qwen2-0.5b-chat]
-- [modelscope-qwen2-1.5b-chat]
-- [modelscope-qwen2-7b-chat]
+- [modelscope-qwen2-0.5b-instruct]
+- [modelscope-qwen2-1.5b-instruct]
+- [modelscope-qwen2-7b-instruct]
+- [modelscope-qwen2-vl-2b-instruct]
+- [modelscope-qwen2-vl-7b-instruct]
 
 </details>
 
@@ -63,10 +65,17 @@ Download models from `modelscope`：
 </details>
 
 <details>
-  <summary>others</summary>
+  <summary>phi</summary>
 
 - [modelscope-phi-2]
+
+</details>
+
+<details>
+  <summary>embedding</summary>
+
 - [modelscope-bge-large-zh]
+- [modelscope-gte_sentence-embedding_multilingual-base]
 
 </details>
 
@@ -78,9 +87,11 @@ Download models from `modelscope`：
 [modelscope-qwen1.5-1.8b-chat]: https://modelscope.cn/models/zhaode/Qwen1.5-1.8B-Chat-MNN/files
 [modelscope-qwen1.5-4b-chat]: https://modelscope.cn/models/zhaode/Qwen1.5-4B-Chat-MNN/files
 [modelscope-qwen1.5-7b-chat]: https://modelscope.cn/models/zhaode/Qwen1.5-7B-Chat-MNN/files
-[modelscope-qwen2-0.5b-chat]: https://modelscope.cn/models/zhaode/Qwen2-0.5B-Instruct-MNN/files
-[modelscope-qwen2-1.5b-chat]: https://modelscope.cn/models/zhaode/Qwen2-1.5B-Instruct-MNN/files
-[modelscope-qwen2-7b-chat]: https://modelscope.cn/models/zhaode/Qwen2-7B-Instruct-MNN/files
+[modelscope-qwen2-0.5b-instruct]: https://modelscope.cn/models/zhaode/Qwen2-0.5B-Instruct-MNN/files
+[modelscope-qwen2-1.5b-instruct]: https://modelscope.cn/models/zhaode/Qwen2-1.5B-Instruct-MNN/files
+[modelscope-qwen2-7b-instruct]: https://modelscope.cn/models/zhaode/Qwen2-7B-Instruct-MNN/files
+[modelscope-qwen2-vl-2b-instruct]: https://modelscope.cn/models/zhaode/Qwen2-VL-2B-Instruct-MNN/files
+[modelscope-qwen2-vl-7b-instruct]: https://modelscope.cn/models/zhaode/Qwen2-VL-7B-Instruct-MNN/files
 
 [modelscope-chatglm-6b]: https://modelscope.cn/models/zhaode/chatglm-6b-MNN/files
 [modelscope-chatglm2-6b]: https://modelscope.cn/models/zhaode/chatglm2-6b-MNN/files
@@ -97,6 +108,7 @@ Download models from `modelscope`：
 [modelscope-tinyllama-1.1b-chat]: https://modelscope.cn/models/zhaode/TinyLlama-1.1B-Chat-MNN/files
 [modelscope-phi-2]: https://modelscope.cn/models/zhaode/phi-2-MNN/files
 [modelscope-bge-large-zh]: https://modelscope.cn/models/zhaode/bge-large-zh-MNN/files
+[modelscope-gte_sentence-embedding_multilingual-base]: https://modelscope.cn/models/zhaode/gte_sentence-embedding_multilingual-base-MNN/files
 
 ## Building
 
@@ -147,9 +159,10 @@ cd mnn-llm
 ./script/ios_build.sh
 ```
 
-The default backend used is `CPU`. If you want to use a different backend, you can add a MNN compilation macro within the script:
+The default backend used is `CPU`. If you want to use a different backend, you can add a MNN compilation macro:
 - cuda: `-DMNN_CUDA=ON`
 - opencl: `-DMNN_OPENCL=ON`
+- metal: `-DMNN_METAL=ON`
 
 
 ### 4. Execution
@@ -174,27 +187,36 @@ adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo ./Qwen2-
 <details>
   <summary>reference</summary>
 
-- [chatglm-6b](https://modelscope.cn/models/ZhipuAI/chatglm-6b/summary)
-- [chatglm2-6b](https://modelscope.cn/models/ZhipuAI/chatglm2-6b/summary)
-- [chatglm3-6b](https://modelscope.cn/models/ZhipuAI/chatglm3-6b/summary)
-- [codegeex2-6b](https://modelscope.cn/models/ZhipuAI/codegeex2-6b/summary)
-- [Baichuan2-7B-Chat](https://modelscope.cn/models/baichuan-inc/baichuan-7B/summary)
-- [Qwen-7B-Chat](https://modelscope.cn/models/qwen/Qwen-7B-Chat/summary)
-- [Qwen-VL-Chat](https://modelscope.cn/models/qwen/Qwen-VL-Chat/summary)
-- [Qwen-1.8B-Chat](https://modelscope.cn/models/qwen/Qwen-1_8B-Chat/summary)
-- [Llama-2-7b-chat-ms](https://modelscope.cn/models/modelscope/Llama-2-7b-chat-ms/summary)
-- [internlm-chat-7b](https://modelscope.cn/models/Shanghai_AI_Laboratory/internlm-chat-7b/summary)
-- [phi-2](https://modelscope.cn/models/AI-ModelScope/phi-2/summary)
-- [bge-large-zh](https://modelscope.cn/models/AI-ModelScope/bge-large-zh/summary)
-- [TinyLlama-1.1B-Chat-v0.6](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v0.6)
-- [Yi-6B-Chat](https://modelscope.cn/models/01ai/Yi-6B-Chat/summary)
-- [Qwen1.5-0.5B-Chat](https://modelscope.cn/models/qwen/Qwen1.5-0.5B-Chat/summary)
-- [Qwen1.5-1.8B-Chat](https://modelscope.cn/models/qwen/Qwen1.5-1.8B-Chat/summary)
-- [Qwen1.5-4B-Chat](https://modelscope.cn/models/qwen/Qwen1.5-4B-Chat/summary)
-- [Qwen1.5-7B-Chat](https://modelscope.cn/models/qwen/Qwen1.5-7B-Chat/summary)
 - [cpp-httplib](https://github.com/yhirose/cpp-httplib)
 - [chatgpt-web](https://github.com/xqdoo00o/chatgpt-web)
 - [ChatViewDemo](https://github.com/BrettFX/ChatViewDemo)
 - [nlohmann/json](https://github.com/nlohmann/json)
+- [Qwen-1.8B-Chat](https://modelscope.cn/models/qwen/Qwen-1_8B-Chat/summary)
+- [Qwen-7B-Chat](https://modelscope.cn/models/qwen/Qwen-7B-Chat/summary)
+- [Qwen-VL-Chat](https://modelscope.cn/models/qwen/Qwen-VL-Chat/summary)
+- [Qwen1.5-0.5B-Chat](https://modelscope.cn/models/qwen/Qwen1.5-0.5B-Chat/summary)
+- [Qwen1.5-1.8B-Chat](https://modelscope.cn/models/qwen/Qwen1.5-1.8B-Chat/summary)
+- [Qwen1.5-4B-Chat](https://modelscope.cn/models/qwen/Qwen1.5-4B-Chat/summary)
+- [Qwen1.5-7B-Chat](https://modelscope.cn/models/qwen/Qwen1.5-7B-Chat/summary)
+- [Qwen2-0.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2-0.5B-Instruct/summary)
+- [Qwen2-1.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2-1.5B-Instruct/summary)
+- [Qwen2-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2-7B-Instruct/summary)
+- [Qwen2-VL-2B-Instruct](https://modelscope.cn/models/qwen/Qwen2-VL-2B-Instruct/summary)
+- [Qwen2-VL-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2-VL-7B-Instruct/summary)
+- [chatglm-6b](https://modelscope.cn/models/ZhipuAI/chatglm-6b/summary)
+- [chatglm2-6b](https://modelscope.cn/models/ZhipuAI/chatglm2-6b/summary)
+- [codegeex2-6b](https://modelscope.cn/models/ZhipuAI/codegeex2-6b/summary)
+- [chatglm3-6b](https://modelscope.cn/models/ZhipuAI/chatglm3-6b/summary)
+- [glm4-9b-chat](https://modelscope.cn/models/ZhipuAI/glm-4-9b-chat/summary)
+- [Llama-2-7b-chat-ms](https://modelscope.cn/models/modelscope/Llama-2-7b-chat-ms/summary)
+- [Llama-3-8B-Instruct](https://modelscope.cn/models/modelscope/Meta-Llama-3-8B-Instruct/summary)
+- [Baichuan2-7B-Chat](https://modelscope.cn/models/baichuan-inc/baichuan-7B/summary)
+- [internlm-chat-7b](https://modelscope.cn/models/Shanghai_AI_Laboratory/internlm-chat-7b/summary)
+- [Yi-6B-Chat](https://modelscope.cn/models/01ai/Yi-6B-Chat/summary)
+- [deepseek-llm-7b-chat](https://modelscope.cn/models/deepseek-ai/deepseek-llm-7b-chat/summary)
+- [TinyLlama-1.1B-Chat-v0.6](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v0.6)
+- [phi-2](https://modelscope.cn/models/AI-ModelScope/phi-2/summary)
+- [bge-large-zh](https://modelscope.cn/models/AI-ModelScope/bge-large-zh/summary)
+- [gte_sentence-embedding_multilingual-base](https://modelscope.cn/models/iic/gte_sentence-embedding_multilingual-base/summary)
 
 </details>

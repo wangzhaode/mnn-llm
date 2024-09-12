@@ -277,37 +277,41 @@ protected:
 class Lvlm : public Llm {
 public:
     Lvlm(std::shared_ptr<LlmConfig> config) : Llm(config) {
-        img_size_ = config->llm_config_.value("img_size", img_size_);
-        imgpad_len_ = config->llm_config_.value("imgpad_len", imgpad_len_);
-        img_start_ = config->llm_config_.value("img_start", img_start_);
-        img_end_ = config->llm_config_.value("img_end", img_end_);
-        img_pad_ = config->llm_config_.value("img_pad", img_pad_);
+        image_size_ = config->llm_config_.value("image_size", image_size_);
+        image_pad_ = config->llm_config_.value("image_pad", image_pad_);
+        vision_start_ = config->llm_config_.value("vision_start", vision_start_);
+        vision_end_ = config->llm_config_.value("vision_end", vision_end_);
+        image_mean_ = config->llm_config_.value("image_mean", image_mean_);
+        image_norm_ = config->llm_config_.value("image_norm", image_norm_);
     }
     ~Lvlm() { visual_module_.reset(); }
     virtual void load() override;
-private:
-    int img_size_ = 448, imgpad_len_ = 256, img_start_ = 151857, img_end_ = 151858, img_pad_ = 151859;
-    std::shared_ptr<Module> visual_module_;
-    VARP visual_embedding(const std::vector<int>& input_ids);
-    std::vector<int> url_encode(const std::string& url);
     virtual std::vector<int> tokenizer(const std::string& query) override;
-    virtual VARP embedding(const std::vector<int>& input_ids) override;
+    virtual MNN::Express::VARP embedding(const std::vector<int>& input_ids) override;
+private:
+    int image_size_ = 448, vision_start_ = 151857, vision_end_ = 151858, image_pad_ = 151859;
+    std::vector<float> image_mean_ {122.7709383 , 116.7460125 , 104.09373615};
+    std::vector<float> image_norm_ {0.01459843, 0.01500777, 0.01422007};
+    std::vector<int> image_process(const std::string& img_info);
+    std::shared_ptr<Module> visual_module_;
+    std::vector<VARP> image_embeddings_;
 };
 // Llm end
 
 // Embedding start
 class Embedding : public Llm {
 public:
-    Embedding(std::shared_ptr<LlmConfig> config) : Llm(config) {}
-    static Embedding* createEmbedding(const std::string& config_path);
-    static float dist(VARP var0, VARP var1);
+    Embedding(std::shared_ptr<LlmConfig> config);
+    static Embedding* createEmbedding(const std::string& config_path, bool load = true);
+    static float dist(MNN::Express::VARP var0, MNN::Express::VARP var1);
     virtual void load() override;
-    VARP embedding(const std::string& txt);
-    int dim() { return config_->hidden_size(); }
+    MNN::Express::VARP ids_embedding(const std::vector<int>& ids);
+    MNN::Express::VARP txt_embedding(const std::string& txt);
+    int dim() const;
 private:
     virtual std::vector<int> tokenizer(const std::string& query) override;
-    virtual VARP gen_attention_mask(int seq_len) override;
-    virtual VARP gen_position_ids(int seq_len) override;
+    virtual MNN::Express::VARP gen_attention_mask(int seq_len) override;
+    virtual MNN::Express::VARP gen_position_ids(int seq_len) override;
 };
 // Embedding end
 

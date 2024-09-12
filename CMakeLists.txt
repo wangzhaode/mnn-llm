@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.5)
 project(mnn-llm)
 
 option(BUILD_FOR_ANDROID "Build for android whith mini memory mode." OFF)
-option(USING_VISUAL_MODEL "Using visual model will need dpes: MNNOpenCV and httplib." OFF)
+option(LLM_SUPPORT_VISION "Llm model support vision input." OFF)
 option(DUMP_PROFILE_INFO "Dump profile info when chat." OFF)
 option(BUILD_JNI "Build JNI for android app." OFF)
 
-if (USING_VISUAL_MODEL)
-    add_definitions(-DUSING_VISUAL_MODEL)
+if (LLM_SUPPORT_VISION)
+    add_definitions(-DLLM_SUPPORT_VISION)
 endif()
 
 if (DUMP_PROFILE_INFO)
@@ -24,7 +24,7 @@ set(MNN_SUPPORT_TRANSFORMER_FUSE ON CACHE BOOL "Open MNN_SUPPORT_TRANSFORMER_FUS
 if (BUILD_FOR_ANDROID)
     set(MNN_ARM82 ON CACHE BOOL "Open MNN_ARM82" FORCE)
 endif()
-if (USING_VISUAL_MODEL)
+if (LLM_SUPPORT_VISION)
     set(MNN_BUILD_OPENCV ON CACHE BOOL "Open MNN_BUILD_OPENCV" FORCE)
     set(MNN_IMGCODECS ON CACHE BOOL "Open MNN_IMGCODECS" FORCE)
 endif()
@@ -33,7 +33,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/MNN)
 # include dir
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include/
                     ${CMAKE_CURRENT_LIST_DIR}/MNN/include/
-                    ${CMAKE_CURRENT_LIST_DIR}/MNN/tools/cv/include/cv/
+                    ${CMAKE_CURRENT_LIST_DIR}/MNN/tools/cv/include/
                     )
 
 # source files
@@ -58,7 +58,7 @@ else()
     set_target_properties(llm PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
     target_link_libraries(llm MNN MNN_Express)
-    if (USING_VISUAL_MODEL)
+    if (LLM_SUPPORT_VISION)
         target_link_libraries(llm MNNOpenCV)
     endif()
 endif()

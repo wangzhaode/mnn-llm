@@ -17,7 +17,7 @@
 #include "llm.hpp"
 #include "tokenizer.hpp"
 
-#ifdef USING_VISUAL_MODEL
+#ifdef LLM_SUPPORT_VISION
 #include "httplib.h"
 #include <cv/cv.hpp>
 #endif
@@ -499,77 +499,22 @@ void Lvlm::load() {
     Module::Config module_config;
     module_config.shapeMutable = true;
     module_config.rearrange = false;
+    runtime_manager_->setExternalFile(config_->visual_model() + ".weight");
     visual_module_.reset(Module::load({}, {}, config_->visual_model().c_str(), runtime_manager_, &module_config));
 }
 
-std::vector<int> Lvlm::url_encode(const std::string& url) {
-    std::vector<int> ascii_values(imgpad_len_ + 2, img_pad_);
-    ascii_values[0] = img_start_;
-    ascii_values[imgpad_len_ + 1] = img_end_;
-    for (int i = 0; i < url.size(); i++) {
-        ascii_values[i + 1] = static_cast<int>(url[i]);
-    }
-    return ascii_values;
-}
-
-std::vector<int> Lvlm::tokenizer(const std::string& query) {
-    auto prompt = apply_prompt_template(query);
-    // split query
-    std::regex img_regex("<img>(.*?)</img>");
-    std::string::const_iterator searchStart(prompt.cbegin());
-    std::smatch match;
-    std::vector<std::string> img_info, txt_info;
-    std::vector<int> ids {};
-    while (std::regex_search(searchStart, prompt.cend(), match, img_regex)) {
-        std::cout << match[1].str() << std::endl;
-        auto txt_ids = tokenizer_->encode(match.prefix().str());
-        ids.insert(ids.end(), txt_ids.begin(), txt_ids.end());
-        auto img_ids = url_encode(match[1].str());
-        ids.insert(ids.end(), img_ids.begin(), img_ids.end());
-        searchStart = match.suffix().first;
-    }
-    if (searchStart != prompt.cend()) {
-        auto txt_ids = tokenizer_->encode(std::string(searchStart, prompt.cend()));
-        ids.insert(ids.end(), txt_ids.begin(), txt_ids.end());
-    }
-    return ids;
-}
-
-VARP Lvlm::embedding(const std::vector<int>& input_ids) {
-#ifdef USING_VISUAL_MODEL
-    int start_pos = 0, pad_pos = 0, end_pos = 0;
-    for (int i = 0; i < input_ids.size(); i++) {
-        int id = input_ids[i];
-        if (id == img_start_ && !start_pos) {
-            start_pos = i;
-        }
-        if (id == img_pad_ && !pad_pos) {
-            pad_pos = i;
-        }
-        if (id == img_end_ && !end_pos) {
-            end_pos = i;
-        }
-    }
-    if (!start_pos) {
-        return Llm::embedding(input_ids);
-    }
-    std::vector<int> prefix(input_ids.begin(), input_ids.begin() + start_pos + 1);
-    std::vector<int> img_ascii(input_ids.begin() + start_pos + 1, input_ids.begin() + pad_pos);
-    std::vector<int> suffix(input_ids.begin() + end_pos, input_ids.end());
-    std::string img_path;
-    for (auto ascii_val : img_ascii) {
-        img_path += static_cast<char>(ascii_val);
-    }
+std::vector<int> Lvlm::image_process(const std::string& image_info) {
+#ifdef LLM_SUPPORT_VISION
     VARP image = nullptr;
-    if (img_path.substr(0, 4) == "http") {
+    if (image_info.substr(0, 4) == "http") {
         std::regex url_regex(R"(^https?://([^/]+)(/.*))");
         std::smatch url_match_result;
         std::string host, path;
-        if (std::regex_search(img_path, url_match_result, url_regex) && url_match_result.size() == 3) {
+        if (std::regex_search(image_info, url_match_result, url_regex) && url_match_result.size() == 3) {
             host = url_match_result[1].str();
             path = url_match_result[2].str();
         }
-        std::cout << host << "#" << path << std::endl;
+        // std::cout << host << "#" << path << std::endl;
         httplib::Client cli(host);
         auto res = cli.Get(path);
         std::string img_file = "downloaded_image.jpg";
@@ -589,21 +534,77 @@ VARP Lvlm::embedding(const std::vector<int>& input_ids) {
         }
         image = MNN::CV::imread(img_file);
     } else {
-        image = MNN::CV::imread(img_path);
+        image = MNN::CV::imread(image_info);
     }
-    image = MNN::CV::resize(image, {img_size_, img_size_}, 0, 0, MNN::CV::INTER_LINEAR, MNN::CV::COLOR_BGR2RGB,
-                            {123.25239296, 117.20384, 104.50194688}, {0.0145414 , 0.01494914, 0.01416452});
+    image = MNN::CV::resize(image, {image_size_, image_size_}, 0, 0, MNN::CV::INTER_LINEAR, MNN::CV::COLOR_BGR2RGB, image_mean_, image_norm_);
     image = MNN::Express::_Unsqueeze(image, {0});
     image = MNN::Express::_Convert(image, NC4HW4);
     auto image_embedding = visual_module_->forward(image);
-    image_embedding = MNN::Express::_Permute(image_embedding, {1, 0, 2});
-    auto prefix_embedding = Llm::embedding(prefix);
-    auto suffix_embedding = Llm::embedding(suffix);
-    auto embeddings = MNN::Express::_Concat({prefix_embedding, image_embedding, suffix_embedding}, 0);
+    image_embeddings_.push_back(image_embedding);
+    int visual_len = image_embedding->getInfo()->dim[0];
+    std::vector<int> img_ids(visual_len, image_pad_);
+    img_ids.insert(img_ids.begin(), vision_start_);
+    img_ids.push_back(vision_end_);
+    return img_ids;
 #else
-    auto embeddings = Llm::embedding(input_ids);
+    return std::vector<int>(0);
 #endif
-    return embeddings;
+}
+
+std::vector<int> Lvlm::tokenizer(const std::string& query) {
+    auto prompt = apply_prompt_template(query);
+    // split query
+    std::regex img_regex("<img>(.*?)</img>");
+    std::string::const_iterator searchStart(prompt.cbegin());
+    std::smatch match;
+    std::vector<std::string> img_infos;
+    std::vector<int> ids {};
+
+    while (std::regex_search(searchStart, prompt.cend(), match, img_regex)) {
+        // std::cout << "img match: " << match[1].str() << std::endl;
+        auto txt_ids = tokenizer_->encode(match.prefix().str());
+        ids.insert(ids.end(), txt_ids.begin(), txt_ids.end());
+        auto img_ids = image_process(match[1].str());
+        ids.insert(ids.end(), img_ids.begin(), img_ids.end());
+        searchStart = match.suffix().first;
+    }
+    if (searchStart != prompt.cend()) {
+        auto txt_ids = tokenizer_->encode(std::string(searchStart, prompt.cend()));
+        ids.insert(ids.end(), txt_ids.begin(), txt_ids.end());
+    }
+    // printf("ids = ["); for (auto id : ids) printf("%d, ", id); printf("]\n");
+    return ids;
+}
+
+VARP Lvlm::embedding(const std::vector<int>& input_ids) {
+    if (input_ids.size() == 1) {
+        return Llm::embedding(input_ids);
+    }
+    std::vector<VARP> embeddings;
+    int img_idx = 0;
+    std::vector<int> cur_txt_ids;
+    for (int i = 0; i < input_ids.size(); i++) {
+        int id = input_ids[i];
+        if (id == image_pad_) {
+            continue;
+        }
+        cur_txt_ids.push_back(id);
+        if (id == vision_start_) {
+            auto txt_embedding = Llm::embedding(cur_txt_ids);
+            auto img_embedding = image_embeddings_[img_idx++];
+            embeddings.push_back(txt_embedding);
+            embeddings.push_back(img_embedding);
+        } else if (id == vision_end_) {
+            cur_txt_ids.clear();
+            cur_txt_ids.push_back(id);
+        }
+    }
+    if (!cur_txt_ids.empty()) {
+        auto txt_embedding = Llm::embedding(cur_txt_ids);
+        embeddings.push_back(txt_embedding);
+    }
+    auto embedding = MNN::Express::_Concat(embeddings, 0);
+    return embedding;
 }
 // Llm end
 
@@ -614,12 +615,18 @@ float Embedding::dist(VARP var0, VARP var1) {
     return dist;
 }
 
-Embedding* Embedding::createEmbedding(const std::string& config_path) {
+Embedding* Embedding::createEmbedding(const std::string& config_path, bool load) {
     std::shared_ptr<LlmConfig> config(new LlmConfig(config_path));
     Embedding* embedding = new Embedding(config);
-    embedding->load();
+    if (load) {
+        embedding->load();
+    }
     return embedding;
 }
+
+Embedding::Embedding(std::shared_ptr<LlmConfig> config) : Llm(config) {}
+
+int Embedding::dim() const { return config_->hidden_size(); }
 
 void Embedding::load() {
     init_runtime();
@@ -636,15 +643,14 @@ void Embedding::load() {
     MNN_PRINT("load %s ... ", model_path.c_str());
     modules_.resize(1);
     modules_[0].reset(Module::load(
-            {"input_ids", "attention_mask", "position_ids"},
-            {"sentence_embeddings"}, model_path.c_str(), runtime_manager_, &module_config));
+                                   {"input_ids", "attention_mask", "position_ids"},
+                                   {"sentence_embeddings"}, model_path.c_str(), runtime_manager_, &module_config));
     MNN_PRINT("Done!\n");
 }
 
-VARP Embedding::embedding(const std::string& txt) {
-    auto ids = tokenizer(txt);
+VARP Embedding::ids_embedding(const std::vector<int>& ids) {
     int prompt_len = ids.size();
-    auto inputs_ids = _Const(ids.data(), {prompt_len}, NCHW, halide_type_of<int>());
+    auto inputs_ids = embedding(ids);
     auto attention_mask = gen_attention_mask(prompt_len);
     auto position_ids = gen_position_ids(prompt_len);
     auto outputs = modules_[0]->onForward({inputs_ids, attention_mask, position_ids});
@@ -652,12 +658,12 @@ VARP Embedding::embedding(const std::string& txt) {
     return sentence_embeddings;
 }
 
+VARP Embedding::txt_embedding(const std::string& txt) {
+    return ids_embedding(tokenizer(txt));
+}
+
 std::vector<int> Embedding::tokenizer(const std::string& query) {
-    auto prompt = query;
-    if (query.size() <= 256) {
-        prompt = "为这个句子生成表示以用于检索相关文章：" + query;
-    }
-    prompt = apply_prompt_template(prompt);
+    auto prompt = apply_prompt_template(query);
     auto ids = tokenizer_->encode(prompt);
     return ids;
 }
@@ -770,7 +776,7 @@ VARP TextVectorStore::text2vector(const std::string& text) {
         std::cerr << "Not set embedding for TextVectorStore." << std::endl;
         return nullptr;
     }
-    auto vector = embedding_->embedding(text);
+    auto vector = embedding_->txt_embedding(text);
     return vector;
 }
 // TextVectorStore end

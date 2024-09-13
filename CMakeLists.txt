@@ -6,10 +6,6 @@ option(LLM_SUPPORT_VISION "Llm model support vision input." OFF)
 option(DUMP_PROFILE_INFO "Dump profile info when chat." OFF)
 option(BUILD_JNI "Build JNI for android app." OFF)
 
-if (LLM_SUPPORT_VISION)
-    add_definitions(-DLLM_SUPPORT_VISION)
-endif()
-
 if (DUMP_PROFILE_INFO)
     add_definitions(-DDUMP_PROFILE_INFO)
 endif()
@@ -25,6 +21,7 @@ if (BUILD_FOR_ANDROID)
     set(MNN_ARM82 ON CACHE BOOL "Open MNN_ARM82" FORCE)
 endif()
 if (LLM_SUPPORT_VISION)
+    add_definitions(-DLLM_SUPPORT_VISION)
     set(MNN_BUILD_OPENCV ON CACHE BOOL "Open MNN_BUILD_OPENCV" FORCE)
     set(MNN_IMGCODECS ON CACHE BOOL "Open MNN_IMGCODECS" FORCE)
 endif()
@@ -34,6 +31,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/MNN)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include/
                     ${CMAKE_CURRENT_LIST_DIR}/MNN/include/
                     ${CMAKE_CURRENT_LIST_DIR}/MNN/tools/cv/include/
+                    ${CMAKE_CURRENT_LIST_DIR}/MNN/MNN/3rd_party/
                     )
 
 # source files

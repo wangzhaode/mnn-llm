@@ -402,6 +402,49 @@
 		4DA4F7D12C9438500070D36A /* MNNSamplerC3BilinearOpt.S in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F7D02C9438500070D36A /* MNNSamplerC3BilinearOpt.S */; };
 		4DA4F7DD2C94386C0070D36A /* KVCacheManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F7DC2C94386C0070D36A /* KVCacheManager.cpp */; };
 		4DA4F7E12C94390C0070D36A /* MNNFileUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F7E02C94390C0070D36A /* MNNFileUtils.cpp */; };
+		4DA4F8022C943BA80070D36A /* qwen2-vl-2b-instruct in Resources */ = {isa = PBXBuildFile; fileRef = 4DA4F8012C943BA80070D36A /* qwen2-vl-2b-instruct */; };
+		4DA4F8B42C94679A0070D36A /* filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F8982C9467990070D36A /* filter.cpp */; };
+		4DA4F8B62C94679A0070D36A /* calib3d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F8902C9467990070D36A /* calib3d.cpp */; };
+		4DA4F8B82C94679A0070D36A /* histograms.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F89A2C9467990070D36A /* histograms.cpp */; };
+		4DA4F8B92C94679A0070D36A /* geometric.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F8992C9467990070D36A /* geometric.cpp */; };
+		4DA4F8BD2C94679A0070D36A /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F8962C9467990070D36A /* color.cpp */; };
+		4DA4F8BE2C94679A0070D36A /* structural.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F89C2C9467990070D36A /* structural.cpp */; };
+		4DA4F8C32C94679A0070D36A /* imgcodecs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F8942C9467990070D36A /* imgcodecs.cpp */; };
+		4DA4F8C62C94679A0070D36A /* draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F8972C9467990070D36A /* draw.cpp */; };
+		4DA4F8C72C94679A0070D36A /* core.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F8922C9467990070D36A /* core.cpp */; };
+		4DA4F8C82C94679A0070D36A /* miscellaneous.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F89B2C9467990070D36A /* miscellaneous.cpp */; };
+		4DA4F94D2C953C360070D36A /* MetalLoop.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9312C953C360070D36A /* MetalLoop.mm */; };
+		4DA4F9502C953C360070D36A /* MetalAttention.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F90F2C953C360070D36A /* MetalAttention.mm */; };
+		4DA4F9512C953C360070D36A /* MNNMetalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9482C953C360070D36A /* MNNMetalContext.mm */; };
+		4DA4F9542C953C360070D36A /* MetalConvolution1x1.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F91B2C953C360070D36A /* MetalConvolution1x1.mm */; };
+		4DA4F9562C953C360070D36A /* MetalMatMul.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9332C953C360070D36A /* MetalMatMul.mm */; };
+		4DA4F9582C953C360070D36A /* MetalConvolutionWinograd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9212C953C360070D36A /* MetalConvolutionWinograd.mm */; };
+		4DA4F9592C953C360070D36A /* MetalArgMax.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F90E2C953C360070D36A /* MetalArgMax.mm */; };
+		4DA4F95A2C953C360070D36A /* MetalROIPooling.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9402C953C360070D36A /* MetalROIPooling.mm */; };
+		4DA4F95B2C953C360070D36A /* MetalConvolutionCommon.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F91D2C953C360070D36A /* MetalConvolutionCommon.mm */; };
+		4DA4F95C2C953C360070D36A /* AllShader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F90B2C953C360070D36A /* AllShader.cpp */; };
+		4DA4F95D2C953C360070D36A /* MetalRaster.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F93A2C953C360070D36A /* MetalRaster.mm */; };
+		4DA4F9612C953C360070D36A /* MetalCast.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9162C953C360070D36A /* MetalCast.mm */; };
+		4DA4F9642C953C360070D36A /* MetalConvolution.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9192C953C360070D36A /* MetalConvolution.mm */; };
+		4DA4F9652C953C360070D36A /* MetalSoftmax.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9442C953C360070D36A /* MetalSoftmax.mm */; };
+		4DA4F9662C953C360070D36A /* MetalReduction.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F93C2C953C360070D36A /* MetalReduction.mm */; };
+		4DA4F9672C953C360070D36A /* MetalReLU6.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F93E2C953C360070D36A /* MetalReLU6.mm */; };
+		4DA4F9692C953C360070D36A /* MetalLayerNorm.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9302C953C360070D36A /* MetalLayerNorm.mm */; };
+		4DA4F96B2C953C360070D36A /* MetalExecution.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9282C953C360070D36A /* MetalExecution.mm */; };
+		4DA4F96C2C953C360070D36A /* MetalPReLU.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9382C953C360070D36A /* MetalPReLU.mm */; };
+		4DA4F96D2C953C360070D36A /* MetalConvolutionDepthwise.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F91F2C953C360070D36A /* MetalConvolutionDepthwise.mm */; };
+		4DA4F96E2C953C360070D36A /* MetalPooling.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9362C953C360070D36A /* MetalPooling.mm */; };
+		4DA4F96F2C953C360070D36A /* ShaderMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F94B2C953C360070D36A /* ShaderMap.cpp */; };
+		4DA4F9722C953C360070D36A /* MetalScale.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9422C953C360070D36A /* MetalScale.mm */; };
+		4DA4F9742C953C360070D36A /* MetalGridSample.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F92C2C953C360070D36A /* MetalGridSample.mm */; };
+		4DA4F9762C953C360070D36A /* MetalUnary.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9462C953C360070D36A /* MetalUnary.mm */; };
+		4DA4F9772C953C360070D36A /* MetalDeconvolution.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9232C953C360070D36A /* MetalDeconvolution.mm */; };
+		4DA4F9792C953C360070D36A /* MetalOPRegister.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9342C953C360070D36A /* MetalOPRegister.mm */; };
+		4DA4F97A2C953C360070D36A /* MetalEltwise.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9262C953C360070D36A /* MetalEltwise.mm */; };
+		4DA4F97C2C953C360070D36A /* MetalBinary.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9132C953C360070D36A /* MetalBinary.mm */; };
+		4DA4F97D2C953C360070D36A /* MetalInterp.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F92E2C953C360070D36A /* MetalInterp.mm */; };
+		4DA4F97E2C953C360070D36A /* MetalFuse.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F92A2C953C360070D36A /* MetalFuse.mm */; };
+		4DA4F97F2C953C360070D36A /* MetalBackend.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA4F9112C953C360070D36A /* MetalBackend.mm */; };
 		4DC325622C65DC5700C7970A /* MNNGemmInt8AddBiasScale_ARMV82_w4_Unit.S in Sources */ = {isa = PBXBuildFile; fileRef = 4DC325602C65DC5700C7970A /* MNNGemmInt8AddBiasScale_ARMV82_w4_Unit.S */; };
 		4DC325632C65DC5700C7970A /* MNNDynamicUpdateConvBiasScale.S in Sources */ = {isa = PBXBuildFile; fileRef = 4DC3255E2C65DC5700C7970A /* MNNDynamicUpdateConvBiasScale.S */; };
 		4DC325642C65DC5700C7970A /* MNNGemmInt8AddBiasScale_ARMV86_w4_Unit.S in Sources */ = {isa = PBXBuildFile; fileRef = 4DC325612C65DC5700C7970A /* MNNGemmInt8AddBiasScale_ARMV86_w4_Unit.S */; };
@@ -1012,6 +1055,92 @@
 		4DA4F7DC2C94386C0070D36A /* KVCacheManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = KVCacheManager.cpp; sourceTree = "<group>"; };
 		4DA4F7DF2C94390C0070D36A /* MNNFileUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MNNFileUtils.h; sourceTree = "<group>"; };
 		4DA4F7E02C94390C0070D36A /* MNNFileUtils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MNNFileUtils.cpp; sourceTree = "<group>"; };
+		4DA4F8012C943BA80070D36A /* qwen2-vl-2b-instruct */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "qwen2-vl-2b-instruct"; path = "model/qwen2-vl-2b-instruct"; sourceTree = "<group>"; };
+		4DA4F8902C9467990070D36A /* calib3d.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = calib3d.cpp; sourceTree = "<group>"; };
+		4DA4F8922C9467990070D36A /* core.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = core.cpp; sourceTree = "<group>"; };
+		4DA4F8942C9467990070D36A /* imgcodecs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgcodecs.cpp; sourceTree = "<group>"; };
+		4DA4F8962C9467990070D36A /* color.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = color.cpp; sourceTree = "<group>"; };
+		4DA4F8972C9467990070D36A /* draw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = draw.cpp; sourceTree = "<group>"; };
+		4DA4F8982C9467990070D36A /* filter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = filter.cpp; sourceTree = "<group>"; };
+		4DA4F8992C9467990070D36A /* geometric.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = geometric.cpp; sourceTree = "<group>"; };
+		4DA4F89A2C9467990070D36A /* histograms.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = histograms.cpp; sourceTree = "<group>"; };
+		4DA4F89B2C9467990070D36A /* miscellaneous.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = miscellaneous.cpp; sourceTree = "<group>"; };
+		4DA4F89C2C9467990070D36A /* structural.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = structural.cpp; sourceTree = "<group>"; };
+		4DA4F8E32C9468100070D36A /* color.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = color.hpp; sourceTree = "<group>"; };
+		4DA4F8E42C9468100070D36A /* draw.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = draw.hpp; sourceTree = "<group>"; };
+		4DA4F8E52C9468100070D36A /* filter.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = filter.hpp; sourceTree = "<group>"; };
+		4DA4F8E62C9468100070D36A /* geometric.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = geometric.hpp; sourceTree = "<group>"; };
+		4DA4F8E72C9468100070D36A /* histograms.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = histograms.hpp; sourceTree = "<group>"; };
+		4DA4F8E82C9468100070D36A /* imgproc.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = imgproc.hpp; sourceTree = "<group>"; };
+		4DA4F8E92C9468100070D36A /* miscellaneous.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = miscellaneous.hpp; sourceTree = "<group>"; };
+		4DA4F8EA2C9468100070D36A /* structural.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = structural.hpp; sourceTree = "<group>"; };
+		4DA4F8EC2C9468100070D36A /* calib3d.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = calib3d.hpp; sourceTree = "<group>"; };
+		4DA4F8ED2C9468100070D36A /* core.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = core.hpp; sourceTree = "<group>"; };
+		4DA4F8EE2C9468100070D36A /* cv.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = cv.hpp; sourceTree = "<group>"; };
+		4DA4F8EF2C9468100070D36A /* imgcodecs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = imgcodecs.hpp; sourceTree = "<group>"; };
+		4DA4F8F02C9468100070D36A /* types.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = types.hpp; sourceTree = "<group>"; };
+		4DA4F90A2C953C360070D36A /* AllShader.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AllShader.hpp; sourceTree = "<group>"; };
+		4DA4F90B2C953C360070D36A /* AllShader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AllShader.cpp; sourceTree = "<group>"; };
+		4DA4F90E2C953C360070D36A /* MetalArgMax.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalArgMax.mm; sourceTree = "<group>"; };
+		4DA4F90F2C953C360070D36A /* MetalAttention.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalAttention.mm; sourceTree = "<group>"; };
+		4DA4F9102C953C360070D36A /* MetalBackend.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalBackend.hpp; sourceTree = "<group>"; };
+		4DA4F9112C953C360070D36A /* MetalBackend.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalBackend.mm; sourceTree = "<group>"; };
+		4DA4F9122C953C360070D36A /* MetalBinary.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalBinary.hpp; sourceTree = "<group>"; };
+		4DA4F9132C953C360070D36A /* MetalBinary.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalBinary.mm; sourceTree = "<group>"; };
+		4DA4F9142C953C360070D36A /* MetalCache_generated.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MetalCache_generated.h; sourceTree = "<group>"; };
+		4DA4F9152C953C360070D36A /* MetalCast.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalCast.hpp; sourceTree = "<group>"; };
+		4DA4F9162C953C360070D36A /* MetalCast.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalCast.mm; sourceTree = "<group>"; };
+		4DA4F9182C953C360070D36A /* MetalConvolution.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalConvolution.hpp; sourceTree = "<group>"; };
+		4DA4F9192C953C360070D36A /* MetalConvolution.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalConvolution.mm; sourceTree = "<group>"; };
+		4DA4F91A2C953C360070D36A /* MetalConvolution1x1.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalConvolution1x1.hpp; sourceTree = "<group>"; };
+		4DA4F91B2C953C360070D36A /* MetalConvolution1x1.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalConvolution1x1.mm; sourceTree = "<group>"; };
+		4DA4F91C2C953C360070D36A /* MetalConvolutionCommon.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalConvolutionCommon.hpp; sourceTree = "<group>"; };
+		4DA4F91D2C953C360070D36A /* MetalConvolutionCommon.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalConvolutionCommon.mm; sourceTree = "<group>"; };
+		4DA4F91E2C953C360070D36A /* MetalConvolutionDepthwise.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalConvolutionDepthwise.hpp; sourceTree = "<group>"; };
+		4DA4F91F2C953C360070D36A /* MetalConvolutionDepthwise.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalConvolutionDepthwise.mm; sourceTree = "<group>"; };
+		4DA4F9202C953C360070D36A /* MetalConvolutionWinograd.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalConvolutionWinograd.hpp; sourceTree = "<group>"; };
+		4DA4F9212C953C360070D36A /* MetalConvolutionWinograd.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalConvolutionWinograd.mm; sourceTree = "<group>"; };
+		4DA4F9222C953C360070D36A /* MetalDeconvolution.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalDeconvolution.hpp; sourceTree = "<group>"; };
+		4DA4F9232C953C360070D36A /* MetalDeconvolution.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalDeconvolution.mm; sourceTree = "<group>"; };
+		4DA4F9242C953C360070D36A /* MetalDefine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MetalDefine.h; sourceTree = "<group>"; };
+		4DA4F9252C953C360070D36A /* MetalEltwise.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalEltwise.hpp; sourceTree = "<group>"; };
+		4DA4F9262C953C360070D36A /* MetalEltwise.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalEltwise.mm; sourceTree = "<group>"; };
+		4DA4F9272C953C360070D36A /* MetalExecution.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalExecution.hpp; sourceTree = "<group>"; };
+		4DA4F9282C953C360070D36A /* MetalExecution.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalExecution.mm; sourceTree = "<group>"; };
+		4DA4F9292C953C360070D36A /* MetalFuse.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalFuse.hpp; sourceTree = "<group>"; };
+		4DA4F92A2C953C360070D36A /* MetalFuse.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalFuse.mm; sourceTree = "<group>"; };
+		4DA4F92B2C953C360070D36A /* MetalGridSample.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalGridSample.hpp; sourceTree = "<group>"; };
+		4DA4F92C2C953C360070D36A /* MetalGridSample.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalGridSample.mm; sourceTree = "<group>"; };
+		4DA4F92D2C953C360070D36A /* MetalInterp.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalInterp.hpp; sourceTree = "<group>"; };
+		4DA4F92E2C953C360070D36A /* MetalInterp.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalInterp.mm; sourceTree = "<group>"; };
+		4DA4F92F2C953C360070D36A /* MetalLayerNorm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalLayerNorm.hpp; sourceTree = "<group>"; };
+		4DA4F9302C953C360070D36A /* MetalLayerNorm.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalLayerNorm.mm; sourceTree = "<group>"; };
+		4DA4F9312C953C360070D36A /* MetalLoop.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalLoop.mm; sourceTree = "<group>"; };
+		4DA4F9322C953C360070D36A /* MetalMatMul.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalMatMul.hpp; sourceTree = "<group>"; };
+		4DA4F9332C953C360070D36A /* MetalMatMul.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalMatMul.mm; sourceTree = "<group>"; };
+		4DA4F9342C953C360070D36A /* MetalOPRegister.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalOPRegister.mm; sourceTree = "<group>"; };
+		4DA4F9352C953C360070D36A /* MetalPooling.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalPooling.hpp; sourceTree = "<group>"; };
+		4DA4F9362C953C360070D36A /* MetalPooling.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalPooling.mm; sourceTree = "<group>"; };
+		4DA4F9372C953C360070D36A /* MetalPReLU.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalPReLU.hpp; sourceTree = "<group>"; };
+		4DA4F9382C953C360070D36A /* MetalPReLU.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalPReLU.mm; sourceTree = "<group>"; };
+		4DA4F9392C953C360070D36A /* MetalRaster.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalRaster.hpp; sourceTree = "<group>"; };
+		4DA4F93A2C953C360070D36A /* MetalRaster.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalRaster.mm; sourceTree = "<group>"; };
+		4DA4F93B2C953C360070D36A /* MetalReduction.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalReduction.hpp; sourceTree = "<group>"; };
+		4DA4F93C2C953C360070D36A /* MetalReduction.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalReduction.mm; sourceTree = "<group>"; };
+		4DA4F93D2C953C360070D36A /* MetalReLU6.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalReLU6.hpp; sourceTree = "<group>"; };
+		4DA4F93E2C953C360070D36A /* MetalReLU6.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalReLU6.mm; sourceTree = "<group>"; };
+		4DA4F93F2C953C360070D36A /* MetalROIPooling.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalROIPooling.hpp; sourceTree = "<group>"; };
+		4DA4F9402C953C360070D36A /* MetalROIPooling.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalROIPooling.mm; sourceTree = "<group>"; };
+		4DA4F9412C953C360070D36A /* MetalScale.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalScale.hpp; sourceTree = "<group>"; };
+		4DA4F9422C953C360070D36A /* MetalScale.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalScale.mm; sourceTree = "<group>"; };
+		4DA4F9432C953C360070D36A /* MetalSoftmax.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalSoftmax.hpp; sourceTree = "<group>"; };
+		4DA4F9442C953C360070D36A /* MetalSoftmax.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalSoftmax.mm; sourceTree = "<group>"; };
+		4DA4F9452C953C360070D36A /* MetalUnary.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = MetalUnary.hpp; sourceTree = "<group>"; };
+		4DA4F9462C953C360070D36A /* MetalUnary.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MetalUnary.mm; sourceTree = "<group>"; };
+		4DA4F9472C953C360070D36A /* MNNMetalContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MNNMetalContext.h; sourceTree = "<group>"; };
+		4DA4F9482C953C360070D36A /* MNNMetalContext.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MNNMetalContext.mm; sourceTree = "<group>"; };
+		4DA4F94A2C953C360070D36A /* ShaderMap.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ShaderMap.hpp; sourceTree = "<group>"; };
+		4DA4F94B2C953C360070D36A /* ShaderMap.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ShaderMap.cpp; sourceTree = "<group>"; };
 		4DC3255E2C65DC5700C7970A /* MNNDynamicUpdateConvBiasScale.S */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = MNNDynamicUpdateConvBiasScale.S; sourceTree = "<group>"; };
 		4DC3255F2C65DC5700C7970A /* MNNGemmInt8AddBiasScale_16x4_w4_Unit.S */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = MNNGemmInt8AddBiasScale_16x4_w4_Unit.S; sourceTree = "<group>"; };
 		4DC325602C65DC5700C7970A /* MNNGemmInt8AddBiasScale_ARMV82_w4_Unit.S */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = MNNGemmInt8AddBiasScale_ARMV82_w4_Unit.S; sourceTree = "<group>"; };
@@ -2267,6 +2396,7 @@
 		4D3B6ADB2C2124D400E2A1E0 /* backend */ = {
 			isa = PBXGroup;
 			children = (
+				4DA4F94C2C953C360070D36A /* metal */,
 				4D3B64132C2124D400E2A1E0 /* arm82 */,
 				4D3B66452C2124D400E2A1E0 /* cpu */,
 			);
@@ -2502,6 +2632,7 @@
 		4D3B701D2C2124D400E2A1E0 /* MNN */ = {
 			isa = PBXGroup;
 			children = (
+				4DA4F8B32C9467990070D36A /* cv */,
 				4D3B62672C2124D400E2A1E0 /* express */,
 				4D3B62822C2124D400E2A1E0 /* include */,
 				4D3B6B9F2C2124D400E2A1E0 /* source */,
@@ -2526,6 +2657,7 @@
 		4D5B977F2B2B21D3003AF2F1 = {
 			isa = PBXGroup;
 			children = (
+				4DA4F8012C943BA80070D36A /* qwen2-vl-2b-instruct */,
 				4D5B978A2B2B21D3003AF2F1 /* mnn-llm */,
 				4DD09EB12C40C882006F9F0A /* watchllm Watch App */,
 				4D5B97892B2B21D3003AF2F1 /* Products */,
@@ -2591,6 +2723,170 @@
 			children = (
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		4DA4F8912C9467990070D36A /* calib3d */ = {
+			isa = PBXGroup;
+			children = (
+				4DA4F8902C9467990070D36A /* calib3d.cpp */,
+			);
+			path = calib3d;
+			sourceTree = "<group>";
+		};
+		4DA4F8932C9467990070D36A /* core */ = {
+			isa = PBXGroup;
+			children = (
+				4DA4F8922C9467990070D36A /* core.cpp */,
+			);
+			path = core;
+			sourceTree = "<group>";
+		};
+		4DA4F8952C9467990070D36A /* imgcodecs */ = {
+			isa = PBXGroup;
+			children = (
+				4DA4F8942C9467990070D36A /* imgcodecs.cpp */,
+			);
+			path = imgcodecs;
+			sourceTree = "<group>";
+		};
+		4DA4F89D2C9467990070D36A /* imgproc */ = {
+			isa = PBXGroup;
+			children = (
+				4DA4F8962C9467990070D36A /* color.cpp */,
+				4DA4F8972C9467990070D36A /* draw.cpp */,
+				4DA4F8982C9467990070D36A /* filter.cpp */,
+				4DA4F8992C9467990070D36A /* geometric.cpp */,
+				4DA4F89A2C9467990070D36A /* histograms.cpp */,
+				4DA4F89B2C9467990070D36A /* miscellaneous.cpp */,
+				4DA4F89C2C9467990070D36A /* structural.cpp */,
+			);
+			path = imgproc;
+			sourceTree = "<group>";
+		};
+		4DA4F89E2C9467990070D36A /* source */ = {
+			isa = PBXGroup;
+			children = (
+				4DA4F8912C9467990070D36A /* calib3d */,
+				4DA4F8932C9467990070D36A /* core */,
+				4DA4F8952C9467990070D36A /* imgcodecs */,
+				4DA4F89D2C9467990070D36A /* imgproc */,
+			);
+			path = source;
+			sourceTree = "<group>";
+		};
+		4DA4F8B32C9467990070D36A /* cv */ = {
+			isa = PBXGroup;
+			children = (
+				4DA4F8F22C9468100070D36A /* include */,
+				4DA4F89E2C9467990070D36A /* source */,
+			);
+			name = cv;
+			path = tools/cv;
+			sourceTree = "<group>";
+		};
+		4DA4F8EB2C9468100070D36A /* imgproc */ = {
+			isa = PBXGroup;
+			children = (
+				4DA4F8E32C9468100070D36A /* color.hpp */,
+				4DA4F8E42C9468100070D36A /* draw.hpp */,
+				4DA4F8E52C9468100070D36A /* filter.hpp */,
+				4DA4F8E62C9468100070D36A /* geometric.hpp */,
+				4DA4F8E72C9468100070D36A /* histograms.hpp */,
+				4DA4F8E82C9468100070D36A /* imgproc.hpp */,
+				4DA4F8E92C9468100070D36A /* miscellaneous.hpp */,
+				4DA4F8EA2C9468100070D36A /* structural.hpp */,
+			);
+			path = imgproc;
+			sourceTree = "<group>";
+		};
+		4DA4F8F12C9468100070D36A /* cv */ = {
+			isa = PBXGroup;
+			children = (
+				4DA4F8EB2C9468100070D36A /* imgproc */,
+				4DA4F8EC2C9468100070D36A /* calib3d.hpp */,
+				4DA4F8ED2C9468100070D36A /* core.hpp */,
+				4DA4F8EE2C9468100070D36A /* cv.hpp */,
+				4DA4F8EF2C9468100070D36A /* imgcodecs.hpp */,
+				4DA4F8F02C9468100070D36A /* types.hpp */,
+			);
+			path = cv;
+			sourceTree = "<group>";
+		};
+		4DA4F8F22C9468100070D36A /* include */ = {
+			isa = PBXGroup;
+			children = (
+				4DA4F8F12C9468100070D36A /* cv */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		4DA4F94C2C953C360070D36A /* metal */ = {
+			isa = PBXGroup;
+			children = (
+				4DA4F90A2C953C360070D36A /* AllShader.hpp */,
+				4DA4F90B2C953C360070D36A /* AllShader.cpp */,
+				4DA4F90E2C953C360070D36A /* MetalArgMax.mm */,
+				4DA4F90F2C953C360070D36A /* MetalAttention.mm */,
+				4DA4F9102C953C360070D36A /* MetalBackend.hpp */,
+				4DA4F9112C953C360070D36A /* MetalBackend.mm */,
+				4DA4F9122C953C360070D36A /* MetalBinary.hpp */,
+				4DA4F9132C953C360070D36A /* MetalBinary.mm */,
+				4DA4F9142C953C360070D36A /* MetalCache_generated.h */,
+				4DA4F9152C953C360070D36A /* MetalCast.hpp */,
+				4DA4F9162C953C360070D36A /* MetalCast.mm */,
+				4DA4F9182C953C360070D36A /* MetalConvolution.hpp */,
+				4DA4F9192C953C360070D36A /* MetalConvolution.mm */,
+				4DA4F91A2C953C360070D36A /* MetalConvolution1x1.hpp */,
+				4DA4F91B2C953C360070D36A /* MetalConvolution1x1.mm */,
+				4DA4F91C2C953C360070D36A /* MetalConvolutionCommon.hpp */,
+				4DA4F91D2C953C360070D36A /* MetalConvolutionCommon.mm */,
+				4DA4F91E2C953C360070D36A /* MetalConvolutionDepthwise.hpp */,
+				4DA4F91F2C953C360070D36A /* MetalConvolutionDepthwise.mm */,
+				4DA4F9202C953C360070D36A /* MetalConvolutionWinograd.hpp */,
+				4DA4F9212C953C360070D36A /* MetalConvolutionWinograd.mm */,
+				4DA4F9222C953C360070D36A /* MetalDeconvolution.hpp */,
+				4DA4F9232C953C360070D36A /* MetalDeconvolution.mm */,
+				4DA4F9242C953C360070D36A /* MetalDefine.h */,
+				4DA4F9252C953C360070D36A /* MetalEltwise.hpp */,
+				4DA4F9262C953C360070D36A /* MetalEltwise.mm */,
+				4DA4F9272C953C360070D36A /* MetalExecution.hpp */,
+				4DA4F9282C953C360070D36A /* MetalExecution.mm */,
+				4DA4F9292C953C360070D36A /* MetalFuse.hpp */,
+				4DA4F92A2C953C360070D36A /* MetalFuse.mm */,
+				4DA4F92B2C953C360070D36A /* MetalGridSample.hpp */,
+				4DA4F92C2C953C360070D36A /* MetalGridSample.mm */,
+				4DA4F92D2C953C360070D36A /* MetalInterp.hpp */,
+				4DA4F92E2C953C360070D36A /* MetalInterp.mm */,
+				4DA4F92F2C953C360070D36A /* MetalLayerNorm.hpp */,
+				4DA4F9302C953C360070D36A /* MetalLayerNorm.mm */,
+				4DA4F9312C953C360070D36A /* MetalLoop.mm */,
+				4DA4F9322C953C360070D36A /* MetalMatMul.hpp */,
+				4DA4F9332C953C360070D36A /* MetalMatMul.mm */,
+				4DA4F9342C953C360070D36A /* MetalOPRegister.mm */,
+				4DA4F9352C953C360070D36A /* MetalPooling.hpp */,
+				4DA4F9362C953C360070D36A /* MetalPooling.mm */,
+				4DA4F9372C953C360070D36A /* MetalPReLU.hpp */,
+				4DA4F9382C953C360070D36A /* MetalPReLU.mm */,
+				4DA4F9392C953C360070D36A /* MetalRaster.hpp */,
+				4DA4F93A2C953C360070D36A /* MetalRaster.mm */,
+				4DA4F93B2C953C360070D36A /* MetalReduction.hpp */,
+				4DA4F93C2C953C360070D36A /* MetalReduction.mm */,
+				4DA4F93D2C953C360070D36A /* MetalReLU6.hpp */,
+				4DA4F93E2C953C360070D36A /* MetalReLU6.mm */,
+				4DA4F93F2C953C360070D36A /* MetalROIPooling.hpp */,
+				4DA4F9402C953C360070D36A /* MetalROIPooling.mm */,
+				4DA4F9412C953C360070D36A /* MetalScale.hpp */,
+				4DA4F9422C953C360070D36A /* MetalScale.mm */,
+				4DA4F9432C953C360070D36A /* MetalSoftmax.hpp */,
+				4DA4F9442C953C360070D36A /* MetalSoftmax.mm */,
+				4DA4F9452C953C360070D36A /* MetalUnary.hpp */,
+				4DA4F9462C953C360070D36A /* MetalUnary.mm */,
+				4DA4F9472C953C360070D36A /* MNNMetalContext.h */,
+				4DA4F9482C953C360070D36A /* MNNMetalContext.mm */,
+				4DA4F94A2C953C360070D36A /* ShaderMap.hpp */,
+				4DA4F94B2C953C360070D36A /* ShaderMap.cpp */,
+			);
+			path = metal;
 			sourceTree = "<group>";
 		};
 		4DD09EB12C40C882006F9F0A /* watchllm Watch App */ = {
@@ -3606,6 +3902,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4DA4F8022C943BA80070D36A /* qwen2-vl-2b-instruct in Resources */,
 				4D5B97932B2B21D5003AF2F1 /* Preview Assets.xcassets in Resources */,
 				4D5B97902B2B21D5003AF2F1 /* Assets.xcassets in Resources */,
 			);
@@ -3716,6 +4013,16 @@
 				4D3B764E2C2124D500E2A1E0 /* ResizeFunction.cpp in Sources */,
 				4D3B7A012C2124D600E2A1E0 /* ShapeQuantizedAvgPool.cpp in Sources */,
 				4D3B76C92C2124D600E2A1E0 /* CPUTFQuantizedConv2D.cpp in Sources */,
+				4DA4F8B42C94679A0070D36A /* filter.cpp in Sources */,
+				4DA4F8B62C94679A0070D36A /* calib3d.cpp in Sources */,
+				4DA4F8B82C94679A0070D36A /* histograms.cpp in Sources */,
+				4DA4F8B92C94679A0070D36A /* geometric.cpp in Sources */,
+				4DA4F8BD2C94679A0070D36A /* color.cpp in Sources */,
+				4DA4F8BE2C94679A0070D36A /* structural.cpp in Sources */,
+				4DA4F8C32C94679A0070D36A /* imgcodecs.cpp in Sources */,
+				4DA4F8C62C94679A0070D36A /* draw.cpp in Sources */,
+				4DA4F8C72C94679A0070D36A /* core.cpp in Sources */,
+				4DA4F8C82C94679A0070D36A /* miscellaneous.cpp in Sources */,
 				4D3B769B2C2124D500E2A1E0 /* CPUFloatToInt8.cpp in Sources */,
 				4D3B7A052C2124D600E2A1E0 /* ShapeReduction.cpp in Sources */,
 				4D3B761B2C2124D500E2A1E0 /* MNNReluWithSlopeChannelInt8.S in Sources */,
@@ -3992,6 +4299,38 @@
 				4D3B79902C2124D600E2A1E0 /* Backend.cpp in Sources */,
 				4D3B76B72C2124D600E2A1E0 /* CPURaster.cpp in Sources */,
 				4D3B76C32C2124D600E2A1E0 /* CPUSelect.cpp in Sources */,
+				4DA4F94D2C953C360070D36A /* MetalLoop.mm in Sources */,
+				4DA4F9502C953C360070D36A /* MetalAttention.mm in Sources */,
+				4DA4F9512C953C360070D36A /* MNNMetalContext.mm in Sources */,
+				4DA4F9542C953C360070D36A /* MetalConvolution1x1.mm in Sources */,
+				4DA4F9562C953C360070D36A /* MetalMatMul.mm in Sources */,
+				4DA4F9582C953C360070D36A /* MetalConvolutionWinograd.mm in Sources */,
+				4DA4F9592C953C360070D36A /* MetalArgMax.mm in Sources */,
+				4DA4F95A2C953C360070D36A /* MetalROIPooling.mm in Sources */,
+				4DA4F95B2C953C360070D36A /* MetalConvolutionCommon.mm in Sources */,
+				4DA4F95C2C953C360070D36A /* AllShader.cpp in Sources */,
+				4DA4F95D2C953C360070D36A /* MetalRaster.mm in Sources */,
+				4DA4F9612C953C360070D36A /* MetalCast.mm in Sources */,
+				4DA4F9642C953C360070D36A /* MetalConvolution.mm in Sources */,
+				4DA4F9652C953C360070D36A /* MetalSoftmax.mm in Sources */,
+				4DA4F9662C953C360070D36A /* MetalReduction.mm in Sources */,
+				4DA4F9672C953C360070D36A /* MetalReLU6.mm in Sources */,
+				4DA4F9692C953C360070D36A /* MetalLayerNorm.mm in Sources */,
+				4DA4F96B2C953C360070D36A /* MetalExecution.mm in Sources */,
+				4DA4F96C2C953C360070D36A /* MetalPReLU.mm in Sources */,
+				4DA4F96D2C953C360070D36A /* MetalConvolutionDepthwise.mm in Sources */,
+				4DA4F96E2C953C360070D36A /* MetalPooling.mm in Sources */,
+				4DA4F96F2C953C360070D36A /* ShaderMap.cpp in Sources */,
+				4DA4F9722C953C360070D36A /* MetalScale.mm in Sources */,
+				4DA4F9742C953C360070D36A /* MetalGridSample.mm in Sources */,
+				4DA4F9762C953C360070D36A /* MetalUnary.mm in Sources */,
+				4DA4F9772C953C360070D36A /* MetalDeconvolution.mm in Sources */,
+				4DA4F9792C953C360070D36A /* MetalOPRegister.mm in Sources */,
+				4DA4F97A2C953C360070D36A /* MetalEltwise.mm in Sources */,
+				4DA4F97C2C953C360070D36A /* MetalBinary.mm in Sources */,
+				4DA4F97D2C953C360070D36A /* MetalInterp.mm in Sources */,
+				4DA4F97E2C953C360070D36A /* MetalFuse.mm in Sources */,
+				4DA4F97F2C953C360070D36A /* MetalBackend.mm in Sources */,
 				4D3B75462C2124D500E2A1E0 /* MNNUnpackC8FP16.S in Sources */,
 				4D3B79F42C2124D600E2A1E0 /* ShapeLSTM.cpp in Sources */,
 				4D3B75E92C2124D500E2A1E0 /* MNNBinarySubInt8.S in Sources */,
@@ -4169,6 +4508,10 @@
 					"MNN_ARM82=1",
 					"MNN_SUPPORT_TRANSFORMER_FUSE=1",
 					"MNN_LOW_MEMORY=1",
+					"MNN_BUILD_OPENCV=1",
+					"MNN_IMGCODECS=1",
+					"LLM_SUPPORT_VISION=1",
+					"MNN_METAL_ENABLED=1",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
@@ -4177,8 +4520,13 @@
 					"${SRCROOT}/../../MNN/source/",
 					"${SRCROOT}/../../MNN/schema/current/",
 					"${SRCROOT}/../../MNN/3rd_party/flatbuffers/include/",
+					"${SRCROOT}/../../MNN/3rd_party/imageHelper",
 					"${SRCROOT}/../../MNN/3rd_party/half",
+					"${SRCROOT}/../../MNN/tools/cv/include",
 				);
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用相机来拍摄照片";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册来选择照片";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -4223,6 +4571,10 @@
 					"MNN_ARM82=1",
 					"MNN_SUPPORT_TRANSFORMER_FUSE=1",
 					"MNN_LOW_MEMORY=1",
+					"MNN_BUILD_OPENCV=1",
+					"MNN_IMGCODECS=1",
+					"LLM_SUPPORT_VISION=1",
+					"MNN_METAL_ENABLED=1",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
@@ -4231,8 +4583,13 @@
 					"${SRCROOT}/../../MNN/source/",
 					"${SRCROOT}/../../MNN/schema/current/",
 					"${SRCROOT}/../../MNN/3rd_party/flatbuffers/include/",
+					"${SRCROOT}/../../MNN/3rd_party/imageHelper",
 					"${SRCROOT}/../../MNN/3rd_party/half",
+					"${SRCROOT}/../../MNN/tools/cv/include",
 				);
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用相机来拍摄照片";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册来选择照片";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

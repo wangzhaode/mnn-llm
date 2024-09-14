@@ -69,127 +69,50 @@ public:
         }
     }
 
+    #define DEFINE_CONFIG_PATH_ACCESSOR(name, defaultValue) \
+    std::string name() const { return base_dir_ + config_.value(#name, defaultValue); }
+
+    #define DEFINE_CONFIG_ACCESSOR(name, type, defaultValue) \
+    type name() const { return config_.value(#name, defaultValue); }
+
+    #define DEFINE_LLM_CONFIG_ACCESSOR(name, type, defaultValue) \
+    type name() const { return llm_config_.value(#name, defaultValue); }
+
     // < model file config start
-    std::string llm_config() const {
-        return base_dir_ + config_.value("llm_config", "llm_config.json");
-    }
-
-    std::string llm_model() const {
-        return base_dir_ + config_.value("llm_model", "llm.mnn");
-    }
-
-    std::string llm_weight() const {
-        return base_dir_ + config_.value("llm_weight", "llm.mnn.weight");
-    }
-
-    std::string block_model(int index) const {
-        return base_dir_ + config_.value("block_model", "block_") + std::to_string(index) + ".mnn";
-    }
-
-    std::string lm_model() const {
-        return base_dir_ + config_.value("lm_model", "lm.mnn");
-    }
-
-    std::string embedding_model() const {
-        return base_dir_ + config_.value("embedding_model", "embedding.mnn");
-    }
-
-    std::string embedding_file() const {
-        return base_dir_ + config_.value("embedding_file", "embeddings_bf16.bin");
-    }
-
-    std::string tokenizer_file() const {
-        return base_dir_ + config_.value("tokenizer_file", "tokenizer.txt");
-    }
-
-    std::string visual_model() const {
-        return base_dir_ + config_.value("visual_model", "visual.mnn");
-    }
+    DEFINE_CONFIG_PATH_ACCESSOR(llm_config, "llm_config.json")
+    DEFINE_CONFIG_PATH_ACCESSOR(llm_model, "llm.mnn")
+    DEFINE_CONFIG_PATH_ACCESSOR(llm_weight, "llm.mnn.weight")
+    DEFINE_CONFIG_PATH_ACCESSOR(lm_model, "lm.mnn")
+    DEFINE_CONFIG_PATH_ACCESSOR(embedding_model, "embedding.mnn")
+    DEFINE_CONFIG_PATH_ACCESSOR(embedding_file, "embeddings_bf16.bin")
+    DEFINE_CONFIG_PATH_ACCESSOR(tokenizer_file, "tokenizer.txt")
+    DEFINE_CONFIG_PATH_ACCESSOR(visual_model, "visual.mnn")
     // model file config end >
 
     // < generate config start
-    int max_new_tokens() const {
-        return config_.value("max_new_tokens", 512);
-    }
-
-    bool reuse_kv() const {
-        return config_.value("reuse_kv", false);
-    }
+    DEFINE_CONFIG_ACCESSOR(max_new_tokens, int, 512)
+    DEFINE_CONFIG_ACCESSOR(reuse_kv, bool, false)
+    DEFINE_CONFIG_ACCESSOR(backend_type, std::string, "cpu")
+    DEFINE_CONFIG_ACCESSOR(thread_num, int, 4)
+    DEFINE_CONFIG_ACCESSOR(precision, std::string, "low")
+    DEFINE_CONFIG_ACCESSOR(power, std::string, "normal")
+    DEFINE_CONFIG_ACCESSOR(memory, std::string, "low")
+    DEFINE_CONFIG_ACCESSOR(quant_qkv, int, 0)
+    DEFINE_CONFIG_ACCESSOR(kvcache_limit, int, -1)
+    DEFINE_CONFIG_ACCESSOR(use_mmap, bool, false)
+    DEFINE_CONFIG_ACCESSOR(kvcache_mmap, bool, false)
+    DEFINE_CONFIG_ACCESSOR(tmp_path, std::string, "")
     // generate config end >
 
-    // < backend config start
-    std::string backend_type() const {
-        return config_.value("backend_type", "cpu");
-    }
-
-    int thread_num() const {
-        return config_.value("thread_num", 4);
-    }
-
-    std::string precision() const {
-        return config_.value("precision", "low");
-    }
-    std::string power() const {
-        return config_.value("power", "normal");
-    }
-
-    std::string memory() const {
-        return config_.value("memory", "low");
-    }
-
-    int quant_qkv() const {
-        return config_.value("quant_qkv", 0);
-    }
-
-    int kvcache_limit() const {
-        return config_.value("kvcache_limit", -1);
-    }
-    // backend config end >
-
     // < llm model config start
-    bool is_single() const {
-        return llm_config_.value("is_single", true);
-    }
-
-    bool is_visual() const {
-        return llm_config_.value("is_visual", false);
-    }
-
-    bool use_mmap() const {
-        return config_.value("use_mmap", false);
-    }
-    bool kvcache_mmap() const {
-        return config_.value("kvcache_mmap", false);
-    }
-    std::string tmp_path() const {
-        return config_.value("tmp_path", "");
-    }
-
-    int hidden_size() const {
-        return llm_config_.value("hidden_size", 4096);
-    }
-
-    int layer_nums() const {
-        return llm_config_.value("layer_nums", 32);
-    }
-
-    std::vector<int> key_value_shape() const {
-        return llm_config_.value("key_value_shape", std::vector<int>{});
-    }
-
-    std::string attention_mask() const {
-        return llm_config_.value("attention_mask", "int");
-    }
-    bool attention_fused() const {
-        return llm_config_.value("attention_fused", true);
-    }
-
-    std::string chat_template() const {
-        return llm_config_.value("chat_template", "");
-    }
-
-    std::string prompt_template() const {
-        return llm_config_.value("prompt_template", "");
-    }
+    DEFINE_LLM_CONFIG_ACCESSOR(is_single, bool, true)
+    DEFINE_LLM_CONFIG_ACCESSOR(is_visual, bool, false)
+    DEFINE_LLM_CONFIG_ACCESSOR(hidden_size, int, 4096)
+    DEFINE_LLM_CONFIG_ACCESSOR(layer_nums, int, 32)
+    DEFINE_LLM_CONFIG_ACCESSOR(key_value_shape, std::vector<int>, std::vector<int>{})
+    DEFINE_LLM_CONFIG_ACCESSOR(attention_mask, std::string, "int")
+    DEFINE_LLM_CONFIG_ACCESSOR(attention_fused, bool, true)
+    DEFINE_LLM_CONFIG_ACCESSOR(chat_template, std::string, "")
+    DEFINE_LLM_CONFIG_ACCESSOR(prompt_template, std::string, "")
     // llm model config end >
 };

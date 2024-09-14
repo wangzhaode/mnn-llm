@@ -602,7 +602,9 @@ public:
         image_mean_ = config->llm_config_.value("image_mean", image_mean_);
         image_norm_ = config->llm_config_.value("image_norm", image_norm_);
     }
-    ~Lvlm() { visual_module_.reset(); }
+    ~Lvlm() {
+        visual_module_.reset();
+    }
     virtual void load() override;
     virtual std::vector<int> tokenizer(const std::string& query) override;
     virtual MNN::Express::VARP embedding(const std::vector<int>& input_ids) override;
@@ -637,6 +639,7 @@ void Lvlm::load() {
 
 std::vector<int> Lvlm::image_process(const std::string& image_info) {
 #ifdef LLM_SUPPORT_VISION
+    AUTOTIME;
     VARP image = nullptr;
     if (image_info.substr(0, 4) == "http") {
         std::regex url_regex(R"(^https?://([^/]+)(/.*))");
@@ -691,7 +694,7 @@ std::vector<int> Lvlm::tokenizer(const std::string& query) {
     std::smatch match;
     std::vector<std::string> img_infos;
     std::vector<int> ids {};
-
+    image_embeddings_.clear();
     while (std::regex_search(searchStart, prompt.cend(), match, img_regex)) {
         // std::cout << "img match: " << match[1].str() << std::endl;
         auto txt_ids = tokenizer_->encode(match.prefix().str());
@@ -704,7 +707,7 @@ std::vector<int> Lvlm::tokenizer(const std::string& query) {
         auto txt_ids = tokenizer_->encode(std::string(searchStart, prompt.cend()));
         ids.insert(ids.end(), txt_ids.begin(), txt_ids.end());
     }
-    // printf("ids = ["); for (auto id : ids) printf("%d, ", id); printf("]\n");
+    // printf("ids (%lu) = [", ids.size()); for (auto id : ids) printf("%d, ", id); printf("]\n");
     return ids;
 }
 

@@ -35,7 +35,7 @@ const char* GetMainBundleDirectory() {
 - (BOOL)loadModel {
     if (!llm) {
         std::string model_dir = GetMainBundleDirectory();
-        std::string config_path = model_dir + "/qwen1.5-0.5b-chat/config.json";
+        std::string config_path = model_dir + "/qwen2-vl-2b-instruct/config.json";
         llm = Llm::createLLM(config_path);
         llm->load();
     }

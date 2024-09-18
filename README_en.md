@@ -41,7 +41,10 @@ Download models from `modelscope`：
 - [modelscope-qwen2.5-1.5b-instruct]
 - [modelscope-qwen2.5-3b-instruct]
 - [modelscope-qwen2.5-7b-instruct]
+- [modelscope-qwen2.5-coder-1.5b-instruct]
 - [modelscope-qwen2.5-coder-7b-instruct]
+- [modelscope-qwen2.5-math-1.5b-instruct]
+- [modelscope-qwen2.5-math-7b-instruct]
 
 </details>
 
@@ -84,7 +87,6 @@ Download models from `modelscope`：
 
 </details>
 
-
 [modelscope-qwen-1.8b-chat]: https://modelscope.cn/models/zhaode/Qwen-1_8B-Chat-MNN/files
 [modelscope-qwen-7b-chat]: https://modelscope.cn/models/zhaode/Qwen-7B-Chat-MNN/files
 [modelscope-qwen-vl-chat]: https://modelscope.cn/models/zhaode/Qwen-VL-Chat-MNN/files
@@ -101,7 +103,10 @@ Download models from `modelscope`：
 [modelscope-qwen2.5-1.5b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-1.5B-Instruct-MNN/files
 [modelscope-qwen2.5-3b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-3B-Instruct-MNN/files
 [modelscope-qwen2.5-7b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-7B-Instruct-MNN/files
+[modelscope-qwen2.5-coder-1.5b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-Coder-1.5B-Instruct-MNN/files
 [modelscope-qwen2.5-coder-7b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-Coder-7B-Instruct-MNN/files
+[modelscope-qwen2.5-math-1.5b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-Math-1.5B-Instruct-MNN/files
+[modelscope-qwen2.5-math-7b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-Math-7B-Instruct-MNN/files
 
 [modelscope-chatglm-6b]: https://modelscope.cn/models/zhaode/chatglm-6b-MNN/files
 [modelscope-chatglm2-6b]: https://modelscope.cn/models/zhaode/chatglm2-6b-MNN/files
@@ -117,6 +122,7 @@ Download models from `modelscope`：
 [modelscope-deepseek-7b-chat]: https://modelscope.cn/models/zhaode/deepseek-llm-7b-chat-MNN/files
 [modelscope-tinyllama-1.1b-chat]: https://modelscope.cn/models/zhaode/TinyLlama-1.1B-Chat-MNN/files
 [modelscope-phi-2]: https://modelscope.cn/models/zhaode/phi-2-MNN/files
+
 [modelscope-bge-large-zh]: https://modelscope.cn/models/zhaode/bge-large-zh-MNN/files
 [modelscope-gte_sentence-embedding_multilingual-base]: https://modelscope.cn/models/zhaode/gte_sentence-embedding_multilingual-base-MNN/files
 
@@ -217,7 +223,10 @@ adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo ./Qwen2-
 - [Qwen2.5-1.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-1.5B-Instruct/summary)
 - [Qwen2.5-3B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-3B-Instruct/summary)
 - [Qwen2.5-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-7B-Instruct/summary)
+- [Qwen2.5-Coder-1.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-Coder-1.5B-Instruct/summary)
 - [Qwen2.5-Coder-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-Coder-7B-Instruct/summary)
+- [Qwen2.5-Math-1.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-Math-1.5B-Instruct/summary)
+- [Qwen2.5-Math-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-Math-7B-Instruct/summary)
 - [chatglm-6b](https://modelscope.cn/models/ZhipuAI/chatglm-6b/summary)
 - [chatglm2-6b](https://modelscope.cn/models/ZhipuAI/chatglm2-6b/summary)
 - [codegeex2-6b](https://modelscope.cn/models/ZhipuAI/codegeex2-6b/summary)

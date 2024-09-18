@@ -40,11 +40,6 @@ JNIEXPORT jboolean JNICALL Java_com_mnn_llm_Chat_Ready(JNIEnv* env, jobject thiz
     return JNI_FALSE;
 }
 
-JNIEXPORT jfloat JNICALL Java_com_mnn_llm_Chat_Progress(JNIEnv* env, jobject thiz) {
-    if (!llm.get()) return jfloat(0);
-    return jfloat(llm->load_progress_);
-}
-
 JNIEXPORT jstring JNICALL Java_com_mnn_llm_Chat_Submit(JNIEnv* env, jobject thiz, jstring inputStr) {
     if (!llm.get()) {
         return env->NewStringUTF("Failed, Chat is not ready!");
@@ -71,7 +66,7 @@ JNIEXPORT void JNICALL Java_com_mnn_llm_Chat_Done(JNIEnv* env, jobject thiz) {
 }
 
 JNIEXPORT void JNICALL Java_com_mnn_llm_Chat_Reset(JNIEnv* env, jobject thiz) {
-    // llm->reset();
+    llm->reset();
 }
 
 } // extern "C"

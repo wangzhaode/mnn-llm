@@ -5,7 +5,16 @@
     android:gravity="center_vertical"
     android:padding="@dimen/space10"
     android:layout_marginLeft="@dimen/spaceLR">
+    <ImageView
+        android:id="@+id/tv_chat_image"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="@dimen/space5"
+        android:visibility="gone"
+        android:scaleType="centerCrop"/>
     <LinearLayout
+        android:layout_below="@+id/tv_chat_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -27,7 +36,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="@dimen/space10"
-            android:text="Hi, joe how are you, do you like to join our party in next week because you don't like party?"
+            android:text="你好"
             android:textColor="@android:color/white"
             android:textSize="@dimen/h3"
             android:layout_alignParentRight="true"

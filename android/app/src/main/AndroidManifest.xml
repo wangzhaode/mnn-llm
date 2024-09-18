@@ -22,11 +22,6 @@
             android:screenOrientation= "portrait"
             android:theme="@style/AppTheme.Trans">
         </activity>
-        <activity
-            android:name=".DownloadModel"
-            android:screenOrientation= "portrait"
-            android:theme="@style/AppTheme.Trans">
-        </activity>
     </application>
 
     <uses-permission android:name="android.permission.INTERNET"/>

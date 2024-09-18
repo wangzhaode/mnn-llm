@@ -712,7 +712,10 @@ std::vector<int> Lvlm::tokenizer(const std::string& query) {
 }
 
 VARP Lvlm::embedding(const std::vector<int>& input_ids) {
-    if (input_ids.size() == 1) {
+    // decode or input_ids not contains vision_start_ and vision_end_, using Llm::embedding
+    if (input_ids.size() == 1 ||
+        std::find(input_ids.begin(), input_ids.end(), vision_start_) == input_ids.end() ||
+        std::find(input_ids.begin(), input_ids.end(), vision_end_) == input_ids.end()) {
         return Llm::embedding(input_ids);
     }
     std::vector<VARP> embeddings;

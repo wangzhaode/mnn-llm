@@ -12,7 +12,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
-                arguments "-DBUILD_JNI=TRUE", "-DANDROID_STL=c++_shared", "-DLLM_SUPPORT_VISION=TRUE"
+                arguments "-DBUILD_JNI=TRUE", "-DANDROID_STL=c++_shared", "-DLLM_SUPPORT_VISION=TRUE", "-DMNN_OPENCL=TRUE"
                 abiFilters 'arm64-v8a'
             }
         }

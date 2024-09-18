@@ -37,6 +37,11 @@ Download models from `modelscope`：
 - [modelscope-qwen2-7b-instruct]
 - [modelscope-qwen2-vl-2b-instruct]
 - [modelscope-qwen2-vl-7b-instruct]
+- [modelscope-qwen2.5-0.5b-instruct]
+- [modelscope-qwen2.5-1.5b-instruct]
+- [modelscope-qwen2.5-3b-instruct]
+- [modelscope-qwen2.5-7b-instruct]
+- [modelscope-qwen2.5-coder-7b-instruct]
 
 </details>
 
@@ -92,6 +97,11 @@ Download models from `modelscope`：
 [modelscope-qwen2-7b-instruct]: https://modelscope.cn/models/zhaode/Qwen2-7B-Instruct-MNN/files
 [modelscope-qwen2-vl-2b-instruct]: https://modelscope.cn/models/zhaode/Qwen2-VL-2B-Instruct-MNN/files
 [modelscope-qwen2-vl-7b-instruct]: https://modelscope.cn/models/zhaode/Qwen2-VL-7B-Instruct-MNN/files
+[modelscope-qwen2.5-0.5b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-0.5B-Instruct-MNN/files
+[modelscope-qwen2.5-1.5b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-1.5B-Instruct-MNN/files
+[modelscope-qwen2.5-3b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-3B-Instruct-MNN/files
+[modelscope-qwen2.5-7b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-7B-Instruct-MNN/files
+[modelscope-qwen2.5-coder-7b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-Coder-7B-Instruct-MNN/files
 
 [modelscope-chatglm-6b]: https://modelscope.cn/models/zhaode/chatglm-6b-MNN/files
 [modelscope-chatglm2-6b]: https://modelscope.cn/models/zhaode/chatglm2-6b-MNN/files
@@ -203,6 +213,11 @@ adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo ./Qwen2-
 - [Qwen2-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2-7B-Instruct/summary)
 - [Qwen2-VL-2B-Instruct](https://modelscope.cn/models/qwen/Qwen2-VL-2B-Instruct/summary)
 - [Qwen2-VL-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2-VL-7B-Instruct/summary)
+- [Qwen2.5-0.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-0.5B-Instruct/summary)
+- [Qwen2.5-1.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-1.5B-Instruct/summary)
+- [Qwen2.5-3B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-3B-Instruct/summary)
+- [Qwen2.5-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-7B-Instruct/summary)
+- [Qwen2.5-Coder-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-Coder-7B-Instruct/summary)
 - [chatglm-6b](https://modelscope.cn/models/ZhipuAI/chatglm-6b/summary)
 - [chatglm2-6b](https://modelscope.cn/models/ZhipuAI/chatglm2-6b/summary)
 - [codegeex2-6b](https://modelscope.cn/models/ZhipuAI/codegeex2-6b/summary)

@@ -45,6 +45,8 @@ Download models from `modelscope`：
 - [modelscope-qwen2.5-coder-7b-instruct]
 - [modelscope-qwen2.5-math-1.5b-instruct]
 - [modelscope-qwen2.5-math-7b-instruct]
+- [modelscope-reader-lm-0.5b]
+- [modelscope-reader-lm-1.5b]
 
 </details>
 
@@ -107,6 +109,8 @@ Download models from `modelscope`：
 [modelscope-qwen2.5-coder-7b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-Coder-7B-Instruct-MNN/files
 [modelscope-qwen2.5-math-1.5b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-Math-1.5B-Instruct-MNN/files
 [modelscope-qwen2.5-math-7b-instruct]: https://modelscope.cn/models/zhaode/Qwen2.5-Math-7B-Instruct-MNN/files
+[modelscope-reader-lm-0.5b]: https://modelscope.cn/models/zhaode/reader-lm-0.5b-MNN/files
+[modelscope-reader-lm-1.5b]: https://modelscope.cn/models/zhaode/reader-lm-1.5b-MNN/files
 
 [modelscope-chatglm-6b]: https://modelscope.cn/models/zhaode/chatglm-6b-MNN/files
 [modelscope-chatglm2-6b]: https://modelscope.cn/models/zhaode/chatglm2-6b-MNN/files

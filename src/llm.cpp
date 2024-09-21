@@ -6,11 +6,14 @@
 //
 // #define MNN_OPEN_TIME_TRACE 1
 
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <unordered_set>
+#include <random>
 #include <regex>
+#include <sys/time.h>
 
 #include <MNN/expr/ExecutorScope.hpp>
 #include <MNN/AutoTime.hpp>
@@ -225,17 +228,60 @@ int Llm::sample(VARP logits, const std::vector<int>& pre_ids) {
         float score = scores[id];
         scores[id] = score < 0 ? score * repetition_penalty : score / repetition_penalty;
     }
-    // argmax
-    float max_score = 0;
-    int token_id = 0;
-    for (int i = 0; i < size; i++) {
-        float score = scores[i];
-        if (score > max_score) {
-            max_score = score;
-            token_id = i;
+
+    if (fabsf(temp) < 1e-8) {
+        // argmax
+        float max_score = 0;
+        int token_id = 0;
+        for (int i = 0; i < size; i++) {
+            float score = scores[i];
+            if (score > max_score) {
+                max_score = score;
+                token_id = i;
+            }
         }
+        return token_id;
     }
-    return token_id;
+
+    // sample with temperature
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    std::mt19937_64 rng(tv.tv_usec/100);
+    std::uniform_real_distribution<float> dist(0, 1);
+
+    std::vector<std::pair<float, int>> probs(size);
+    for (int i = 0; i < size; i++) probs[i] = {scores[i] / temp, i};
+    std::sort(probs.begin(), probs.end(),
+              std::greater<std::pair<float, int>>());
+    while (probs.size() > topk) probs.pop_back();
+
+    // softmax
+    auto maximum = probs[0].first;
+    std::transform(probs.begin(), probs.end(), probs.begin(),
+                   [maximum](std::pair<float, int> x) {
+                       return std::make_pair(expf(x.first - maximum), x.second);
+                   });
+    auto sum = std::accumulate(probs.begin(), probs.end(), 0.0f,
+                               [](float x, std::pair<float, int> y) { return x + y.first; });
+    std::transform(probs.begin(), probs.end(), probs.begin(), [sum](std::pair<float, int> x) {
+        return std::make_pair(x.first / sum, x.second);
+    });
+
+    sum = 0;
+    int last = 0;
+    for (int i = 0; i < (int)probs.size(); i++) {
+        sum += probs[i].first;
+        last = i;
+        if (sum > topp) break;
+    }
+
+    float r = dist(rng) * sum;
+    sum = 0;
+    for (int i = 0; i <= last; i++) {
+        sum += probs[i].first;
+        if (sum > r) return probs[i].second;
+    }
+    return probs[last].second;
 }
 
 static std::string apply_template(std::string prompt_template, const std::string& content, const std::string& role = "") {

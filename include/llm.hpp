@@ -68,7 +68,11 @@ struct Prompt {
 class Llm {
 public:
     using PromptItem = std::pair<std::string, std::string>; // <role, content>
-    Llm(std::shared_ptr<LlmConfig> config) : config_(config) {}
+    Llm(std::shared_ptr<LlmConfig> config) : config_(config) {
+        temp = 0.85;
+        topp = 0.9;
+        topk = 300;
+    }
     virtual ~Llm();
     void chat();
     void reset();
@@ -105,6 +109,10 @@ public:
     float load_progress_ = 0.f;
     bool is_single_ = true;
     bool attention_fused_ = true;
+    // sample
+    float temp;
+    float topp;
+    float topk;
 protected:
     std::shared_ptr<LlmConfig> config_;
     std::shared_ptr<Tokenizer> tokenizer_;

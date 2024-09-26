@@ -66,6 +66,8 @@ Download models from `modelscope`：
 
 - [modelscope-llama2-7b-chat]
 - [modelscope-llama3-8b-instruct]
+- [modelscope-llama3.2-1b-instruct]
+- [modelscope-llama3.2-3b-instruct]
 - [modelscope-baichuan2-7b-chat]
 - [modelscope-internlm-chat-7b]
 - [modelscope-yi-6b-chat]
@@ -120,6 +122,8 @@ Download models from `modelscope`：
 
 [modelscope-llama2-7b-chat]: https://modelscope.cn/models/zhaode/Llama-2-7b-chat-MNN/files
 [modelscope-llama3-8b-instruct]: https://modelscope.cn/models/zhaode/Llama-3-8B-Instruct-MNN/files
+[modelscope-llama3.2-1b-instruct]: https://modelscope.cn/models/zhaode/Llama-3.2-1B-Instruct-MNN/files
+[modelscope-llama3.2-3b-instruct]: https://modelscope.cn/models/zhaode/Llama-3.2-3B-Instruct-MNN/files
 [modelscope-baichuan2-7b-chat]: https://modelscope.cn/models/zhaode/Baichuan2-7B-Chat-MNN/files
 [modelscope-internlm-chat-7b]: https://modelscope.cn/models/zhaode/internlm-chat-7b-MNN/files
 [modelscope-yi-6b-chat]: https://modelscope.cn/models/zhaode/Yi-6B-Chat-MNN/files
@@ -238,6 +242,8 @@ adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo ./Qwen2-
 - [glm4-9b-chat](https://modelscope.cn/models/ZhipuAI/glm-4-9b-chat/summary)
 - [Llama-2-7b-chat-ms](https://modelscope.cn/models/modelscope/Llama-2-7b-chat-ms/summary)
 - [Llama-3-8B-Instruct](https://modelscope.cn/models/modelscope/Meta-Llama-3-8B-Instruct/summary)
+- [Llama-3.2-1B-Instruct](https://modelscope.cn/models/LLM-Research/Llama-3.2-1B-Instruct/summary)
+- [Llama-3.2-3B-Instruct](https://modelscope.cn/models/LLM-Research/Llama-3.2-3B-Instruct/summary)
 - [Baichuan2-7B-Chat](https://modelscope.cn/models/baichuan-inc/baichuan-7B/summary)
 - [internlm-chat-7b](https://modelscope.cn/models/Shanghai_AI_Laboratory/internlm-chat-7b/summary)
 - [Yi-6B-Chat](https://modelscope.cn/models/01ai/Yi-6B-Chat/summary)

@@ -9,6 +9,7 @@ Release
 include/pthread.h
 include/sched.h
 include/semaphore.h
+docs/_build/
 
 # ignore files
 .DS_Store

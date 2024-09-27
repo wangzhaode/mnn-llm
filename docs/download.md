@@ -1,0 +1,44 @@
+# 模型下载
+
+|   Model  | ModelScope  | Hugging Face |
+| -------- | ----------- | ------------ |
+| [Qwen-VL-Chat](https://modelscope.cn/models/qwen/Qwen-VL-Chat/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen-VL-Chat-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen-VL-Chat-MNN) |
+| [Baichuan2-7B-Chat](https://modelscope.cn/models/baichuan-inc/Baichuan2-7B-Chat/summary) | [q4_1](https://modelscope.cn/models/zhaode/Baichuan2-7B-Chat-MNN) | [q4_1](https://huggingface.co/zhaode/Baichuan2-7B-Chat-MNN) |
+| [bge-large-zh](https://modelscope.cn/models/AI-ModelScope/bge-large-zh/summary) | [q4_1](https://modelscope.cn/models/zhaode/bge-large-zh-MNN) | [q4_1](https://huggingface.co/zhaode/bge-large-zh-MNN) |
+| [chatglm-6b](https://modelscope.cn/models/ZhipuAI/ChatGLM-6B/summary) | [q4_1](https://modelscope.cn/models/zhaode/chatglm-6b-MNN) | [q4_1](https://huggingface.co/zhaode/chatglm-6b-MNN) |
+| [chatglm2-6b](https://modelscope.cn/models/ZhipuAI/chatglm2-6b/summary) | [q4_1](https://modelscope.cn/models/zhaode/chatglm2-6b-MNN) | [q4_1](https://huggingface.co/zhaode/chatglm2-6b-MNN) |
+| [chatglm3-6b](https://modelscope.cn/models/ZhipuAI/chatglm3-6b/summary) | [q4_1](https://modelscope.cn/models/zhaode/chatglm3-6b-MNN) | [q4_1](https://huggingface.co/zhaode/chatglm3-6b-MNN) |
+| [codegeex2-6b](https://modelscope.cn/models/zhaode/codegeex2-6b-MNN/summary) | [q4_1](https://modelscope.cn/models/zhaode/codegeex2-6b-MNN) | [q4_1](https://huggingface.co/zhaode/codegeex2-6b-MNN) |
+| [deepseek-llm-7b-chat](https://modelscope.cn/models/deepseek-ai/deepseek-llm-7b-chat/summary) | [q4_1](https://modelscope.cn/models/zhaode/deepseek-llm-7b-chat-MNN) | [q4_1](https://huggingface.co/zhaode/deepseek-llm-7b-chat-MNN) |
+| [gemma-2-2b-it](https://modelscope.cn/models/llm-research/gemma-2-2b-it) | [q4_1](https://modelscope.cn/models/zhaode/gemma-2-2b-it-MNN) | [q4_1](https://huggingface.co/zhaode/gemma-2-2b-it-MNN) |
+| [glm-4-9b-chat](https://modelscope.cn/models/ZhipuAI/glm-4-9b-chat/summary) | [q4_1](https://modelscope.cn/models/zhaode/glm-4-9b-chat-MNN) | [q4_1](https://huggingface.co/zhaode/glm-4-9b-chat-MNN) |
+| [gte_sentence-embedding_multilingual-base](https://modelscope.cn/models/iic/gte_sentence-embedding_multilingual-base/summary) | [q4_1](https://modelscope.cn/models/zhaode/gte_sentence-embedding_multilingual-base-MNN) | [q4_1](https://huggingface.co/zhaode/gte_sentence-embedding_multilingual-base-MNN) |
+| [internlm-chat-7b](https://modelscope.cn/models/AI-ModelScope/internlm-chat-7b/summary) | [q4_1](https://modelscope.cn/models/zhaode/internlm-chat-7b-MNN) | [q4_1](https://huggingface.co/zhaode/internlm-chat-7b-MNN) |
+| [Llama-2-7b-chat](https://modelscope.cn/models/modelscope/Llama-2-7b-chat-ms/summary) | [q4_1](https://modelscope.cn/models/zhaode/Llama-2-7b-chat-MNN) | [q4_1](https://huggingface.co/zhaode/Llama-2-7b-chat-MNN) |
+| [Llama-3-8B-Instruct](https://modelscope.cn/models/modelscope/Meta-Llama-3-8B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Llama-3-8B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Llama-3-8B-Instruct-MNN) |
+| [Llama-3.2-1B-Instruct](https://modelscope.cn/models/LLM-Research/Llama-3.2-1B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Llama-3.2-1B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Llama-3.2-1B-Instruct-MNN) |
+| [Llama-3.2-3B-Instruct](https://modelscope.cn/models/LLM-Research/Llama-3.2-3B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Llama-3.2-3B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Llama-3.2-3B-Instruct-MNN) |
+| [phi-2](https://modelscope.cn/models/mengzhao/phi-2/summary) | [q4_1](https://modelscope.cn/models/zhaode/phi-2-MNN) | [q4_1](https://huggingface.co/zhaode/phi-2-MNN) |
+| [Qwen-1_8B-Chat](https://modelscope.cn/models/qwen/Qwen-1_8B-Chat/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen-1_8B-Chat-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen-1_8B-Chat-MNN) |
+| [Qwen-7B-Chat](https://modelscope.cn/models/qwen/Qwen-7B-Chat/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen-7B-Chat-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen-7B-Chat-MNN) |
+| [Qwen1.5-0.5B-Chat](https://modelscope.cn/models/qwen/Qwen1.5-0.5B-Chat/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen1.5-0.5B-Chat-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen1.5-0.5B-Chat-MNN) |
+| [Qwen1.5-1.8B-Chat](https://modelscope.cn/models/qwen/Qwen1.5-1.8B-Chat/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen1.5-1.8B-Chat-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen1.5-1.8B-Chat-MNN) |
+| [Qwen1.5-4B-Chat](https://modelscope.cn/models/qwen/Qwen1.5-4B-Chat/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen1.5-4B-Chat-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen1.5-4B-Chat-MNN) |
+| [Qwen1.5-7B-Chat](https://modelscope.cn/models/qwen/Qwen1.5-7B-Chat/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen1.5-7B-Chat-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen1.5-7B-Chat-MNN) |
+| [Qwen2-0.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2-0.5B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2-0.5B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2-0.5B-Instruct-MNN) |
+| [Qwen2-1.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2-1.5B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2-1.5B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2-1.5B-Instruct-MNN) |
+| [Qwen2-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2-7B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2-7B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2-7B-Instruct-MNN) |
+| [Qwen2-VL-2B-Instruct](https://modelscope.cn/models/qwen/Qwen2-VL-2B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2-VL-2B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2-VL-2B-Instruct-MNN) |
+| [Qwen2-VL-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2-VL-7B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2-VL-7B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2-VL-7B-Instruct-MNN) |
+| [Qwen2.5-0.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-0.5B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2.5-0.5B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2.5-0.5B-Instruct-MNN) |
+| [Qwen2.5-1.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-1.5B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2.5-1.5B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2.5-1.5B-Instruct-MNN) |
+| [Qwen2.5-3B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-3B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2.5-3B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2.5-3B-Instruct-MNN) |
+| [Qwen2.5-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-7B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2.5-7B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2.5-7B-Instruct-MNN) |
+| [Qwen2.5-Coder-1.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-Coder-1.5B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2.5-Coder-1.5B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2.5-Coder-1.5B-Instruct-MNN) |
+| [Qwen2.5-Coder-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-Coder-7B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2.5-Coder-7B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2.5-Coder-7B-Instruct-MNN) |
+| [Qwen2.5-Math-1.5B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-Math-1.5B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2.5-Math-1.5B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2.5-Math-1.5B-Instruct-MNN) |
+| [Qwen2.5-Math-7B-Instruct](https://modelscope.cn/models/qwen/Qwen2.5-Math-7B-Instruct/summary) | [q4_1](https://modelscope.cn/models/zhaode/Qwen2.5-Math-7B-Instruct-MNN) | [q4_1](https://huggingface.co/zhaode/Qwen2.5-Math-7B-Instruct-MNN) |
+| [reader-lm-0.5b](https://huggingface.co/jinaai/reader-lm-0.5b) | [q4_1](https://modelscope.cn/models/zhaode/reader-lm-0.5b-MNN) | [q4_1](https://huggingface.co/zhaode/reader-lm-0.5b-MNN) |
+| [reader-lm-1.5b](https://huggingface.co/jinaai/reader-lm-1.5b) | [q4_1](https://modelscope.cn/models/zhaode/reader-lm-1.5b-MNN) | [q4_1](https://huggingface.co/zhaode/reader-lm-1.5b-MNN) |
+| [TinyLlama-1.1B-Chat-v1.0](https://modelscope.cn/models/AI-ModelScope/TinyLlama-1.1B-Chat-v1.0/summary) | [q4_1](https://modelscope.cn/models/zhaode/TinyLlama-1.1B-Chat-MNN) | [q4_1](https://huggingface.co/zhaode/TinyLlama-1.1B-Chat-MNN) |
+| [Yi-6B-Chat](https://modelscope.cn/models/01ai/Yi-6B-Chat/summary) | [q4_1](https://modelscope.cn/models/zhaode/Yi-6B-Chat-MNN) | [q4_1](https://huggingface.co/zhaode/Yi-6B-Chat-MNN) |

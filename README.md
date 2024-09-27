@@ -3,6 +3,8 @@
 # mnn-llm
 [![License](https://img.shields.io/github/license/wangzhaode/mnn-llm)](LICENSE.txt)
 [![Download](https://img.shields.io/github/downloads/wangzhaode/mnn-llm/total)](https://github.com/wangzhaode/mnn-llm/releases)
+[![Documentation Status](https://readthedocs.org/projects/mnn-llm/badge/?version=latest)](https://mnn-llm.readthedocs.io/en/latest/?badge=latest)
+
 
 [English](./README_en.md)
 

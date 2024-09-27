@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-欢迎使用MNN文档
+欢迎使用mnn-llm文档
 ===================================
 
 遇到问题请先查看文档和FAQ，如果没有答案请在Github提issue或在钉钉群提问。

@@ -18,12 +18,12 @@ from recommonmark.parser import CommonMarkParser
 
 # -- Project information -----------------------------------------------------
 
-project = 'MNN-Doc'
-copyright = '2022, Alibaba Group'
+project = 'mnn-llm doc'
+copyright = '2024, Alibaba Group'
 author = 'Alibaba Group'
 
 # The full version, including alpha/beta/rc tags
-release = '2.1.1'
+release = 'dev'
 
 
 # -- General configuration ---------------------------------------------------

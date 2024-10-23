@@ -209,8 +209,10 @@ cd mnn-llm
 .\Debug\web_demo.exe ./Qwen2-1.5B-Instruct-MNN/config.json ../web
 
 # android
-adb push libs/*.so build/libllm.so build/cli_demo /data/local/tmp
-adb push model_dir /data/local/tmp
+adb push android_build/MNN/OFF/arm64-v8a/libMNN.so /data/local/tmp
+adb push android_build/MNN/express/OFF/arm64-v8a/libMNN_Express.so /data/local/tmp
+adb push android_build/libllm.so android_build/cli_demo /data/local/tmp
+adb push Qwen2-1.5B-Instruct-MNN /data/local/tmp
 adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo ./Qwen2-1.5B-Instruct-MNN/config.json"
 ```
 

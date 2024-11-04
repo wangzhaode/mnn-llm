@@ -46,3 +46,7 @@
 | [reader-lm-1.5b](https://huggingface.co/jinaai/reader-lm-1.5b) | [Q4_1](https://modelscope.cn/models/MNN/reader-lm-1.5b-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/reader-lm-1.5b-MNN) |
 | [TinyLlama-1.1B-Chat-v1.0](https://modelscope.cn/models/AI-ModelScope/TinyLlama-1.1B-Chat-v1.0/summary) | [Q4_1](https://modelscope.cn/models/MNN/TinyLlama-1.1B-Chat-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/TinyLlama-1.1B-Chat-MNN) |
 | [Yi-6B-Chat](https://modelscope.cn/models/01ai/Yi-6B-Chat/summary) | [Q4_1](https://modelscope.cn/models/MNN/Yi-6B-Chat-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/Yi-6B-Chat-MNN) |
+| [MobileLLM-125M](https://huggingface.co/facebook/MobileLLM-125M) | [Q4_1](https://modelscope.cn/models/MNN/MobileLLM-125M-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/MobileLLM-125M-MNN) |
+| [MobileLLM-350M](https://huggingface.co/facebook/MobileLLM-350M) | [Q4_1](https://modelscope.cn/models/MNN/MobileLLM-350M-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/MobileLLM-350M-MNN) |
+| [MobileLLM-600M](https://huggingface.co/facebook/MobileLLM-600M) | [Q4_1](https://modelscope.cn/models/MNN/MobileLLM-600M-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/MobileLLM-600M-MNN) |
+| [MobileLLM-1B](https://huggingface.co/facebook/MobileLLM-1B) | [Q4_1](https://modelscope.cn/models/MNN/MobileLLM-1B-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/MobileLLM-1B-MNN) |

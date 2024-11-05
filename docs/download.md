@@ -50,3 +50,6 @@
 | [MobileLLM-350M](https://huggingface.co/facebook/MobileLLM-350M) | [Q4_1](https://modelscope.cn/models/MNN/MobileLLM-350M-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/MobileLLM-350M-MNN) |
 | [MobileLLM-600M](https://huggingface.co/facebook/MobileLLM-600M) | [Q4_1](https://modelscope.cn/models/MNN/MobileLLM-600M-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/MobileLLM-600M-MNN) |
 | [MobileLLM-1B](https://huggingface.co/facebook/MobileLLM-1B) | [Q4_1](https://modelscope.cn/models/MNN/MobileLLM-1B-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/MobileLLM-1B-MNN) |
+| [SmolLM2-135M-Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct) | [Q4_1](https://modelscope.cn/models/MNN/SmolLM2-135M-Instruct-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/SmolLM2-135M-Instruct-MNN) |
+| [SmolLM2-360M-Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct) | [Q4_1](https://modelscope.cn/models/MNN/SmolLM2-360M-Instruct-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/SmolLM2-360M-Instruct-MNN) |
+| [SmolLM2-1.7B-Instruct](https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct) | [Q4_1](https://modelscope.cn/models/MNN/SmolLM2-1.7B-Instruct-MNN) | [Q4_1](https://huggingface.co/alibaba-mnn/SmolLM2-1.7B-Instruct-MNN) |

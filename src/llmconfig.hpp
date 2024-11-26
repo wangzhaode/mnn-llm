@@ -4,11 +4,17 @@
 //  Created by MNN on 2024/07/19.
 //  ZhaodeWang
 //
-#include "llm.hpp"
+
+#include "rapidjson/document.h"
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
+
+namespace MNN {
+namespace Transformer {
 
 static inline bool has_suffix(const std::string& str, const std::string& suffix) {
     return str.size() >= suffix.size() &&
-           str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+    str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
 static inline std::string base_dir(const std::string& path) {
@@ -29,17 +35,136 @@ static inline std::string file_name(const std::string& path) {
     }
 }
 
+bool merge_json(rapidjson::Value& destination, const rapidjson::Value& source,
+                rapidjson::Document::AllocatorType& allocator) {
+    if (!source.IsObject() || !destination.IsObject()) {
+        return false;
+    }
+
+    for (auto it = source.MemberBegin(); it != source.MemberEnd(); ++it) {
+        const char* key = it->name.GetString();
+        if (destination.HasMember(key)) {
+            if (destination[key].IsObject() && it->value.IsObject()) {
+                // Recursively merge the two JSON objects
+                merge_json(destination[key], it->value, allocator);
+            } else {
+                // Overwrite the value in the destination
+                destination[key].CopyFrom(it->value, allocator);
+            }
+        } else {
+            // Add the value to the destination
+            rapidjson::Value newKey(key, allocator);
+            rapidjson::Value newValue;
+            newValue.CopyFrom(it->value, allocator);
+            destination.AddMember(newKey, newValue, allocator);
+        }
+    }
+    return true;
+}
+
+class rapid_json_wrapper {
+public:
+    rapidjson::Document document;
+    rapid_json_wrapper() {}
+    rapid_json_wrapper(rapidjson::Document doc) : document(std::move(doc)) {}
+    static rapid_json_wrapper parse(const std::ifstream& ifile) {
+        std::ostringstream ostr;
+        ostr << ifile.rdbuf();
+        rapidjson::Document document;
+        document.Parse(ostr.str().c_str());
+        rapid_json_wrapper json_wrapper(std::move(document));
+        return json_wrapper;
+    }
+    static rapid_json_wrapper parse(const char* str) {
+        rapidjson::Document document;
+        document.Parse(str);
+        rapid_json_wrapper json_wrapper(std::move(document));
+        return json_wrapper;
+    }
+    bool merge(const char* str) {
+        rapidjson::Document input_doc;
+        input_doc.Parse(str);
+        if (input_doc.HasParseError()) {
+            return false;
+        }
+        // merge
+        rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
+        return merge_json(document, input_doc, allocator);
+    }
+    std::string dump() {
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        document.Accept(writer);
+        return buffer.GetString();
+    }
+    // read value
+    int value(const char* key, const int& default_value) const {
+        if (document.HasMember(key)) {
+            const auto& value = document[key];
+            if (value.IsInt()) return value.GetInt();
+        }
+        return default_value;
+    }
+    bool value(const char* key, const bool& default_value) const {
+        if (document.HasMember(key)) {
+            const auto& value = document[key];
+            if (value.IsBool()) return value.GetBool();
+        }
+        return default_value;
+    }
+    std::string value(const char* key, const std::string& default_value) const {
+        if (document.HasMember(key)) {
+            const auto& value = document[key];
+            if (value.IsString()) return value.GetString();
+        }
+        return default_value;
+    }
+    std::vector<int> value(const char* key, const std::vector<int>& default_value) const {
+        if (document.HasMember(key)) {
+            const auto& value = document[key];
+            if (value.IsArray()) {
+                std::vector<int> result;
+                for (auto& v : value.GetArray()) {
+                    if (v.IsInt()) {
+                        result.push_back(v.GetInt());
+                    }
+                }
+                return result;
+            }
+        }
+        return default_value;
+    }
+    std::vector<float> value(const char* key, const std::vector<float>& default_value) const {
+        if (document.HasMember(key)) {
+            const auto& value = document[key];
+            if (value.IsArray()) {
+                std::vector<float> result;
+                for (auto& v : value.GetArray()) {
+                    if (v.IsFloat()) {
+                        result.push_back(v.GetFloat());
+                    }
+                }
+                return result;
+            }
+        }
+        return default_value;
+    }
+    std::string value(const char key[], const char default_value[]) const {
+        return value(key, std::string(default_value));
+    }
+};
+
 class LlmConfig {
 public:
     std::string base_dir_;
-    json config_, llm_config_;
+    rapid_json_wrapper config_, llm_config_;
     LlmConfig() {}
     LlmConfig(const std::string& path) {
         // load config
         if (has_suffix(path, ".json")) {
             std::ifstream config_file(path);
             if (config_file.is_open()) {
-                config_ = json::parse(config_file);
+                config_ = rapid_json_wrapper::parse(config_file);
             } else {
                 std::cerr << "Unable to open config file: " << path << std::endl;
             }
@@ -48,13 +173,15 @@ public:
             // compatibility with the original usage
             if (has_suffix(path, ".mnn")) {
                 auto model_name = file_name(path);
-                config_ = {
-                    {"llm_model", model_name},
-                    {"llm_weight", model_name + ".weight"}
-                };
+                std::string json_str = R"({
+                    "llm_model": ")" + model_name + R"(",
+                    "llm_weight": ")" + model_name + R"(.weight"
+                })";
+                config_ = rapid_json_wrapper::parse(json_str.c_str());
                 base_dir_ = base_dir(path);
             } else {
-                config_ = {};
+                const char* json_cstr = "{}";
+                config_ = rapid_json_wrapper::parse(json_cstr);
                 base_dir_ = path;
             }
         }
@@ -63,56 +190,139 @@ public:
         // load llm_config for model info
         std::ifstream llm_config_file(llm_config());
         if (llm_config_file.is_open()) {
-            llm_config_ = json::parse(llm_config_file);
+            llm_config_ = rapid_json_wrapper::parse(llm_config_file);
         } else {
             std::cerr << "Unable to open llm_config file: " << llm_config() << std::endl;
         }
     }
 
-    #define DEFINE_CONFIG_PATH_ACCESSOR(name, defaultValue) \
-    std::string name() const { return base_dir_ + config_.value(#name, defaultValue); }
-
-    #define DEFINE_CONFIG_ACCESSOR(name, type, defaultValue) \
-    type name() const { return config_.value(#name, defaultValue); }
-
-    #define DEFINE_LLM_CONFIG_ACCESSOR(name, type, defaultValue) \
-    type name() const { return llm_config_.value(#name, defaultValue); }
-
     // < model file config start
-    DEFINE_CONFIG_PATH_ACCESSOR(llm_config, "llm_config.json")
-    DEFINE_CONFIG_PATH_ACCESSOR(llm_model, "llm.mnn")
-    DEFINE_CONFIG_PATH_ACCESSOR(llm_weight, "llm.mnn.weight")
-    DEFINE_CONFIG_PATH_ACCESSOR(lm_model, "lm.mnn")
-    DEFINE_CONFIG_PATH_ACCESSOR(embedding_model, "embedding.mnn")
-    DEFINE_CONFIG_PATH_ACCESSOR(embedding_file, "embeddings_bf16.bin")
-    DEFINE_CONFIG_PATH_ACCESSOR(tokenizer_file, "tokenizer.txt")
-    DEFINE_CONFIG_PATH_ACCESSOR(visual_model, "visual.mnn")
+    std::string llm_config() const {
+        return base_dir_ + config_.value("llm_config", "llm_config.json");
+    }
+
+    std::string llm_model() const {
+        return base_dir_ + config_.value("llm_model", "llm.mnn");
+    }
+
+    std::string llm_weight() const {
+        return base_dir_ + config_.value("llm_weight", "llm.mnn.weight");
+    }
+
+    std::string block_model(int index) const {
+        return base_dir_ + config_.value("block_model", "block_") + std::to_string(index) + ".mnn";
+    }
+
+    std::string lm_model() const {
+        return base_dir_ + config_.value("lm_model", "lm.mnn");
+    }
+
+    std::string embedding_model() const {
+        return base_dir_ + config_.value("embedding_model", "embedding.mnn");
+    }
+
+    std::string embedding_file() const {
+        return base_dir_ + config_.value("embedding_file", "embeddings_bf16.bin");
+    }
+
+    std::string tokenizer_file() const {
+        return base_dir_ + config_.value("tokenizer_file", "tokenizer.txt");
+    }
+
+    std::string visual_model() const {
+        return base_dir_ + config_.value("visual_model", "visual.mnn");
+    }
     // model file config end >
 
     // < generate config start
-    DEFINE_CONFIG_ACCESSOR(max_new_tokens, int, 512)
-    DEFINE_CONFIG_ACCESSOR(reuse_kv, bool, false)
-    DEFINE_CONFIG_ACCESSOR(backend_type, std::string, "cpu")
-    DEFINE_CONFIG_ACCESSOR(thread_num, int, 4)
-    DEFINE_CONFIG_ACCESSOR(precision, std::string, "low")
-    DEFINE_CONFIG_ACCESSOR(power, std::string, "normal")
-    DEFINE_CONFIG_ACCESSOR(memory, std::string, "low")
-    DEFINE_CONFIG_ACCESSOR(quant_qkv, int, 0)
-    DEFINE_CONFIG_ACCESSOR(kvcache_limit, int, -1)
-    DEFINE_CONFIG_ACCESSOR(use_mmap, bool, false)
-    DEFINE_CONFIG_ACCESSOR(kvcache_mmap, bool, false)
-    DEFINE_CONFIG_ACCESSOR(tmp_path, std::string, "")
+    int max_new_tokens() const {
+        return config_.value("max_new_tokens", 512);
+    }
+
+    bool reuse_kv() const {
+        return config_.value("reuse_kv", false);
+    }
     // generate config end >
 
+    // < backend config start
+    std::string backend_type() const {
+        return config_.value("backend_type", "cpu");
+    }
+
+    int thread_num() const {
+        return config_.value("thread_num", 4);
+    }
+
+    std::string precision() const {
+        return config_.value("precision", "low");
+    }
+    std::string power() const {
+        return config_.value("power", "normal");
+    }
+
+    std::string memory() const {
+        return config_.value("memory", "low");
+    }
+
+    int quant_qkv() const {
+        return config_.value("quant_qkv", 0);
+    }
+
+    int kvcache_limit() const {
+        return config_.value("kvcache_limit", -1);
+    }
+    // backend config end >
+
     // < llm model config start
-    DEFINE_LLM_CONFIG_ACCESSOR(is_single, bool, true)
-    DEFINE_LLM_CONFIG_ACCESSOR(is_visual, bool, false)
-    DEFINE_LLM_CONFIG_ACCESSOR(hidden_size, int, 4096)
-    DEFINE_LLM_CONFIG_ACCESSOR(layer_nums, int, 32)
-    DEFINE_LLM_CONFIG_ACCESSOR(key_value_shape, std::vector<int>, std::vector<int>{})
-    DEFINE_LLM_CONFIG_ACCESSOR(attention_mask, std::string, "int")
-    DEFINE_LLM_CONFIG_ACCESSOR(attention_fused, bool, true)
-    DEFINE_LLM_CONFIG_ACCESSOR(chat_template, std::string, "")
-    DEFINE_LLM_CONFIG_ACCESSOR(prompt_template, std::string, "")
+    bool is_single() const {
+        return llm_config_.value("is_single", true);
+    }
+
+    bool is_visual() const {
+        return llm_config_.value("is_visual", false);
+    }
+
+    bool use_mmap() const {
+        return config_.value("use_mmap", false);
+    }
+    bool kvcache_mmap() const {
+        return config_.value("kvcache_mmap", false);
+    }
+    std::string tmp_path() const {
+        return config_.value("tmp_path", "");
+    }
+
+    int hidden_size() const {
+        return llm_config_.value("hidden_size", 4096);
+    }
+
+    int layer_nums() const {
+        return llm_config_.value("layer_nums", 32);
+    }
+
+    std::vector<int> key_value_shape() const {
+        return llm_config_.value("key_value_shape", std::vector<int>{});
+    }
+
+    std::string attention_mask() const {
+        return llm_config_.value("attention_mask", "int");
+    }
+    bool attention_fused() const {
+        return llm_config_.value("attention_fused", true);
+    }
+
+    std::string chat_template() const {
+        return llm_config_.value("chat_template", "");
+    }
+
+    std::string prompt_template() const {
+        return llm_config_.value("prompt_template", "");
+    }
+
+    std::vector<int> tie_embeddings() const {
+        return llm_config_.value("tie_embeddings", std::vector<int>{});
+    }
     // llm model config end >
 };
+} // Transformer
+} // MNN

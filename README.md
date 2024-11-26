@@ -101,8 +101,8 @@ cd mnn-llm
 adb push android_build/MNN/OFF/arm64-v8a/libMNN.so /data/local/tmp
 adb push android_build/MNN/express/OFF/arm64-v8a/libMNN_Express.so /data/local/tmp
 adb push android_build/libllm.so android_build/cli_demo /data/local/tmp
-adb push Qwen2-1.5B-Instruct-MNN /data/local/tmp
-adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo ./Qwen2-1.5B-Instruct-MNN/config.json"
+adb push Qwen2-1.5B-Instruct-MNN /data/local/tmp/mnn-llm
+adb shell "cd /data/local/tmp && export LD_LIBRARY_PATH=. && ./cli_demo ./mnn-llm/Qwen2-1.5B-Instruct-MNN/config.json"
 ```
 
 

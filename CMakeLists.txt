@@ -32,7 +32,8 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/MNN)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include/
                     ${CMAKE_CURRENT_LIST_DIR}/MNN/include/
                     ${CMAKE_CURRENT_LIST_DIR}/MNN/tools/cv/include/
-                    ${CMAKE_CURRENT_LIST_DIR}/MNN/MNN/3rd_party/
+                    ${CMAKE_CURRENT_LIST_DIR}/MNN/tools/cpp/
+                    ${CMAKE_CURRENT_LIST_DIR}/MNN/3rd_party/
                     )
 
 # source files

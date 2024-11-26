@@ -14,16 +14,151 @@
 
 #include <MNN/expr/ExecutorScope.hpp>
 #include <MNN/AutoTime.hpp>
+#include "ExprDebug.hpp"
 #include "llm.hpp"
-#include "llmconfig.hpp"
 #include "tokenizer.hpp"
+#include "llmconfig.hpp"
+// 0: no debug, 1: test op time, 2: print tensor info
+#define DEBUG_MODE 0
 
 #ifdef LLM_SUPPORT_VISION
 #include "httplib.h"
 #include <cv/cv.hpp>
 #endif
 
+using namespace MNN::Express;
+namespace MNN {
+namespace Transformer {
+
+typedef void (*DequantFunction)(const uint8_t*, float*, float, float, int);
+
+static void q41_dequant_ref(const uint8_t* src, float* dst, float scale, float zero, int size) {
+    for (int i = 0; i < size / 2; i++) {
+        int x = src[i];
+        int x1 = x / 16 - 8;
+        int x2= x % 16 - 8;
+        float w1 = x1 * scale + zero;
+        float w2 = x2 * scale + zero;
+        dst[2 * i] = w1;
+        dst[2 * i + 1] = w2;
+    }
+}
+
+static void q81_dequant_ref(const uint8_t* src, float* dst, float scale, float zero, int size) {
+    for (int i = 0; i < size; i++) {
+        dst[i] = src[i] * scale + zero;
+    }
+}
+
+class DiskEmbedding {
+public:
+    explicit DiskEmbedding(const std::shared_ptr<LlmConfig>& config);
+    ~DiskEmbedding() {}
+    void embedding(const std::vector<int>& input_ids, float* ptr);
+private:
+    void seek_read(uint8_t* dst, int size, int offset);
+    std::unique_ptr<uint8_t[]> alpha_ = nullptr;
+    std::unique_ptr<uint8_t[]> weight_ = nullptr;
+    std::unique_ptr<FILE, decltype(&fclose)> fp_;
+    DequantFunction dequant_;
+    int hidden_size_, weight_token_size_;
+    int w_offset_, block_num_, quant_block_, quant_bit_;
+};
+
+void DiskEmbedding::seek_read(uint8_t* dst, int size, int offset) {
+    fseek(fp_.get(), offset, SEEK_SET);
+    size_t bytes_read = fread(dst, 1, size, fp_.get());
+    (void)bytes_read;
+}
+
+DiskEmbedding::DiskEmbedding(const std::shared_ptr<LlmConfig>& config) : fp_(nullptr, &fclose) {
+    auto tie_embeddings = config->tie_embeddings();
+    hidden_size_ = config->hidden_size();
+    if (tie_embeddings.size() == 5) {
+        w_offset_    = tie_embeddings[0];
+        quant_bit_   = tie_embeddings[3];
+        quant_block_ = tie_embeddings[4];
+        block_num_ = hidden_size_ / quant_block_;
+        weight_token_size_ = hidden_size_ * quant_bit_ / 8;
+        fp_.reset(fopen(config->llm_weight().c_str(), "rb"));
+        // TODO: optimize dequant function
+        dequant_ = quant_bit_ == 8 ? q81_dequant_ref : q41_dequant_ref;
+        int a_offset    = tie_embeddings[1];
+        int alpha_size  = tie_embeddings[2];
+        alpha_.reset(new uint8_t[alpha_size]);
+        seek_read(alpha_.get(), alpha_size, a_offset);
+    } else {
+        weight_token_size_ = hidden_size_ * sizeof(int16_t);
+        fp_.reset(fopen(config->embedding_file().c_str(), "rb"));
+    }
+    weight_.reset(new uint8_t[weight_token_size_]);
+}
+
+void DiskEmbedding::embedding(const std::vector<int>& input_ids, float* dst) {
+    if (alpha_.get()) {
+        // quant
+        for (size_t i = 0; i < input_ids.size(); i++) {
+            int token = input_ids[i];
+            seek_read(weight_.get(), weight_token_size_, w_offset_ + token * weight_token_size_);
+            auto dptr = dst + i * hidden_size_;
+            auto alpha_ptr = reinterpret_cast<float*>(alpha_.get()) + token * block_num_ * 2;
+            for (int n = 0; n < block_num_; n++) {
+                auto dst_ptr = dptr + n * quant_block_;
+                uint8_t* src_ptr = weight_.get() + n * (quant_block_ * quant_bit_ / 8);
+                float zero = (alpha_ptr + n * 2)[0];
+                float scale = (alpha_ptr + n * 2)[1];
+                dequant_(src_ptr, dst_ptr, scale, zero, quant_block_);
+            }
+        }
+    } else {
+        // bf16
+        for (size_t i = 0; i < input_ids.size(); i++) {
+            seek_read(weight_.get(), weight_token_size_, input_ids[i] * weight_token_size_);
+            int16_t* dst_ptr = reinterpret_cast<int16_t*>(dst + i * hidden_size_);
+            for (int j = 0; j < hidden_size_; j++) {
+                dst_ptr[j * 2] = 0;
+                dst_ptr[j * 2 + 1] = reinterpret_cast<int16_t*>(weight_.get())[j];
+            }
+        }
+    }
+}
+
+class Lvlm : public Llm {
+public:
+    Lvlm(std::shared_ptr<LlmConfig> config) : Llm(config) {
+        image_size_ = config->llm_config_.value("image_size", image_size_);
+        image_pad_ = config->llm_config_.value("image_pad", image_pad_);
+        vision_start_ = config->llm_config_.value("vision_start", vision_start_);
+        vision_end_ = config->llm_config_.value("vision_end", vision_end_);
+        image_mean_ = config->llm_config_.value("image_mean", image_mean_);
+        image_norm_ = config->llm_config_.value("image_norm", image_norm_);
+    }
+    ~Lvlm() { visual_module_.reset(); }
+    virtual void load() override;
+
+    virtual std::vector<int> tokenizer_encode(const std::string& query, bool use_template = true) override;
+    virtual MNN::Express::VARP embedding(const std::vector<int>& input_ids) override;
+private:
+    int image_size_ = 448, vision_start_ = 151857, vision_end_ = 151858, image_pad_ = 151859;
+    std::vector<float> image_mean_ {122.7709383 , 116.7460125 , 104.09373615};
+    std::vector<float> image_norm_ {0.01459843, 0.01500777, 0.01422007};
+    std::vector<int> image_process(const std::string& img_info);
+    std::shared_ptr<Module> visual_module_;
+    std::vector<VARP> image_embeddings_;
+};
+
 // Llm start
+Llm* Llm::createLLM(const std::string& config_path) {
+    std::shared_ptr<LlmConfig> config(new LlmConfig(config_path));
+    Llm* llm = nullptr;
+    if (config->is_visual()) {
+        llm = new Lvlm(config);
+    } else {
+        llm = new Llm(config);
+    }
+    return llm;
+}
+
 static MNNForwardType backend_type_convert(const std::string& type_str) {
     if (type_str == "cpu") return MNN_FORWARD_CPU;
     if (type_str == "metal") return MNN_FORWARD_METAL;
@@ -40,8 +175,7 @@ std::string Llm::dump_config() {
 }
 
 bool Llm::set_config(const std::string& content) {
-    config_->config_.merge_patch(content.c_str());
-    return true;
+    return config_->config_.merge(content.c_str());
 }
 
 void Llm::init_runtime() {
@@ -79,6 +213,15 @@ void Llm::init_runtime() {
     if (config_->use_mmap()) {
         runtime_manager_->setExternalPath(tmpPath, MNN::Interpreter::EXTERNAL_WEIGHT_DIR);
     }
+
+#if DEBUG_MODE==1
+    runtime_manager_->setMode(MNN::Interpreter::Session_Debug);
+    _initTimeTrace();
+#endif
+#if DEBUG_MODE==2
+    runtime_manager_->setMode(MNN::Interpreter::Session_Debug);
+    _initTensorStatic();
+#endif
     {
         runtime_manager_->setCache(".tempcache");
     }
@@ -90,15 +233,12 @@ void Llm::load() {
     key_value_shape_ = config_->key_value_shape();
     is_single_ = config_->is_single();
     attention_fused_ = config_->attention_fused();
-    {
-        std::ifstream embedding_bin(config_->embedding_file());
-        embedding_bin.close();
-    }
     MNN_PRINT("### is_single_ = %d\n", is_single_);
     // 1. load vocab
     MNN_PRINT("load tokenizer\n");
     tokenizer_.reset(Tokenizer::createTokenizer(config_->tokenizer_file()));
     MNN_PRINT("load tokenizer Done\n");
+    disk_embedding_.reset(new DiskEmbedding(config_));
     // 3. load model
     Module::Config module_config;
     module_config.shapeMutable = true;
@@ -135,7 +275,6 @@ void Llm::load() {
     MNN_PRINT("Clone Decode Module Done!\n");
 
     prefill_modules_ = modules_;
-    load_progress_ = 100.f;
 }
 
 size_t Llm::apply_lora(const std::string& lora_path) {
@@ -145,8 +284,13 @@ size_t Llm::apply_lora(const std::string& lora_path) {
     module_config.rearrange = true;
     module_config.base = modules_.begin()->get();
     size_t lora_index = modules_.size();
-    modules_.emplace_back(Module::load({"input_ids", "attention_mask", "position_ids", "past_key_values"},
-                                       {"logits", "presents"}, model_path.c_str(), runtime_manager_, &module_config));
+    if (attention_fused_) {
+        modules_.emplace_back(Module::load({"input_ids", "attention_mask", "position_ids"},
+                                           {"logits"}, model_path.c_str(), runtime_manager_, &module_config));
+    } else {
+        modules_.emplace_back(Module::load({"input_ids", "attention_mask", "position_ids", "past_key_values"},
+                                           {"logits", "presents"}, model_path.c_str(), runtime_manager_, &module_config));
+    }
     select_module(lora_index);
     return lora_index;
 }
@@ -184,6 +328,56 @@ bool Llm::select_module(size_t index) {
     decode_modules_[0].reset(Module::clone(modules_[index].get()));
     prefill_modules_[0] = modules_[index];
     return true;
+}
+
+void Llm::trace(bool start) {
+    auto status = MNN::Interpreter::Session_Resize_Check;
+    if (start) {
+        status = MNN::Interpreter::Session_Resize_Check;
+    } else {
+        status = MNN::Interpreter::Session_Resize_Fix;
+    }
+    for (auto& m : decode_modules_) {
+        m->traceOrOptimize(status);
+    }
+
+    runtime_manager_->updateCache();
+    mTracing = start;
+}
+
+void Llm::tuning(TuneType type, std::vector<int> candidates) {
+    if(type != OP_ENCODER_NUMBER) {
+        MNN_ERROR("tuning type not supported\n");
+        return;
+    }
+    if(config_->backend_type() != "metal") {
+        return;
+    }
+
+    current_modules_ = decode_modules_;
+    int64_t min_time = INT64_MAX;
+    int prefer_candidate = 10;
+    for(auto& candidate : candidates) {
+        runtime_manager_->setHint(MNN::Interpreter::OP_ENCODER_NUMBER_FOR_COMMIT, candidate);
+
+        auto st = std::chrono::system_clock::now();
+        auto logits = forward({0});
+        if (nullptr == logits.get()) {
+            return;
+        }
+        if (logits->getInfo()->size == 0) {
+            return;
+        }
+        auto token = sample(logits, {});
+        auto et = std::chrono::system_clock::now();
+        int64_t time = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
+        if(time < min_time) {
+            prefer_candidate = candidate;
+            min_time = time;
+            //MNN_PRINT("op encode number:%d, decode time: %lld us\n", candidate, time);
+        }
+    }
+    runtime_manager_->setHint(MNN::Interpreter::OP_ENCODER_NUMBER_FOR_COMMIT, prefer_candidate);
 }
 
 VARP Llm::forward(const std::vector<int>& input_ids) {
@@ -289,9 +483,13 @@ void Llm::chat() {
             continue;
         }
         std::cout << "\nA: " << std::flush;
-        history.emplace_back(std::make_pair("user", user_str));
-        auto assistant_str = response(history);
-        history.emplace_back(std::make_pair("assistant", assistant_str));
+        if (config_->reuse_kv()) {
+            response(user_str);
+        } else {
+            history.emplace_back(std::make_pair("user", user_str));
+            auto assistant_str = response(history);
+            history.emplace_back(std::make_pair("assistant", assistant_str));
+        }
         std::cout << std::endl;
     }
 }
@@ -318,6 +516,7 @@ void Llm::generate_init() {
         all_seq_len_ = 0;
         history_ids_.clear();
     }
+    current_modules_ = prefill_modules_;
 }
 
 std::vector<int> Llm::generate(const std::vector<int>& input_ids, int max_new_tokens) {
@@ -351,6 +550,15 @@ std::vector<int> Llm::generate(const std::vector<int>& input_ids, int max_new_to
 }
 
 std::string Llm::generate(const std::vector<int>& input_ids, std::ostream* os, const char* end_with) {
+    if (mTracing) {
+        // Skip real forward
+        current_modules_ = prefill_modules_;
+        forward(input_ids);
+        current_modules_ = decode_modules_;
+        forward({input_ids[0]});
+        forward({input_ids[0]});
+        return "Test";
+    }
     prompt_len_ = static_cast<int>(input_ids.size());
     history_ids_.insert(history_ids_.end(), input_ids.begin(), input_ids.end()); // push to history_ids_
     auto st = std::chrono::system_clock::now();
@@ -362,7 +570,7 @@ std::string Llm::generate(const std::vector<int>& input_ids, std::ostream* os, c
     int token = sample(logits, history_ids_);
     auto et = std::chrono::system_clock::now();
     current_modules_ = decode_modules_;
-    std::string output_str = decode(token);
+    std::string output_str = tokenizer_decode(token);
     prefill_us_ = std::chrono::duration_cast<std::chrono::microseconds>(et - st).count();
     *os << output_str << std::flush;
     while (gen_seq_len_ < config_->max_new_tokens()) {
@@ -383,7 +591,7 @@ std::string Llm::generate(const std::vector<int>& input_ids, std::ostream* os, c
             *os << end_with << std::flush;
             break;
         }
-        auto word = decode(token);
+        auto word = tokenizer_decode(token);
         *os << word << std::flush;
         output_str += word;
     }
@@ -394,8 +602,11 @@ std::string Llm::generate(const std::vector<int>& input_ids, std::ostream* os, c
     return output_str;
 }
 
-std::vector<int> Llm::tokenizer(const std::string& query) {
-    auto prompt = apply_prompt_template(query);
+std::vector<int> Llm::tokenizer_encode(const std::string& user_content, bool use_template) {
+    if (!use_template) {
+        return tokenizer_->encode(user_content);
+    }
+    auto prompt = apply_prompt_template(user_content);
     auto input_ids = tokenizer_->encode(prompt);
     return input_ids;
 }
@@ -411,7 +622,7 @@ std::string Llm::response(const std::string& user_content, std::ostream* os, con
         }
         input_ids = tokenizer_->encode(prompt);
     } else {
-        input_ids = tokenizer(user_content);
+        input_ids = tokenizer_encode(user_content);
     }
     return generate(input_ids, os, end_with);
 }
@@ -428,6 +639,36 @@ std::string Llm::response(const std::vector<PromptItem>& chat_prompts, std::ostr
     auto input_ids = tokenizer_->encode(prompt);
     // printf("input_ids (%lu): ", input_ids.size()); for (auto id : input_ids) printf("%d, ", id); printf("\n");
     return generate(input_ids, os, end_with);
+}
+
+Llm::~Llm() {
+#if DEBUG_MODE==1
+    if (nullptr != gTimeTraceInfo) {
+        float opSummer = 0.0f;
+        float opFlopsSummber = 0.0f;
+        for (auto& iter : gTimeTraceInfo->mTypes) {
+            float summer = 0.0f;
+            float summerflops = 0.0f;
+            for (auto& t : iter.second) {
+                for (auto& t0 : t.second) {
+                    summer += t0.first;
+                    summerflops += t0.second;
+                }
+            }
+            summer = summer;
+            summerflops = summerflops;
+            MNN_PRINT("%s : %.7f, FLOP: %.7f, Speed: %.7f GFlops\n", iter.first.c_str(), summer, summerflops, summerflops / summer);
+            opSummer += summer;
+            opFlopsSummber+= summerflops;
+        }
+        MNN_PRINT("OP Summer: %.7f, Flops: %.7f, Speed: %.7f GFlops\n", opSummer, opFlopsSummber, opFlopsSummber/opSummer);
+    }
+#endif
+    current_modules_.clear();
+    decode_modules_.clear();
+    prefill_modules_.clear();
+    modules_.clear();
+    runtime_manager_.reset();
 }
 
 void Llm::print_speed() {
@@ -448,15 +689,6 @@ void Llm::print_speed() {
     printf("##################################\n");
 }
 
-
-Llm::~Llm() {
-    current_modules_.clear();
-    decode_modules_.clear();
-    prefill_modules_.clear();
-    modules_.clear();
-    runtime_manager_.reset();
-}
-
 static inline bool needNewVar(VARP var, int axis, int seq_len) {
     if (var == nullptr) {
         return true;
@@ -469,31 +701,17 @@ static inline bool needNewVar(VARP var, int axis, int seq_len) {
 
 VARP Llm::embedding(const std::vector<int>& input_ids) {
     AUTOTIME;
-    // disk embedding to save memory
     int hidden_size = config_->hidden_size();
     int seq_len = static_cast<int>(input_ids.size());
     if (needNewVar(inputs_embeds_, 0, seq_len)) {
         inputs_embeds_ = _Input({seq_len, 1, hidden_size}, NCHW);
     }
-
-    size_t size = hidden_size * sizeof(int16_t);
-    FILE* file = fopen(config_->embedding_file().c_str(), "rb");
-    std::unique_ptr<int16_t[]> buffer(new int16_t[hidden_size]);
-    for (size_t i = 0; i < seq_len; i++) {
-        fseek(file, input_ids[i] * size, SEEK_SET);
-        size_t bytes_read = fread(buffer.get(), 1, size, file);
-        (void)bytes_read;
-        auto ptr = inputs_embeds_->writeMap<int16_t>() + i * hidden_size * 2;
-        for (int j = 0; j < hidden_size; j++) {
-            ptr[j * 2] = 0;
-            ptr[j * 2 + 1] = buffer[j];
-        }
-    }
-    fclose(file);
+    // disk embedding to save memory
+    disk_embedding_->embedding(input_ids, inputs_embeds_->writeMap<float>());
     return inputs_embeds_;
 }
 
-std::string Llm::decode(int id) {
+std::string Llm::tokenizer_decode(int id) {
     std::string word = tokenizer_->decode(id);
     // Fix utf-8 garbled characters
     if (word.length() == 6 && word[0] == '<' && word[word.length()-1] == '>' && word[1] == '0' && word[2] == 'x') {
@@ -592,54 +810,17 @@ bool Llm::is_stop(int token_id) {
     return tokenizer_->is_stop(token_id);
 }
 
-class Lvlm : public Llm {
-public:
-    Lvlm(std::shared_ptr<LlmConfig> config) : Llm(config) {
-        image_size_ = config->llm_config_.value("image_size", image_size_);
-        image_pad_ = config->llm_config_.value("image_pad", image_pad_);
-        vision_start_ = config->llm_config_.value("vision_start", vision_start_);
-        vision_end_ = config->llm_config_.value("vision_end", vision_end_);
-        image_mean_ = config->llm_config_.value("image_mean", image_mean_);
-        image_norm_ = config->llm_config_.value("image_norm", image_norm_);
-    }
-    ~Lvlm() {
-        visual_module_.reset();
-    }
-    virtual void load() override;
-    virtual std::vector<int> tokenizer(const std::string& query) override;
-    virtual MNN::Express::VARP embedding(const std::vector<int>& input_ids) override;
-private:
-    int image_size_ = 448, vision_start_ = 151857, vision_end_ = 151858, image_pad_ = 151859;
-    std::vector<float> image_mean_ {122.7709383 , 116.7460125 , 104.09373615};
-    std::vector<float> image_norm_ {0.01459843, 0.01500777, 0.01422007};
-    std::vector<int> image_process(const std::string& img_info);
-    std::shared_ptr<Module> visual_module_;
-    std::vector<VARP> image_embeddings_;
-};
-
-Llm* Llm::createLLM(const std::string& config_path) {
-    std::shared_ptr<LlmConfig> config(new LlmConfig(config_path));
-    Llm* llm = nullptr;
-    if (config->is_visual()) {
-        llm = new Lvlm(config);
-    } else {
-        llm = new Llm(config);
-    }
-    return llm;
-}
-
 void Lvlm::load() {
     Llm::load();
     Module::Config module_config;
     module_config.shapeMutable = true;
-    module_config.rearrange = true;
+    module_config.rearrange = false;
     runtime_manager_->setExternalFile(config_->visual_model() + ".weight");
     visual_module_.reset(Module::load({}, {}, config_->visual_model().c_str(), runtime_manager_, &module_config));
 }
 
 std::vector<int> Lvlm::image_process(const std::string& image_info) {
 #ifdef LLM_SUPPORT_VISION
-    AUTOTIME;
     VARP image = nullptr;
     if (image_info.substr(0, 4) == "http") {
         std::regex url_regex(R"(^https?://([^/]+)(/.*))");
@@ -686,7 +867,7 @@ std::vector<int> Lvlm::image_process(const std::string& image_info) {
 #endif
 }
 
-std::vector<int> Lvlm::tokenizer(const std::string& query) {
+std::vector<int> Lvlm::tokenizer_encode(const std::string& query, bool use_template) {
     auto prompt = apply_prompt_template(query);
     // split query
     std::regex img_regex("<img>(.*?)</img>");
@@ -694,7 +875,7 @@ std::vector<int> Lvlm::tokenizer(const std::string& query) {
     std::smatch match;
     std::vector<std::string> img_infos;
     std::vector<int> ids {};
-    image_embeddings_.clear();
+
     while (std::regex_search(searchStart, prompt.cend(), match, img_regex)) {
         // std::cout << "img match: " << match[1].str() << std::endl;
         auto txt_ids = tokenizer_->encode(match.prefix().str());
@@ -707,15 +888,12 @@ std::vector<int> Lvlm::tokenizer(const std::string& query) {
         auto txt_ids = tokenizer_->encode(std::string(searchStart, prompt.cend()));
         ids.insert(ids.end(), txt_ids.begin(), txt_ids.end());
     }
-    // printf("ids (%lu) = [", ids.size()); for (auto id : ids) printf("%d, ", id); printf("]\n");
+    // printf("ids = ["); for (auto id : ids) printf("%d, ", id); printf("]\n");
     return ids;
 }
 
 VARP Lvlm::embedding(const std::vector<int>& input_ids) {
-    // decode or input_ids not contains vision_start_ and vision_end_, using Llm::embedding
-    if (input_ids.size() == 1 ||
-        std::find(input_ids.begin(), input_ids.end(), vision_start_) == input_ids.end() ||
-        std::find(input_ids.begin(), input_ids.end(), vision_end_) == input_ids.end()) {
+    if (input_ids.size() == 1) {
         return Llm::embedding(input_ids);
     }
     std::vector<VARP> embeddings;
@@ -797,13 +975,7 @@ VARP Embedding::ids_embedding(const std::vector<int>& ids) {
 }
 
 VARP Embedding::txt_embedding(const std::string& txt) {
-    return ids_embedding(tokenizer(txt));
-}
-
-std::vector<int> Embedding::tokenizer(const std::string& query) {
-    auto prompt = apply_prompt_template(query);
-    auto ids = tokenizer_->encode(prompt);
-    return ids;
+    return ids_embedding(tokenizer_encode(txt));
 }
 
 VARP Embedding::gen_attention_mask(int seq_len) {
@@ -824,447 +996,5 @@ VARP Embedding::gen_position_ids(int seq_len) {
     return position_ids;
 }
 // Embedding end
-
-// TextVectorStore strat
-TextVectorStore* TextVectorStore::load(const std::string& path, const std::string& embedding_path) {
-    auto vars = Variable::load(path.c_str());
-    if (vars.size() < 2) {
-        return nullptr;
-    }
-    TextVectorStore* store = new TextVectorStore;
-    store->vectors_ = vars[0];
-    for (int i = 1; i < vars.size(); i++) {
-        const char* txt = vars[i]->readMap<char>();
-        store->texts_.push_back(txt);
-    }
-    if (!embedding_path.empty()) {
-        store->embedding_.reset(Embedding::createEmbedding(embedding_path));
-    }
-    return store;
 }
-
-void TextVectorStore::save(const std::string& path) {
-    if (vectors_ == nullptr && texts_.empty()) {
-        return;
-    }
-    std::vector<VARP> vars;
-    vars.push_back(vectors_);
-    for (auto text : texts_) {
-        auto text_var = _Const(text.data(), {static_cast<int>(text.size() + 1)}, NHWC, halide_type_of<int8_t>());
-        vars.push_back(text_var);
-    }
-    Variable::save(vars, path.c_str());
 }
-
-void TextVectorStore::add_text(const std::string& text) {
-    auto vector = text2vector(text);
-    texts_.push_back(text);
-    if (vectors_ == nullptr) {
-        vectors_ = vector;
-    } else {
-        vectors_ = _Concat({vectors_, vector}, 0);
-    }
-    vectors_.fix(VARP::CONSTANT);
-}
-
-void TextVectorStore::add_texts(const std::vector<std::string>& texts) {
-    for (const auto& text : texts) {
-        add_text(text);
-    }
-}
-
-std::vector<std::string> TextVectorStore::search_similar_texts(const std::string& text, int topk) {
-    auto vector = text2vector(text);
-    auto dist = _Sqrt(_ReduceSum(_Square(vectors_ - vector), {-1}));
-    auto indices = _Sort(dist, 0, true);
-    auto ptr = dist->readMap<float>();
-    auto idx_ptr = indices->readMap<int>();
-    std::vector<std::string> res;
-    for (int i = 0; i < std::max(topk, 1); i++) {
-        int pos = idx_ptr[i];
-        if (pos >= 0 && pos < texts_.size()) {
-            res.push_back(texts_[pos]);
-        }
-    }
-    return res;
-}
-
-void TextVectorStore::bench() {
-    const int n = 50000;
-    const int d = 1024;
-    std::vector<int> shape0_v = {n, d};
-    std::vector<int> shape1_v = {1, d};
-    auto shape0 = _Const(shape0_v.data(), {2});
-    auto shape1 = _Const(shape1_v.data(), {2});
-    vectors_ = _RandomUnifom(shape0, halide_type_of<float>());
-    auto vec = _RandomUnifom(shape1, halide_type_of<float>());
-    auto start = std::chrono::high_resolution_clock::now();
-    auto dist = _Sqrt(_ReduceSum(_Square(vectors_ - vec), {-1}));
-    auto indices = _Sort(dist, 0, true);
-    auto ptr = dist->readMap<float>();
-    auto iptr = indices->readMap<int>();
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "bench search time (ms): " << duration.count();
-    vectors_ = nullptr;
-}
-
-VARP TextVectorStore::text2vector(const std::string& text) {
-    if (embedding_ == nullptr) {
-        std::cerr << "Not set embedding for TextVectorStore." << std::endl;
-        return nullptr;
-    }
-    auto vector = embedding_->txt_embedding(text);
-    return vector;
-}
-// TextVectorStore end
-
-// Document start
-std::vector<std::string> Document::split(int chunk_size) {
-    // judge from extention
-    if (type_ == DOCTYPE::AUTO) {
-        static const std::unordered_map<std::string, DOCTYPE> extensionMap = {
-            {".txt",  DOCTYPE::TXT},
-            {".md",   DOCTYPE::MD},
-            {".html", DOCTYPE::HTML},
-            {".pdf",  DOCTYPE::PDF}
-        };
-        size_t dotIndex = path_.find_last_of(".");
-        if (dotIndex != std::string::npos) {
-            auto extention = path_.substr(dotIndex);
-            auto it = extensionMap.find(extention);
-            if (it != extensionMap.end()) {
-                type_ = it->second;
-            }
-        }
-    }
-    std::vector<std::string> segments;
-    switch (type_) {
-        case DOCTYPE::AUTO:
-        case DOCTYPE::TXT:
-        case DOCTYPE::MD:
-        case DOCTYPE::HTML:
-            segments = load_txt();
-            break;
-        case DOCTYPE::PDF:
-            segments = load_pdf();
-            break;
-        default:
-            break;
-    }
-    if (segments.empty() || chunk_size < 0) {
-        return segments;
-    }
-    // merge segments by chunk_size
-    std::vector<std::string> merged_segments;
-    std::string current_chunk;
-    for (const auto& segment : segments) {
-        if (current_chunk.empty()) {
-            current_chunk = segment;
-        } else {
-            if (current_chunk.length() + segment.length() < chunk_size) {
-                current_chunk += "\n" + segment;
-            } else {
-                merged_segments.push_back(current_chunk);
-                current_chunk = segment;
-            }
-        }
-    }
-    return merged_segments;
-}
-
-std::vector<std::string> Document::load_txt() {
-    std::vector<std::string> segments;
-    std::ifstream file(path_);
-    std::string line;
-    std::stringstream buffer;
-
-    std::function<bool(const std::string&)> do_segment = [](const std::string& line) {
-        return line.empty();
-    };
-    if (type_ == DOCTYPE::MD) {
-        do_segment = [](const std::string& line) {
-            // segment markdown by third title
-            return line.size() > 3 && line.substr(0, 3) == "###";
-        };
-    }
-
-    while (getline(file, line)) {
-        if (std::all_of(line.begin(), line.end(), [](unsigned char c) {return std::isspace(c);})) {
-            line.clear();
-        }
-        if (do_segment(line) || file.eof()) {
-            if (buffer.tellp() > 0) {
-                segments.push_back(buffer.str());
-                buffer.str(std::string());
-                buffer.clear();
-            }
-            if (!line.empty()) {
-                buffer << line << "\n";
-            }
-        } else {
-            buffer << line << "\n";
-        }
-    }
-    if (!buffer.str().empty()) {
-        segments.push_back(buffer.str());
-    }
-    return segments;
-}
-
-std::vector<std::string> Document::load_pdf() {
-    // TODO
-    return {};
-}
-// Document end
-
-// Memory start
-void MemoryBase::load_store(const std::string& path) {
-    auto store_path = path + ".mnn";
-    std::ifstream file(store_path);
-    if (file.good()) {
-        store_.reset(TextVectorStore::load(store_path));
-    } else {
-        store_.reset(new TextVectorStore);
-    }
-}
-
-void MemoryBase::save_store(const std::string& path) {
-    store_->save(path + ".mnn");
-}
-
-std::vector<std::string> MemoryBase::search(const std::string& query, int topk) {
-    return store_->search_similar_texts(query, topk);
-}
-
-inline std::string format_date(std::string date) {
-    date.replace(7, 1, "月");
-    date.replace(4, 1, "年");
-    date += "日";
-    return date;
-}
-
-std::string now_date() {
-    auto now = std::chrono::system_clock::now();
-    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-    std::tm now_tm = *std::localtime(&now_time_t);
-
-    char buffer[80];
-    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d", &now_tm);
-
-    return std::string(buffer);
-}
-
-ChatMemory* ChatMemory::load(const std::string& path) {
-    // load json memory
-    std::ifstream file(path);
-    if (!file.good()) {
-        std::cerr << "Unable to open file " << path << std::endl;
-        return nullptr;
-    }
-    auto chat_memory = new ChatMemory;
-    chat_memory->memory_ = json::parse(file);
-    chat_memory->load_store(path);
-    return chat_memory;
-}
-
-void ChatMemory::save(const std::string& path) {
-    // save to json
-    std::ofstream file(path);
-    if (file.is_open()) {
-        file << memory_.dump(4);
-        file.close();
-    } else {
-        std::cerr << "Unable to open file " << path << std::endl;
-    }
-    save_store(path);
-}
-
-void ChatMemory::build_vectors() {
-    auto& summary = memory_["summary"];
-    std::vector<std::string> sum_strs;
-    for (auto& element : summary.items()) {
-        auto date = element.key();
-        auto content = element.value();
-        auto record = "对话日期：" + format_date(date) + "\n对话内容总结：" + content.dump();
-        sum_strs.push_back(record);
-    }
-    store_->add_texts(sum_strs);
-}
-
-void ChatMemory::add(const std::vector<Prompt>& prompts) {
-    auto date = now_date();
-    auto& history = memory_["history"];
-    if (!history.contains(date)) {
-        history[date] = nlohmann::json::array({});
-    }
-    std::string query, response;
-    for (const auto& prompt : prompts) {
-        if (prompt.type == PROMPT_TYPE::USER) {
-            query = prompt.str;
-        }
-        if (prompt.type == PROMPT_TYPE::ASSISTANT) {
-            response = prompt.str;
-            json new_entry = {
-                {"query", query},
-                {"response", response}
-            };
-            history[date].push_back(new_entry);
-        }
-    }
-}
-
-std::string ChatMemory::get_latest(std::string key) {
-    if (memory_.contains(key)) {
-        std::string latest_date = "";
-        json latest_value;
-        for (const auto& element : memory_[key].items()) {
-            if (element.key() > latest_date) {
-                latest_date = element.key();
-                latest_value = element.value();
-            }
-        }
-        return latest_value.dump();
-    }
-    return "";
-}
-
-void ChatMemory::summarize(std::shared_ptr<Llm> llm) {
-    auto user = memory_["user"].dump();
-    auto& history = memory_["history"];
-    auto& summary = memory_["summary"];
-    auto& personality = memory_["personality"];
-    for (auto& element : history.items()) {
-        auto date = element.key();
-        auto content = element.value();
-        auto chat_str = content.dump();
-        if (!summary.contains(date)) {
-            auto summary_prompt = "请总结以下的对话内容，尽可能精炼，提取对话的主题和关键信息。如果有多个关键事件，可以分点总结。对话内容：\n" + chat_str + "\n总结：";
-            auto sum = llm->response(summary_prompt);
-            summary[date] = sum;
-        }
-        if (!personality.contains(date)) {
-            auto personality_prompt = "请根据以下的对话推测总结" + user + "的性格特点和心情，并根据你的推测制定回复策略。对话内容：\n" + chat_str + "\n总结：";
-            auto pers = llm->response(personality_prompt);
-            personality[date] = pers;
-        }
-    }
-    // summarize overall_history and overall_personality
-}
-
-Knowledge* Knowledge::load(const std::string& path) {
-    auto knowledge = new Knowledge;
-    knowledge->document_.reset(new Document(path));
-    knowledge->load_store(path);
-    return knowledge;
-}
-
-void Knowledge::save(const std::string& path) {
-    save_store(path);
-}
-
-void Knowledge::build_vectors() {
-    auto segments = document_->split();
-    store_->add_texts(segments);
-}
-
-// Memory end
-Pipeline* Pipeline::load(const std::string& path) {
-    auto pipeline = new Pipeline;
-    std::ifstream file(path);
-    if (!file.good()) {
-        std::cerr << "Unable to open file " << path << std::endl;
-        return nullptr;
-    }
-    auto config = json::parse(file);
-    if (config.contains("user")) {
-        pipeline->user_ = config["user"];
-    }
-    if (config.contains("assistant")) {
-        pipeline->assistant_ = config["assistant"];
-    }
-    if (config.contains("system")) {
-        pipeline->system_ = config["system"];
-    }
-    if (config.contains("llm")) {
-        pipeline->llm_.reset(Llm::createLLM(config["llm"]));
-        pipeline->llm_->load();
-    }
-    if (config.contains("embedding")) {
-        pipeline->embedding_.reset(Embedding::createEmbedding(config["embedding"]));
-        if (config.contains("memory")) {
-            pipeline->memory_.reset(ChatMemory::load(config["memory"]));
-            pipeline->memory_->set_embedding(pipeline->embedding_);
-        }
-        if (config.contains("knowledge")) {
-            pipeline->knowledge_.reset(Knowledge::load(config["knowledge"]));
-            pipeline->knowledge_->set_embedding(pipeline->embedding_);
-        }
-    }
-    pipeline->config_ = std::move(config);
-    return pipeline;
-}
-
-void Pipeline::invoke(const std::string& str) {
-    Prompt user_prompt {PROMPT_TYPE::USER, str, {}};
-    prompts_.emplace_back(std::move(user_prompt));
-    auto prompt = build_prompt(str);
-    std::cout << prompt;
-    if (llm_) {
-        auto res = llm_->response(prompt);
-        Prompt assistant_prompt {PROMPT_TYPE::ASSISTANT, res, {}};
-        prompts_.emplace_back(std::move(assistant_prompt));
-    }
-}
-
-bool Pipeline::need_memory(const std::string& str) {
-    // TODO: using lm model to judge
-    const std::vector<std::string> contextKeywords = {
-        "之前", "先前", "上次", "那天", "刚才", "我们谈过", "你说过", "记得吗", "如你所提",
-        "你提到", "你提及", "你记得", "你还记得", "上回", "上一次", "那一次", "前面", "过去",
-        "以前", "历史上", "之间讨论", "之间的对话", "那时候", "曾经", "你曾说", "你曾提到",
-        "最近谈到", "最近说过", "你之前说过"
-    };
-    for (const auto& keyword : contextKeywords) {
-        if (str.find(keyword) != std::string::npos) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool Pipeline::need_knowledge(const std::string& str) {
-    return false;
-}
-
-std::string Pipeline::build_prompt(const std::string& str) {
-    std::string prompt = system_ + "\n";
-    if (memory_) {
-        if (need_memory(str)) {
-            prompt += "根据当前用户的问题，你开始回忆你们二人过去的对话，你想起与问题最相关的[回忆]是：\n";
-            auto related_memory = memory_->search(str, 1)[0];
-            prompt += related_memory + "\n";
-        }
-        auto personality = memory_->get_latest("personality");
-        if (!personality.empty()) {
-            prompt += "这是最近一次对话时用户的[性格]以及你的[回复策略]：\n" + personality + "\n";
-        }
-    }
-    if (knowledge_ && need_knowledge(str)) {
-        prompt += "根据当前用户的问题，你搜索了一些相关资料，与问题最相关的[资料]是：\n";
-        auto related_knowledge = knowledge_->search(str, 1)[0];
-        prompt += related_knowledge + "\n";
-    }
-    prompt += "\n";
-    for (auto p : prompts_) {
-        if (p.type == PROMPT_TYPE::USER) {
-            prompt += user_ + "：" + p.str + "\n";
-        }
-        if (p.type == PROMPT_TYPE::ASSISTANT) {
-            prompt += assistant_ + "：" + p.str + "\n";
-        }
-    }
-    prompt += assistant_ + "： ";
-    return prompt;
-}
-// Pipeline end

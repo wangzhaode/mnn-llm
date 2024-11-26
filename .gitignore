@@ -10,6 +10,10 @@ include/pthread.h
 include/sched.h
 include/semaphore.h
 docs/_build/
+.idea/
+android/.idea/
+android/.gradle
+android/local.properties
 
 # ignore files
 .DS_Store

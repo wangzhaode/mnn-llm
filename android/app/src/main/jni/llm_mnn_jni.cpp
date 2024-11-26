@@ -10,7 +10,7 @@
 
 #include "llm.hpp"
 
-static std::unique_ptr<Llm> llm(nullptr);
+static std::unique_ptr<MNN::Transformer::Llm> llm(nullptr);
 static std::stringstream response_buffer;
 
 extern "C" {
@@ -27,7 +27,7 @@ JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved) {
 JNIEXPORT jboolean JNICALL Java_com_mnn_llm_Chat_Init(JNIEnv* env, jobject thiz, jstring modelDir) {
     const char* model_dir = env->GetStringUTFChars(modelDir, 0);
     if (!llm.get()) {
-        llm.reset(Llm::createLLM(model_dir));
+        llm.reset(MNN::Transformer::Llm::createLLM(model_dir));
         llm->load();
     }
     return JNI_TRUE;

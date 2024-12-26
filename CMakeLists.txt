@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(mnn-llm)
 
 option(BUILD_FOR_ANDROID "Build for android whith mini memory mode." OFF)
-option(LLM_SUPPORT_VISION "Llm model support vision input." OFF)
+option(LLM_SUPPORT_VISION "Llm model support vision input." ON)
 option(DUMP_PROFILE_INFO "Dump profile info when chat." OFF)
 option(BUILD_JNI "Build JNI for android app." OFF)
 
@@ -15,6 +15,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 # compile MNN first
+set(MNN_SEP_BUILD OFF CACHE BOOL "Close MNN_SEP_BUILD" FORCE)
+set(MNN_BUILD_SHARED_LIBS OFF CACHE BOOL "Close MNN_BUILD_SHARED_LIBS" FORCE)
+set(MNN_BUILD_LLM ON CACHE BOOL "Open MNN_BUILD_LLM" FORCE)
 set(MNN_LOW_MEMORY ON CACHE BOOL "Open MNN_LOW_MEMORY" FORCE)
 set(MNN_SUPPORT_TRANSFORMER_FUSE ON CACHE BOOL "Open MNN_SUPPORT_TRANSFORMER_FUSE" FORCE)
 if (BUILD_FOR_ANDROID)
@@ -33,6 +36,8 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/include/
                     ${CMAKE_CURRENT_LIST_DIR}/MNN/include/
                     ${CMAKE_CURRENT_LIST_DIR}/MNN/tools/cv/include/
                     ${CMAKE_CURRENT_LIST_DIR}/MNN/MNN/3rd_party/
+                    ${CMAKE_CURRENT_LIST_DIR}/MNN/source/
+                    ${CMAKE_CURRENT_LIST_DIR}/MNN/transformers/llm/engine/include
                     )
 
 # source files
@@ -43,6 +48,16 @@ if (BUILD_JNI)
     list(APPEND SRCS "${CMAKE_CURRENT_LIST_DIR}/android/app/src/main/jni/llm_mnn_jni.cpp")
 endif()
 
+if (MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+    add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+endif()
+
+add_executable(mllm ${CMAKE_CURRENT_LIST_DIR}/src/main.cpp)
+target_link_libraries(mllm MNN)
+if (0)
 if (MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++11")
     add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/source-charset:utf-8>")
@@ -66,7 +81,6 @@ else()
 endif()
 
 if (NOT (BUILD_JNI))
-
     add_executable(cli_demo ${CMAKE_CURRENT_LIST_DIR}/demo/cli_demo.cpp)
     add_executable(tokenizer_demo ${CMAKE_CURRENT_LIST_DIR}/demo/tokenizer_demo.cpp)
     add_executable(embedding_demo ${CMAKE_CURRENT_LIST_DIR}/demo/embedding_demo.cpp)
@@ -134,4 +148,5 @@ else()
         COMMAND ${CMAKE_COMMAND} -E copy
                 ${LLM_LIBS}
                 ${CMAKE_CURRENT_LIST_DIR}/android/app/src/main/jni/libs/arm64-v8a)
+endif()
 endif()

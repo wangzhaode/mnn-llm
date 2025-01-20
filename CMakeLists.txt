@@ -32,7 +32,8 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/MNN)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include/
                     ${CMAKE_CURRENT_LIST_DIR}/MNN/include/
                     ${CMAKE_CURRENT_LIST_DIR}/MNN/tools/cv/include/
-                    ${CMAKE_CURRENT_LIST_DIR}/MNN/MNN/3rd_party/
+                    ${CMAKE_CURRENT_LIST_DIR}/MNN/3rd_party/
+                    ${CMAKE_CURRENT_LIST_DIR}/MNN/tools/
                     )
 
 # source files
@@ -70,11 +71,6 @@ if (NOT (BUILD_JNI))
     add_executable(cli_demo ${CMAKE_CURRENT_LIST_DIR}/demo/cli_demo.cpp)
     add_executable(tokenizer_demo ${CMAKE_CURRENT_LIST_DIR}/demo/tokenizer_demo.cpp)
     add_executable(embedding_demo ${CMAKE_CURRENT_LIST_DIR}/demo/embedding_demo.cpp)
-    add_executable(store_demo ${CMAKE_CURRENT_LIST_DIR}/demo/store_demo.cpp)
-    add_executable(document_demo ${CMAKE_CURRENT_LIST_DIR}/demo/document_demo.cpp)
-    add_executable(memory_demo ${CMAKE_CURRENT_LIST_DIR}/demo/memory_demo.cpp)
-    add_executable(knowledge_demo ${CMAKE_CURRENT_LIST_DIR}/demo/knowledge_demo.cpp)
-    add_executable(pipeline_demo ${CMAKE_CURRENT_LIST_DIR}/demo/pipeline_demo.cpp)
 
     if (BUILD_FOR_ANDROID)
         # add_library(MNN SHARED IMPORTED)
@@ -92,20 +88,10 @@ if (NOT (BUILD_JNI))
         target_link_libraries(cli_demo llm log)
         target_link_libraries(tokenizer_demo llm log)
         target_link_libraries(embedding_demo llm log)
-        target_link_libraries(store_demo llm log)
-        target_link_libraries(document_demo llm log)
-        target_link_libraries(memory_demo llm log)
-        target_link_libraries(knowledge_demo llm log)
-        target_link_libraries(pipeline_demo llm log)
     else()
         target_link_libraries(cli_demo llm)
         target_link_libraries(tokenizer_demo llm)
         target_link_libraries(embedding_demo llm)
-        target_link_libraries(store_demo llm)
-        target_link_libraries(document_demo llm)
-        target_link_libraries(memory_demo llm)
-        target_link_libraries(knowledge_demo llm)
-        target_link_libraries(pipeline_demo llm)
         # web demo
         add_executable(web_demo ${CMAKE_CURRENT_LIST_DIR}/demo/web_demo.cpp)
         if (MSVC)

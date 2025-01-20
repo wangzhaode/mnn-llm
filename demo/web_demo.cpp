@@ -10,6 +10,8 @@
 #include <iostream>
 #include <thread>
 
+using namespace MNN::Transformer;
+
 int main(int argc, const char* argv[]) {
     if (argc < 3) {
         std::cout << "Usage: " << argv[0] << " model_dir web_dir" << std::endl;
@@ -21,7 +23,7 @@ int main(int argc, const char* argv[]) {
     std::cout << "model path is " << model_dir << std::endl;
     std::unique_ptr<Llm> llm(Llm::createLLM(model_dir));
     llm->load();
-    
+
     std::stringstream ss;
     httplib::Server svr;
     std::atomic_bool waiting;

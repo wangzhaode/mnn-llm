@@ -11,78 +11,78 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include <iostream>
 #include <fstream>
+#include <sstream>
+#include <iostream>
 #include <streambuf>
 #include <functional>
 #include <unordered_map>
 
-#include <MNN/AutoTime.hpp>
 #include <MNN/expr/Expr.hpp>
 #include <MNN/expr/Module.hpp>
 #include <MNN/expr/MathOp.hpp>
 #include <MNN/expr/NeuralNetWorkOp.hpp>
-#include "tokenizer.hpp"
-#include "json.hpp"
 
-using namespace MNN;
-using namespace Express;
-using json = nlohmann::json;
+namespace MNN {
+namespace Transformer {
 class Tokenizer;
 class Pipeline;
 class LlmConfig;
+class DiskEmbedding;
 
-// Llm start
-// llm stream buffer with callback
-class LlmStreamBuffer : public std::streambuf {
-public:
-    using CallBack = std::function<void(const char* str, size_t len)>;;
-    LlmStreamBuffer(CallBack callback) : callback_(callback) {}
-
-protected:
-    virtual std::streamsize xsputn(const char* s, std::streamsize n) override {
-        if (callback_) {
-            callback_(s, n);
-        }
-        return n;
-    }
-
-private:
-    CallBack callback_ = nullptr;
+enum TuneType {
+    // op encoder number for commit
+    OP_ENCODER_NUMBER = 0,
 };
-
-enum PROMPT_TYPE {
-    SYSTEM = 0,
-    ATTACHMENT = 1,
-    USER = 2,
-    ASSISTANT = 3,
-    OTHER = 4
-};
-
-struct Prompt {
-    PROMPT_TYPE type;
-    std::string str;
-    std::vector<int> tokens;
-};
-
-class Llm {
-public:
+struct KVMeta;
+class MNN_PUBLIC Llm {
     using PromptItem = std::pair<std::string, std::string>; // <role, content>
-    Llm(std::shared_ptr<LlmConfig> config) : config_(config) {}
+public:
+    enum Stage {
+        Prefill,
+        Decode
+    };
+    struct GenerateState {
+        // forward info
+        int prompt_len_ = 0;
+        int gen_seq_len_ = 0;
+        int all_seq_len_ = 0;
+        std::vector<int> history_ids_;
+        // time
+        int64_t vision_us_ = 0;
+        int64_t audio_us_ = 0;
+        int64_t prefill_us_ = 0;
+        int64_t decode_us_ = 0;
+        int current_token_ = 0;
+        std::vector<int> output_ids_;
+        std::ostream* os_ = nullptr;
+        std::string end_with_;
+    };
+    Llm(std::shared_ptr<LlmConfig> config);
     virtual ~Llm();
+    static Llm* createLLM(const std::string& config_path);
     void chat();
     void reset();
-    static Llm* createLLM(const std::string& config_path);
+    void trace(bool start);
+    void tuning(TuneType type, std::vector<int> candidates);
     virtual void load();
-    VARP forward(const std::vector<int>& input_ids);
-    int sample(VARP logits, const std::vector<int>& pre_ids);
+    void switchMode(Stage stage);
+    MNN::Express::VARP forwardRaw(MNN::Express::VARP hiddenState, MNN::Express::VARP mask, MNN::Express::VARP inputPos);
+    virtual MNN::Express::VARP gen_attention_mask(int seq_len);
+    virtual MNN::Express::VARP embedding(const std::vector<int>& input_ids);
+
+    MNN::Express::VARP forward(const std::vector<int>& input_ids);
+    int sample(MNN::Express::VARP logits, const std::vector<int>& pre_ids, int offset = 0, int size = 0);
     std::string apply_prompt_template(const std::string& user_content) const;
     std::string apply_chat_template(const std::vector<PromptItem>& chat_prompts) const;
-    std::string response(const std::string& user_content, std::ostream* os = &std::cout, const char* end_with = nullptr);
-    std::string response(const std::vector<PromptItem>& chat_prompts, std::ostream* os = &std::cout, const char* end_with = nullptr);
-    void generate_init();
-    std::string generate(const std::vector<int>& input_ids, std::ostream* os, const char* end_with);
+    size_t getCurrentHistory() const;
+    void eraseHistory(size_t begin, size_t end);
+    void response(const std::string& user_content, std::ostream* os = &std::cout, const char* end_with = nullptr, int max_new_tokens = -1);
+    void response(const std::vector<PromptItem>& chat_prompts, std::ostream* os = &std::cout, const char* end_with = nullptr, int max_new_tokens = -1);
+    void generate_init(std::ostream* os = nullptr, const char* end_with = nullptr);
+    void generate(int max_token);
     std::vector<int> generate(const std::vector<int>& input_ids, int max_new_tokens = -1);
+    bool stoped();
     void print_speed();
     // config function
     std::string dump_config();
@@ -92,41 +92,33 @@ public:
     Llm* create_lora(const std::string& lora_path);
     bool release_module(size_t index);
     bool select_module(size_t index);
+    // tokenier function
+    bool is_stop(int token_id);
+    std::string tokenizer_decode(int id);
+    virtual std::vector<int> tokenizer_encode(const std::string& query, bool use_template = true);
     friend class Pipeline;
-public:
-    // forward info
-    int prompt_len_ = 0;
-    int gen_seq_len_ = 0;
-    int all_seq_len_ = 0;
-    std::vector<int> history_ids_;
-    // time
-    int64_t prefill_us_ = 0;
-    int64_t decode_us_ = 0;
-    float load_progress_ = 0.f;
-    bool is_single_ = true;
-    bool attention_fused_ = true;
+    const GenerateState& getState() const {
+        return mState;
+    }
 protected:
+    std::shared_ptr<KVMeta> mMeta;
     std::shared_ptr<LlmConfig> config_;
     std::shared_ptr<Tokenizer> tokenizer_;
-    std::vector<int> key_value_shape_ = {};
-    std::vector<MNN::Express::VARP> past_key_values_;
+    std::shared_ptr<DiskEmbedding> disk_embedding_;
     MNN::Express::VARP inputs_embeds_, attention_mask_, position_ids_;
     std::shared_ptr<MNN::Express::Executor::RuntimeManager> runtime_manager_;
+    std::shared_ptr<MNN::Express::Executor::RuntimeManager> mllm_runtime_manager_;
     std::vector<std::shared_ptr<MNN::Express::Module>> modules_;
     std::vector<std::shared_ptr<MNN::Express::Module>> prefill_modules_, decode_modules_, current_modules_;
     const MNN::Express::Module* base_module_ = nullptr;
     void init_runtime();
-    std::string decode(int id);
-    bool is_stop(int token_id);
-    virtual std::vector<int> tokenizer(const std::string& query);
-    virtual MNN::Express::VARP embedding(const std::vector<int>& input_ids);
-    virtual MNN::Express::VARP gen_attention_mask(int seq_len);
     virtual MNN::Express::VARP gen_position_ids(int seq_len);
+    bool mTracing = false;
+    GenerateState mState;
 };
-// Llm end
 
 // Embedding start
-class Embedding : public Llm {
+class MNN_PUBLIC Embedding : public Llm {
 public:
     Embedding(std::shared_ptr<LlmConfig> config);
     static Embedding* createEmbedding(const std::string& config_path, bool load = true);
@@ -136,122 +128,11 @@ public:
     MNN::Express::VARP txt_embedding(const std::string& txt);
     int dim() const;
 private:
-    virtual std::vector<int> tokenizer(const std::string& query) override;
     virtual MNN::Express::VARP gen_attention_mask(int seq_len) override;
     virtual MNN::Express::VARP gen_position_ids(int seq_len) override;
 };
 // Embedding end
-
-// TextVectorStore strat
-class TextVectorStore {
-public:
-    TextVectorStore() : embedding_(nullptr) {}
-    TextVectorStore(std::shared_ptr<Embedding> embedding) : embedding_(embedding) {}
-    ~TextVectorStore() {}
-    static TextVectorStore* load(const std::string& path, const std::string& embedding_path = "");
-    void set_embedding(std::shared_ptr<Embedding> embedding) {
-        embedding_ = embedding;
-    }
-    void save(const std::string& path);
-    void add_text(const std::string& text);
-    void add_texts(const std::vector<std::string>& texts);
-    std::vector<std::string> search_similar_texts(const std::string& txt, int topk = 1);
-    void bench();
-protected:
-    inline VARP text2vector(const std::string& text);
-// private:
-public:
-    std::shared_ptr<Embedding> embedding_;
-    VARP vectors_;
-    std::vector<std::string> texts_;
-    int dim_ = 1024;
-};
-// TextVectorStore end
-
-// Document start
-class Document {
-public:
-    enum DOCTYPE {
-        AUTO = 0,
-        TXT  = 1,
-        MD   = 2,
-        HTML = 3,
-        PDF  = 4
-    };
-    Document(const std::string& path, DOCTYPE type = AUTO) : path_(path), type_(type) {}
-    ~Document() = default;
-    std::vector<std::string> split(int chunk_size = -1);
-private:
-    DOCTYPE type_;
-    std::string path_;
-    std::vector<std::string> load_txt();
-    std::vector<std::string> load_pdf();
-};
-// Document end
-
-// MemoryBase start
-class MemoryBase {
-public:
-    MemoryBase() {}
-    virtual ~MemoryBase() {}
-    void set_embedding(std::shared_ptr<Embedding> embedding) {
-        store_->set_embedding(embedding);
-    }
-    virtual std::vector<std::string> search(const std::string& query, int topk);
-    virtual void save(const std::string& path) = 0;
-    virtual void build_vectors() = 0;
-protected:
-    void load_store(const std::string& path);
-    void save_store(const std::string& path);
-public:
-    std::shared_ptr<TextVectorStore> store_;
-};
-
-class ChatMemory : public MemoryBase {
-public:
-    ChatMemory() {}
-    ~ChatMemory() override {}
-    static ChatMemory* load(const std::string& path);
-    void save(const std::string& path) override;
-    void build_vectors() override;
-    std::string get_latest(std::string key);
-    void add(const std::vector<Prompt>& prompts);
-    void summarize(std::shared_ptr<Llm> llm);
-private:
-    json memory_;
-};
-
-class Knowledge : public MemoryBase {
-public:
-    Knowledge() {}
-    ~Knowledge() override {}
-    static Knowledge* load(const std::string& path);
-    void save(const std::string& path) override;
-    void build_vectors() override;
-private:
-    std::unique_ptr<Document> document_;
-};
-// MemoryBase end
-
-// Pipeline start
-class Pipeline {
-public:
-    Pipeline() {}
-    ~Pipeline() {}
-    static Pipeline* load(const std::string& path);
-    void invoke(const std::string& str);
-private:
-    bool need_memory(const std::string& str);
-    bool need_knowledge(const std::string& str);
-    std::string build_prompt(const std::string& str);
-    std::unique_ptr<Llm> llm_;
-    std::shared_ptr<Embedding> embedding_;
-    std::unique_ptr<Knowledge> knowledge_;
-    std::unique_ptr<ChatMemory> memory_;
-    std::string system_, user_, assistant_;
-    std::vector<Prompt> prompts_;
-    json config_;
-};
-// Pipeline end
+}
+}
 
 #endif // LLM_hpp

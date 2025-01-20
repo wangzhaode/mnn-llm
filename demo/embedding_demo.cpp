@@ -9,7 +9,9 @@
 #include <fstream>
 #include <stdlib.h>
 
-static void dumpVARP(VARP var) {
+using namespace MNN::Transformer;
+
+static void dumpVARP(MNN::Express::VARP var) {
     auto size = var->getInfo()->size;
     auto ptr = var->readMap<float>();
     printf("[ ");

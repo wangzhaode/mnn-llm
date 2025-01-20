@@ -15,7 +15,7 @@
 - [android](./android/): 使用Android Studio打开编译；
 - [ios](./ios/README.md): 使用Xcode打开编译；🚀🚀🚀**该示例代码100%由ChatGPT生成**🚀🚀🚀
 - [python](./python/README.md): 对mnn-llm的python封装`mnnllm`；
-- [other](./demo): 新增文本embedding，向量查询，文本解析，记忆库与知识库能力🔥；
+- [other](./demo): 新增文本embedding；
 
 ## 模型导出与下载
 

@@ -7,6 +7,9 @@
 
 [Chinese](./README.md)
 
+**This project has merged into [MNN](https://github.com/alibaba/MNN/tree/master/transformers/llm).**
+
+
 ## Example Projects
 
 - [cli](./demo/cli_demo.cpp): Compile using the command line, for Android compilation refer to[android_build.sh](./script/android_build.sh)

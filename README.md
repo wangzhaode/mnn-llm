@@ -8,6 +8,8 @@
 
 [English](./README_en.md)
 
+**该项目代码已经Merge到[MNN](https://github.com/alibaba/MNN/tree/master/transformers/llm).**
+
 ## 示例工程
 
 - [cli](./demo/cli_demo.cpp): 使用命令行编译，android编译参考[android_build.sh](./script/android_build.sh)
